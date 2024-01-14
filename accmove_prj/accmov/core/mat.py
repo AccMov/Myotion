@@ -72,6 +72,7 @@ class matFile:
         sources = movements['sources'].tolist()
         signals = sources['signals'].tolist()
 
+        # matdata type
         movement_datas = []
         for key in signals.dtype.fields:
             signal_x = signals[key].tolist()

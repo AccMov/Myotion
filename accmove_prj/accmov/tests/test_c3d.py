@@ -27,7 +27,7 @@ print("total points:", p.size())
 print("point fs:", p.fs)
 
 #get analog
-analog = a.analogdata
+analog = a.analog
 print("total analog data:", analog.size())
 print("analog fs:", analog.fs)
 print("analog label:", analog.label)

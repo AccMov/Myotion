@@ -3,12 +3,15 @@ sys.path.insert(0, '../')
 
 from core.timeSeriesTable import * 
 from core.mat import * 
+from core.c3d import * 
 import matplotlib.pyplot as plt
 
+# get TST / c3d-analogdata
 #a = c3dFile('Sample_data/Sample_data/c3d_emg/ERRPT.c3d')
-a = matFile('Sample_data/Sample_data/mat_emg/zhangjun/Trials/2023-02-03-14-53_SBDDQB.mat')
+#b = a.analog.convertToTST()
 
-# get TST
+# get TST / mat
+a = matFile('Sample_data/Sample_data/mat_emg/zhangjun/Trials/2023-02-03-14-53_SBDDQB.mat')
 b = a.convertToTST()
 
 # print labels and data

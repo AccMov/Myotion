@@ -72,6 +72,13 @@ class Points:
     def __missing__(self, key):
         return  
 
+    def convertToTST(self):
+        if self.channels() == 0:
+            return timeSeriesTable()
+
+        data = [self.data[key] for key in self.labels]  #convert to list
+        return timeSeriesTable(self.fs, self.label, data)
+
 
 '''
 Anlog class that contains data of sampling from c3d file
@@ -123,7 +130,7 @@ class AnalogData:
         for l in self.labels:
             str += "channel {}:{}".format(l, self.analog_data[l])
         return str
-    
+
     def __getitem__(self, key):
         return self.analog_data[key]
     def __setitem__(self, key, obj):
@@ -132,6 +139,13 @@ class AnalogData:
         return
     def __missing__(self, key):
         return  
+
+    def convertToTST(self):
+        if self.channels() == 0:
+            return timeSeriesTable()
+
+        data = [self.analog_data[key] for key in self.labels]  #convert to list
+        return timeSeriesTable(self.fs, self.labels, data)
 
 class c3dFile:
     def __init__(self, file):
@@ -164,7 +178,6 @@ class c3dFile:
         analog_channel_num = self.attr["analog_used"]
         point_labels = self.attr["point_labels"]
         point_number = self.attr["point_used"]
-        
 
         # strip white space
         point_labels = [s.strip() for s in point_labels]

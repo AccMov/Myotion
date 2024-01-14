@@ -7,12 +7,12 @@ from core.c3d import *
 import matplotlib.pyplot as plt
 
 # get TST / c3d-analogdata
-#a = c3dFile('Sample_data/Sample_data/c3d_emg/ERRPT.c3d')
-#b = a.analog.convertToTST()
+a = c3dFile('Sample_data/Sample_data/c3d_emg/ERRPT.c3d')
+b = a.analog.convertToTST()
 
 # get TST / mat
-a = matFile('Sample_data/Sample_data/mat_emg/zhangjun/Trials/2023-02-03-14-53_SBDDQB.mat')
-b = a.convertToTST()
+#a = matFile('Sample_data/Sample_data/mat_emg/zhangjun/Trials/2023-02-03-14-53_SBDDQB.mat')
+#b = a.convertToTST()
 
 # print labels and data
 for label in b.labels:
@@ -65,12 +65,12 @@ b[label_A] = low_result
 
 fig3, axs_3 = plt.subplots(2)
 # threholdDetection
-activated = b.threholdDetection(label_A, 20, 5, 5)
+activated = b.threholdDetection(label_A, 0.7*b.max(label_A), 5, 5)
 axs_3[0].plot(b[label_A])
 axs_3[0].set_title("original")
 for pair in activated:
     axs_3[1].plot(np.arange(pair[0], pair[1]), b[label_A][pair[0]:pair[1]], c='red')
-axs_3[1].set_title("activated threhold:20 n_above:5 n_below:5")
+axs_3[1].set_title("activated threhold:{} n_above:5 n_below:5".format(0.7*b.max(label_A)))
 
 # statistic after filtering
 print("{}'s max: {}".format(label_A, b.max(label_A)))

@@ -1,4 +1,8 @@
-from accmove.core import *
+import sys
+sys.path.insert(0, '../')
+
+from core.person import * 
+from core.timeSeriesTable import * 
 
 a = person()
 a["name"] = "abc"

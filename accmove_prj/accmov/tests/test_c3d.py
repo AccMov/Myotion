@@ -1,8 +1,12 @@
-from accmove.core import *
+import sys
+sys.path.insert(0, '../')
+
+from core.c3d import * 
+
 import matplotlib.pyplot as plt
 
 #a = c3dFile('Sample_data\Sample_data\c3d_emg\ERRPT.c3d')
-a = c3dFile('Sample_data\Sample_data\c3d_emg\RPT_1.c3d')
+a = c3dFile('Sample_data/Sample_data/c3d_emg/RPT_1.c3d')
 
 #metadata
 print("metadata", a.metadata)

@@ -1,7 +1,11 @@
-from accmove.core import *
+import sys
+sys.path.insert(0, '../')
+
+from core.mat import * 
+
 import matplotlib.pyplot as plt
 
-a = matFile('Sample_data\Sample_data\mat_emg\zhangjun\Trials\\2023-02-03-14-53_SBDDQB.mat')
+a = matFile('Sample_data/Sample_data/mat_emg/zhangjun/Trials/2023-02-03-14-53_SBDDQB.mat')
 #a = matFile('Sample_data\Sample_data\mat_emg\lijianhua\Trials\\2023-02-03-17-16_qing.mat')
 
 #get metadata

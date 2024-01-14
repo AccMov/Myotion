@@ -12,6 +12,9 @@ import scipy.signal as sig
 8. on/off detection:    threhold detection
 9. co-contraction index:  integration ratio between two waveform
 10. zero-crossing:   count zero values
+
+
+all returned vector remain same dimension
 '''
 
 class timeSeriesTable:
@@ -50,6 +53,9 @@ class timeSeriesTable:
     def __getattr__(self, key):
         if key in self.metadata:
             return self.metadata[key]
+
+    def size(self):
+        return self.n
 
     # method of one channel
     def max(self, key):
@@ -91,9 +97,72 @@ class timeSeriesTable:
         sos = self.__butterWorth(2, [Wlow, Whigh], 'bandpass')
         return sig.sosfilt(sos, self.data[key])
     
-    #  return ndarray with dc removed
+    # return ndarray with dc removed
     def removeDC(self, key):
         return self.data[key] - self.mean(key)
+
+    # rectification
+    def rectification(self, key):
+        return np.absolute(self.removeDC(key))
+
+    # normalization
+    def normalization(self, key, val):
+        if val <= 0:
+            raise ValueError("normalization val has be bigger than zero")
+        return sef.data[key] / val
+    
+    # threhold detection
+    # https://github.com/BMClab/BMC/blob/master/notebooks/DetectOnset.ipynb
+    def threholdDetection(self, key, threhold, n_above=10, n_below=10):
+        if n_above < 0 or n_above >= self.n or n_below < 0 or n_below >= self.n:
+            raise ValueError("sliding windows has to be a postive value and smaller then total points!")
+
+        activated = []
+
+        above_counter = 0
+        below_counter = 0
+        isactivated = False
+        seg = [0, 0]
+
+        for i in range(0, len(self.data[key])):
+            p = self.data[key][i]
+            if p >= threhold:          #above
+                below_counter = 0      #clear below counter
+                if isactivated:
+                    continue
+
+                if above_counter < n_above:
+                    above_counter += 1
+                if above_counter >= n_above:
+                    isactivated = True
+                    seg[0] = i
+            else:                     #below
+                above_counter = 0
+                if not isactivated:
+                    continue
+
+                if below_counter < n_below:
+                    below_counter += 1
+                if below_counter >= n_below:
+                    isactivated = False
+                    seg[1] = i
+                    activated.append(seg)
+                    seg = [0, 0]
+                    above_counter = 0
+                    below_counter = 0
+
+        if isactivated:
+            activated.append([seg[0], len(self.data[key])])
+
+        return activated
+
+    # co-contraction 
+    def cocontraction(self, muscle_1, muscle_2):
+        return self.data[key] / val
+
+    def countZeros(self, key):
+        return len(self.data[key]) - np.count_nonzero(self.data[key])
+
 
     #method of all channels
     def max_all(self):

@@ -22,6 +22,7 @@ for label in b.labels:
 print("frequency: {}".format(b.fs)) 
 
 label_A = b.labels[0]
+label_B = b.labels[1]
 display_len = 5000
 
 # preprocess
@@ -72,6 +73,14 @@ for pair in activated:
     axs_3[1].plot(np.arange(pair[0], pair[1]), b[label_A][pair[0]:pair[1]], c='red')
 axs_3[1].set_title("activated threhold:{} n_above:5 n_below:5".format(0.7*b.max(label_A)))
 
+fig4, axs_4 = plt.subplots(2)
+#cocontration
+axs_4[0].plot(b[label_A])
+b[label_B] = b.removeDC(label_B)
+b[label_B] = b.rectification(label_B)
+b[label_B] = b.lowpass(label_B, 10)
+axs_4[1].plot(b[label_B])
+
 # statistic after filtering
 print("{}'s max: {}".format(label_A, b.max(label_A)))
 print("{}'s min: {}".format(label_A, b.min(label_A)))
@@ -82,5 +91,6 @@ print("{}'s variance: {}".format(label_A, b.var(label_A)))
 print("{}'s rms: {}".format(label_A, b.rms(label_A)))
 print("{}'s ptp: {}".format(label_A, b.ptp(label_A)))
 print("{}'s zeros: {}".format(label_A, b.countZeros(label_A)))
+print("{} and {}'s co-contration: {}".format(label_A, label_B, b.cocontraction(label_A, label_B)))
 
 plt.show()

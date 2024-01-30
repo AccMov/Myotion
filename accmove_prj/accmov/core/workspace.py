@@ -4,21 +4,31 @@ from .person import *
 from .timeSeriesTable import *
 
 
-'''
-1. max/min/med/sd/var/rms/peak-to-peak-distance
-2. filter
-3. remove-dc offset
-4. full-wave rectification
-5. interpolation
-6. Normalization
-7. Regularity/Entropy:  pattern matching, check complexity of waveform
-8. on/off detection:    threhold detection
-9. co-contraction index:  integration ratio between two waveform
-10. zero-crossing:   count zero values
-'''
 
+class workItem:
+    def __init__(self):
+        self.emg =
+
+
+'''
+Maintain a list of people
+
+persons: set of people 
+'''
 class workspace:
     def __init__(self):
-        self.person = person()
-        self.kinematic = timeSeriesTable()
-        self.emg = timeSeriesTable()
+        self.peopleList = {}
+        self.emg_configure = emg_configure() 
+
+    def addPerson(self, person):
+        # check person exist
+        self.worklist[person] = workItem()
+
+    def addEMGFile(self, person, f):
+        return
+
+    def addEMGTrailFile(self, person, channel, f):
+        return
+
+    def generateReport(self):
+        return

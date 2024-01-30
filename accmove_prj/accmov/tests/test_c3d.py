@@ -26,6 +26,10 @@ p = a.points
 print("total points:", p.size())
 print("point fs:", p.fs)
 
+#iteration
+for key in p.labels:
+    print(p.data[key])
+
 #get analog
 analog = a.analog
 print("total analog data:", analog.size())

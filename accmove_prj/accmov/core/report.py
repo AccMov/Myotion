@@ -4,16 +4,11 @@ from .person import *
 from .workspace import *
 from .kinematic import *
 from .advance_analysis import *
+import xml.etree.ElementTree as ET
 
 class report:
     def __init__(self):
-        self.data = {
-            "person":person(),
-            "kinematic":kinematic(),
-            "emg":emg(),
-            "freq_analysis":freq_analysis(),
-            "advance_analysis":advance_analysis(),
-        }
+        return
 
     @classmethod
     def fromFile(self, file):

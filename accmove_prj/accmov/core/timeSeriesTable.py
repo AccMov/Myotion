@@ -157,12 +157,14 @@ class timeSeriesTable:
         return activated
 
     # co-contraction 
-    def cocontraction(self, muscle_1, muscle_2):
-        return self.data[key] / val
+    def cocontraction(self, key1, key2):
+        return np.trapz(self.data[key1]) / np.trapz(self.data[key2]);
 
     def countZeros(self, key):
         return len(self.data[key]) - np.count_nonzero(self.data[key])
 
+    def entropy(self, key):
+        return
 
     #method of all channels
     def max_all(self):

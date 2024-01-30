@@ -1,12 +1,21 @@
+import xml.etree.ElementTree as ET
+
 class person:
-    def __init__(self):
+    def __init__(self, ):
         self.data = {
-            "id": "",
-            "name": "",
-            "age": "",
+            "first name": "",
+            "middle name": "",
+            "last name": "",
+            "dob": "",
             "gender": "",
+            "height":"",
+            "weight":"",
         }
     
+    def __getattr__(self, key):
+        if key in self.data.keys():
+            return self.data[key]
+
     def __getitem__(self, key):
         return self.data[key]
     def __setitem__(self, key, value):
@@ -20,3 +29,11 @@ class person:
         print("Person:")
         for x in self.data:
             print("\t", x, ":", self.data[x])
+
+    def toXML(self, xml):
+        sub = ET.SubElement(xml, "Person")
+        for key in self.data.keys():
+            t = ET.SubElement(sub, key)
+            t.text = self.data[key]
+
+    def fromXML(self, xml):

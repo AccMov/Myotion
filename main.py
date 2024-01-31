@@ -18,7 +18,6 @@ import sys
 import os
 import platform
 
-
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
 from modules import *
@@ -42,20 +41,15 @@ class MainWindow(QMainWindow):
 
         # USE CUSTOM TITLE BAR | USE AS "False" FOR MAC OR LINUX
         # ///////////////////////////////////////////////////////////////
-        Settings.ENABLE_CUSTOM_TITLE_BAR = True
+        Settings.ENABLE_CUSTOM_TITLE_BAR = False
 
         # APP NAME
         # ///////////////////////////////////////////////////////////////
-        title = "PyDracula - Modern GUI"
-        description = "PyDracula APP - Theme with colors based on Dracula for Python."
+        title = "MYOTION"
+        description = "MYOTION"
         # APPLY TEXTS
         self.setWindowTitle(title)
         widgets.titleRightInfo.setText(description)
-
-        self.timer = QTimer(self)
-        self.timer.connect(self.timer, SIGNAL("timeout()"), self.timerEvent)
-        self.timer.start(1000)
-
 
         # TOGGLE MENU
         # ///////////////////////////////////////////////////////////////
@@ -73,11 +67,12 @@ class MainWindow(QMainWindow):
         # ///////////////////////////////////////////////////////////////
 
         # LEFT MENUS
-        widgets.btn_home.clicked.connect(self.buttonClick)
-        widgets.btn_widgets.clicked.connect(self.buttonClick)
-        widgets.btn_new.clicked.connect(self.buttonClick)
-        widgets.btn_save.clicked.connect(self.buttonClick)
-        
+        widgets.btn_start.clicked.connect(self.buttonClick)
+        widgets.btn_emg.clicked.connect(self.buttonClick)
+        widgets.btn_kinematic.clicked.connect(self.buttonClick)
+        widgets.btn_frequency.clicked.connect(self.buttonClick)
+        widgets.btn_advanced.clicked.connect(self.buttonClick)
+        widgets.btn_stats.clicked.connect(self.buttonClick)
 
         # EXTRA LEFT BOX
         def openCloseLeftBox():
@@ -97,9 +92,7 @@ class MainWindow(QMainWindow):
         # SET CUSTOM THEME
         # ///////////////////////////////////////////////////////////////
         useCustomTheme = False
-        themeFile = "themes\py_dracula_dark.qss"
-
-        print(themeFile)
+        themeFile = "themes\py_dracula_light.qss"
 
         # SET THEME AND HACKS
         if useCustomTheme:
@@ -111,8 +104,8 @@ class MainWindow(QMainWindow):
 
         # SET HOME PAGE AND SELECT MENU
         # ///////////////////////////////////////////////////////////////
-        widgets.stackedWidget.setCurrentWidget(widgets.home)
-        widgets.btn_home.setStyleSheet(UIFunctions.selectMenu(widgets.btn_home.styleSheet()))
+        widgets.stackedWidget.setCurrentWidget(widgets.start_page)
+        widgets.btn_start.setStyleSheet(UIFunctions.selectMenu(widgets.btn_start.styleSheet()))
 
 
     # BUTTONS CLICK
@@ -123,21 +116,21 @@ class MainWindow(QMainWindow):
         btn = self.sender()
         btnName = btn.objectName()
 
-        # SHOW HOME PAGE
-        if btnName == "btn_home":
-            widgets.stackedWidget.setCurrentWidget(widgets.home)
+        # SHOW START PAGE
+        if btnName == "btn_start":
+            widgets.stackedWidget.setCurrentWidget(widgets.start_page)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
 
-        # SHOW WIDGETS PAGE
-        if btnName == "btn_widgets":
-            widgets.stackedWidget.setCurrentWidget(widgets.widgets)
+        # SHOW EMG PAGE
+        if btnName == "btn_emg":
+            widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
 
-        # SHOW NEW PAGE
-        if btnName == "btn_new":
-            widgets.stackedWidget.setCurrentWidget(widgets.new_page) # SET PAGE
+        # SHOW STATS PAGE
+        if btnName == "btn_stats":
+            widgets.stackedWidget.setCurrentWidget(widgets.stats_page) # SET PAGE
             UIFunctions.resetStyle(self, btnName) # RESET ANOTHERS BUTTONS SELECTED
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet())) # SELECT MENU
 
@@ -166,15 +159,8 @@ class MainWindow(QMainWindow):
         if event.buttons() == Qt.RightButton:
             print('Mouse click: RIGHT CLICK')
 
-    def timerEvent(self):
-        print('Timer: clicked')
-
-
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("icon.ico"))
     window = MainWindow()
-    
-    
     sys.exit(app.exec_())

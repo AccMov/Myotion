@@ -49,7 +49,7 @@ Bg App */
 /* /////////////////////////////////////////////////////////////////////////////////////////////////
 Left Menu */
 #leftMenuBg {	
-	background-color: #000000;
+	background-color: #6272a4;
 }
 #topLogo {
 	background-color: #6272a4;
@@ -75,7 +75,8 @@ Left Menu */
 	background-color: #bd93f9;
 }
 #topMenu .QPushButton:pressed {	
-	background-color: #ff79c6;
+	/* background-color: #ff79c6; */
+	background-color: #ff6900;
 	color: rgb(255, 255, 255);
 }
 #bottomMenu .QPushButton {	

@@ -1657,11 +1657,11 @@ class Ui_MainWindow(object):
         self.horizontalLayout_15 = QHBoxLayout(self.stats_page)
         self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
         self.horizontalLayout_15.setContentsMargins(0, 0, 0, 0)
-        self.r_container = QFrame(self.stats_page)
+        self.r_container = QWebEngineView(self.stats_page)
         self.r_container.setObjectName(u"r_container")
         self.r_container.setStyleSheet(u"background-color:#f4f4f4;")
-        self.r_container.setFrameShape(QFrame.StyledPanel)
-        self.r_container.setFrameShadow(QFrame.Raised)
+        #self.r_container.setFrameShape(QFrame.StyledPanel)
+        #self.r_container.setFrameShadow(QFrame.Raised)
 
         self.horizontalLayout_15.addWidget(self.r_container)
 

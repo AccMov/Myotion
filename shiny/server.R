@@ -16,7 +16,7 @@ library(shinyWidgets)
 #setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ## functions
-
+options(shiny.port = 7775)
 
 
 # read data

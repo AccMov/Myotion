@@ -5,7 +5,7 @@ import threading
 import time
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
-    QSize, QTimer, QUrl, Qt)
+    QSize, QTimer, QUrl, Qt, QEvent)
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
 # R server for statistic analysis
@@ -30,6 +30,7 @@ class RServerBrowser(QWebEngineView):
         super(RServerBrowser, self).__init__(parent)
 
         self.url = QUrl("http://127.0.0.1:7775")
+        self.parent = parent
 
         self.connected = False
         self.timer = QTimer()
@@ -42,6 +43,7 @@ class RServerBrowser(QWebEngineView):
         if ok:
             self.connected = True
             self.timer.stop()
+            self.parent.update()
             return
         
         print("html loaded failed, retry in 5 secs")
@@ -51,7 +53,12 @@ class RServerBrowser(QWebEngineView):
     def tryload(self):
         self.load(self.url)
 
-        
+    def event(self, ev):
+        #print(ev.type())
+        rc = super(RServerBrowser, self).event(ev)
+        self.parent.update()
+        return rc
+
 
 
 

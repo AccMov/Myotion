@@ -164,9 +164,6 @@ class MainWindow(QMainWindow):
         if event.buttons() == Qt.RightButton:
             print('Mouse click: RIGHT CLICK')
 
-        #currentWidget = widgets.stackedWidget.currentWidget() 
-        #QApplication.sendEvent(currentWidget, event)
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("icon.ico"))

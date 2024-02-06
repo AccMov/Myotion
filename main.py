@@ -17,6 +17,7 @@
 import sys
 import os
 import platform
+from RServer import RServer
 
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
@@ -31,6 +32,10 @@ widgets = None
 class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
+
+        # Launch R server
+        self.rserver = RServer()
+        self.rserver.start()
 
         # SET AS GLOBAL WIDGETS
         # ///////////////////////////////////////////////////////////////
@@ -87,6 +92,7 @@ class MainWindow(QMainWindow):
 
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
+        #self.showMaximized()
         self.show()
 
         # SET CUSTOM THEME
@@ -106,7 +112,6 @@ class MainWindow(QMainWindow):
         # ///////////////////////////////////////////////////////////////
         widgets.stackedWidget.setCurrentWidget(widgets.start_page)
         widgets.btn_start.setStyleSheet(UIFunctions.selectMenu(widgets.btn_start.styleSheet()))
-
 
     # BUTTONS CLICK
     # Post here your functions for clicked buttons
@@ -148,7 +153,7 @@ class MainWindow(QMainWindow):
         UIFunctions.resize_grips(self)
 
     # MOUSE CLICK EVENTS
-    # ///////////////////////////////////////////////////////////////
+    # //////////////////////////////////////////////////////////////
     def mousePressEvent(self, event):
         # SET DRAG POS WINDOW
         self.dragPos = event.globalPos()
@@ -163,4 +168,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("icon.ico"))
     window = MainWindow()
-    sys.exit(app.exec_())
+    app.exec_()
+    window.rserver.join()
+    sys.exit(0)

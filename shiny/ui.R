@@ -1,18 +1,9 @@
-library(R.matlab)
-library(stringr)
-library(ggplot2)
-library(plotly)
-library(DT)
-#library(bslib)
-library(shinydashboardPlus)
-library(ggthemes)
-library(shinycssloaders)
-library(shiny)
-library(shinydashboard)
-library(tidyverse)
-library(ggridges)
-library(shinyWidgets)
-library(fresh)
+pacs = c("R.matlab","stringr","ggplot2","plotly","shinycssloaders",
+          "ggthemes","shinydashboardPlus","DT","shiny","shinydashboard",
+          "tidyverse","flextable","fresh","rempsyc","ggridges","shinyWidgets")
+
+lapply(pacs, require, character.only = TRUE)
+
 
 groupA_names <- list.files("data/Group_A", pattern="*.mat", full.names=TRUE)
 groupA <- lapply(groupA_names, readMat)

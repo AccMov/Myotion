@@ -1,19 +1,9 @@
-library(R.matlab)
-library(stringr)
-library(ggplot2)
-library(plotly)
-library(shinycssloaders)
-library(ggthemes)
-library(shinydashboardPlus)
-library(DT)
-library(shiny)
-library(shinydashboard)
-library(tidyverse)
-library(fresh)
-#library(bslib)
-library(ggridges)
-library(shinyWidgets)
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+pacs = c("R.matlab","stringr","ggplot2","plotly","shinycssloaders",
+          "ggthemes","shinydashboardPlus","DT","shiny","shinydashboard",
+          "tidyverse","flextable","fresh","rempsyc","ggridges","shinyWidgets")
+
+lapply(pacs, require, character.only = TRUE)
+
 
 ## functions
 options(shiny.port = 7775)

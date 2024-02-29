@@ -3,9 +3,10 @@ import xml.etree.ElementTree as ET
 class person:
     def __init__(self, ):
         self.data = {
-            "first name": "",
-            "middle name": "",
-            "last name": "",
+            "name": "",
+            "first_name": "",
+            "middle_name": "",
+            "last_name": "",
             "dob": "",
             "gender": "",
             "height":"",
@@ -25,11 +26,6 @@ class person:
     def __missing__(self, key):
         return
     
-    def print(self):
-        print("Person:")
-        for x in self.data:
-            print("\t", x, ":", self.data[x])
-
     def toXML(self, xml):
         sub = ET.SubElement(xml, "Person")
         for key in self.data.keys():

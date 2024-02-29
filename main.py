@@ -17,7 +17,7 @@
 import sys
 import os
 import platform
-from RServer import RServer
+from rserver import RServer
 
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////

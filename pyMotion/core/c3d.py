@@ -96,7 +96,7 @@ class AnalogData:
         self.labels = labels
         self.fs = fs
         self.metadata = {
-            "label":      labels,
+            "labels":     labels,
             "fs":         fs
         }
         self.analog_data = {}

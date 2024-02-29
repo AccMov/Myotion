@@ -34,7 +34,7 @@ for key in p.labels:
 analog = a.analog
 print("total analog data:", analog.size())
 print("analog fs:", analog.fs)
-print("analog label:", analog.label)
+print("analog label:", analog.labels)
 
 #get data from from analog
 plt.plot(analog['UT.IM EMG1'])

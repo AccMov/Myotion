@@ -62,7 +62,8 @@ class matFile:
             "gender"  : info['sex'].tolist(),
             "date"    : info['measurement_date'].tolist(),
             "record_name"    : info['record_name'].tolist(),
-            "channel_number":    0
+            "channel_number":    0,
+            "labels":    [],
         }
 
         # ['type', 'name', 'time_begin', 'time_end', sources]
@@ -90,6 +91,7 @@ class matFile:
             "channels"      : movement_datas,
         }
 
+        self.metadata["labels"] = [m.name for m in self.movements["channels"]]
         self.metadata["channel_number"] = len(self.movements["channels"])
 
     def __getattr__(self, key):

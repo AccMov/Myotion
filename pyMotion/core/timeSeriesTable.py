@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.signal as sig
+import pandas as pd
 
 '''
 1. max/min/med/std/var/rms/peak-to-peak-distance
@@ -18,6 +19,7 @@ all returned vector remain same dimension
 '''
 
 class timeSeriesTable:
+    # expect input to be a matrix
     def __init__(self, fs, labels, input):
         self.data = {}
 
@@ -56,6 +58,15 @@ class timeSeriesTable:
 
     def size(self):
         return self.n
+    
+    def hasChannel(self, chan):
+        if chan in self.labels:
+            return True
+        else:
+            return False
+        
+    def toPandasFrame(self):
+        return pd.DataFrame(self.data)
 
     # method of one channel
     def max(self, key):
@@ -113,6 +124,7 @@ class timeSeriesTable:
     
     # threhold detection
     # https://github.com/BMClab/BMC/blob/master/notebooks/DetectOnset.ipynb
+    # slow impl
     def threholdDetection(self, key, threhold, n_above=10, n_below=10):
         if n_above < 0 or n_above >= self.n or n_below < 0 or n_below >= self.n:
             raise ValueError("sliding windows has to be a postive value and smaller then total points!")

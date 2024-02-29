@@ -22,8 +22,10 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
     QScrollArea, QScrollBar, QSizePolicy, QSlider,
     QSpacerItem, QStackedWidget, QTableWidget, QTableWidgetItem,
     QTextEdit, QVBoxLayout, QWidget)
-import resources_rc
-import Myotion_logo_rc
+from . resources_rc import *
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from rserver import RServerBrowser
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -1652,18 +1654,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_16.addWidget(self.frame_2)
 
         self.stackedWidget.addWidget(self.emg_page)
-        self.stats_page = QWidget()
+        self.stats_page = RServerBrowser(self.stackedWidget)
         self.stats_page.setObjectName(u"stats_page")
-        self.horizontalLayout_15 = QHBoxLayout(self.stats_page)
-        self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
-        self.horizontalLayout_15.setContentsMargins(0, 0, 0, 0)
-        self.r_container = QWebEngineView(self.stats_page)
-        self.r_container.setObjectName(u"r_container")
-        self.r_container.setStyleSheet(u"background-color:#f4f4f4;")
-        #self.r_container.setFrameShape(QFrame.StyledPanel)
-        #self.r_container.setFrameShadow(QFrame.Raised)
-
-        self.horizontalLayout_15.addWidget(self.r_container)
 
         self.stackedWidget.addWidget(self.stats_page)
         self.home = QWidget()

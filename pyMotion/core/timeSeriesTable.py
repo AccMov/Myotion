@@ -68,6 +68,9 @@ class timeSeriesTable:
     def toPandasFrame(self):
         return pd.DataFrame(self.data)
 
+    def getLinspace(self):
+        return np.linspace(0, self.ts, self.n)
+
     # method of one channel
     def max(self, key):
         return self.data[key].max()

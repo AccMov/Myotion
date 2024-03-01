@@ -32,4 +32,4 @@ class person:
             t = ET.SubElement(sub, key)
             t.text = self.data[key]
 
-    def fromXML(self, xml):
+    #def fromXML(self, xml):

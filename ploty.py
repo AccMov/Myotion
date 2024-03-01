@@ -36,14 +36,18 @@ class QPlotView(QWebEngineView):
                      markers = True)
         
     # line, plot by timeSeriesTable
-    def line(self, tst, x='', y='', title='', color=[]):
+    def line(self, tst, channel, title='', color=[]):
+        if not tst.hasChannel(channel):
+            logger.error("channel not exist")
+            return -1
         df = tst.toPandasFrame()
+        x = tst.getLinspace()
         self.fig = px.line(df,
-                     x = x,
-                     y = y,
-                     barmode="relative",
+                     x,
+                     y = channel,
                      title = title,
                      markers = True)
+        return 0
 
     # display on webEngine
     def show(self):
@@ -52,4 +56,5 @@ class QPlotView(QWebEngineView):
         html += '</body></ html>'
 
         self.setHtml(html)
+        self.update()
 

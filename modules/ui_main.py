@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
 from . resources_rc import *
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from rserver import RServerBrowser
+from ploty import *
 
 
 class Ui_MainWindow(object):
@@ -1674,20 +1675,16 @@ class Ui_MainWindow(object):
         self.horizontalLayout_19.addWidget(self.label_11)
 
         self.horizontalSpacer_6 = QSpacerItem(524, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
         self.horizontalLayout_19.addItem(self.horizontalSpacer_6)
-
         self.frame_11 = QFrame(self.frame_2)
         self.frame_11.setObjectName(u"frame_11")
         self.frame_11.setStyleSheet(u"border:none;")
         self.frame_11.setFrameShape(QFrame.StyledPanel)
         self.frame_11.setFrameShadow(QFrame.Raised)
-
         self.horizontalLayout_19.addWidget(self.frame_11)
 
-
         self.verticalLayout_40.addWidget(self.frame_2)
-
+        '''
         self.frame_3 = QFrame(self.data_process_graphic_top)
         self.frame_3.setObjectName(u"frame_3")
         sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -1699,7 +1696,16 @@ class Ui_MainWindow(object):
         self.frame_3.setFrameShadow(QFrame.Raised)
 
         self.verticalLayout_40.addWidget(self.frame_3)
+        '''
 
+        self.plot_input = QPlotView(self.emg_page) 
+
+        sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy12.setHorizontalStretch(0)
+        sizePolicy12.setVerticalStretch(9)
+        sizePolicy12.setHeightForWidth(self.plot_input.sizePolicy().hasHeightForWidth())
+        self.plot_input.setSizePolicy(sizePolicy12)
+        self.verticalLayout_40.addWidget(self.plot_input)
 
         self.verticalLayout_39.addWidget(self.data_process_graphic_top)
 

@@ -18,6 +18,7 @@ import sys
 import os
 import platform
 from rserver import RServer
+import pyMotion as pm
 
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
@@ -113,6 +114,14 @@ class MainWindow(QMainWindow):
         widgets.stackedWidget.setCurrentWidget(widgets.start_page)
         widgets.btn_start.setStyleSheet(UIFunctions.selectMenu(widgets.btn_start.styleSheet()))
 
+    def test(self):
+        #////// test
+        a = pm.c3dFile('/home/broxigarchen/projects/Myotion/ERRPT.c3d')
+        b = a.analog.convertToTST()
+
+        widgets.plot_input.line(b, 'Fx1')
+        widgets.plot_input.show()
+
     # BUTTONS CLICK
     # Post here your functions for clicked buttons
     # ///////////////////////////////////////////////////////////////
@@ -132,6 +141,7 @@ class MainWindow(QMainWindow):
             widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
+            self.test()
 
         # SHOW STATS PAGE
         if btnName == "btn_stats":

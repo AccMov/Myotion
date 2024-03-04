@@ -16,5 +16,6 @@
 > open Anaconda power shell
 > ```console
 > cd %PATH_OF_THIS_PROJECT%
+> conda activate accmov
 > python main.py
 > ```

@@ -26,11 +26,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
 from . resources_rc import *
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from rserver import RServerBrowser
-<<<<<<< Updated upstream
-from ploty import *
-=======
 from qplotview import *
->>>>>>> Stashed changes
 
 
 class Ui_MainWindow(object):
@@ -779,7 +775,6 @@ class Ui_MainWindow(object):
 
         self.appLayout.addWidget(self.leftMenuBg)
 
-        self.extraLeftBox = QFrame(self.bgApp)
         self.extraLeftBox = QFrame()
         self.extraLeftBox.setObjectName(u"extraLeftBox")
         self.extraLeftBox.setMinimumSize(QSize(0, 0))
@@ -1688,26 +1683,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_19.addWidget(self.frame_11)
 
         self.verticalLayout_40.addWidget(self.frame_2)
-        '''
-        self.frame_3 = QFrame(self.data_process_graphic_top)
-        self.frame_3.setObjectName(u"frame_3")
-        sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        sizePolicy12.setHorizontalStretch(0)
-        sizePolicy12.setVerticalStretch(9)
-        sizePolicy12.setHeightForWidth(self.frame_3.sizePolicy().hasHeightForWidth())
-        self.frame_3.setSizePolicy(sizePolicy12)
-        self.frame_3.setFrameShape(QFrame.StyledPanel)
-        self.frame_3.setFrameShadow(QFrame.Raised)
 
-        self.verticalLayout_40.addWidget(self.frame_3)
-        '''
-
-<<<<<<< Updated upstream
-        self.plot_input = QPlotView(self.emg_page) 
-
-=======
         self.plot_input = QPlotView() 
->>>>>>> Stashed changes
         sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         sizePolicy12.setHorizontalStretch(0)
         sizePolicy12.setVerticalStretch(9)
@@ -1762,16 +1739,7 @@ class Ui_MainWindow(object):
 
 
         self.verticalLayout_41.addWidget(self.frame_4)
-        '''
-        self.frame_5 = QFrame(self.data_process_graphic_bottom)
-        self.frame_5.setObjectName(u"frame_5")
-        sizePolicy12.setHeightForWidth(self.frame_5.sizePolicy().hasHeightForWidth())
-        self.frame_5.setSizePolicy(sizePolicy12)
-        self.frame_5.setFrameShape(QFrame.StyledPanel)
-        self.frame_5.setFrameShadow(QFrame.Raised)
-        
-        self.verticalLayout_41.addWidget(self.frame_5)
-        '''
+
         self.plot_output = QPlotView() 
         sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         sizePolicy12.setHorizontalStretch(0)

@@ -23,6 +23,9 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
     QSizePolicy, QSlider, QSpacerItem, QStackedWidget,
     QTableWidget, QTableWidgetItem, QTextEdit, QToolBox,
     QVBoxLayout, QWidget)
+
+from modules.kinematics.bodyrender import BodyRender
+from modules.kinematics.emgwidget import EMGWidget
 from . resources_rc import *
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from rserver import RServerBrowser
@@ -1600,6 +1603,19 @@ class Ui_MainWindow(object):
         self.horizontalLayout_7.addWidget(self.start_right)
 
         self.stackedWidget.addWidget(self.start_page)
+        
+        self.kinematic_page=QWidget()
+        self.kinematic_page.setObjectName(u"kinematic_page")
+        self.kinematicLayout = QGridLayout(self.kinematic_page)
+        self.kinematicWidget = BodyRender()
+        self.kinematicWidget.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding)
+        self.emgWidget=EMGWidget(self.kinematic_page)
+        self.kinematicLayout.addWidget(self.kinematicWidget,0,0,1,1)
+        self.kinematicLayout.addWidget(self.emgWidget,0,1,1,1)
+        
+        self.stackedWidget.addWidget(self.kinematic_page)
+        
+        
         self.emg_page = QWidget()
         self.emg_page.setObjectName(u"emg_page")
         self.horizontalLayout_16 = QHBoxLayout(self.emg_page)

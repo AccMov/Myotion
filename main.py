@@ -24,11 +24,12 @@ import pyMotion as pm
 # ///////////////////////////////////////////////////////////////
 from modules import *
 from widgets import *
-os.environ["QT_FONT_DPI"] = "96" # FIX Problem for High DPI and Scale above 100%
 
+os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100%
 # SET AS GLOBAL WIDGETS
 # ///////////////////////////////////////////////////////////////
 widgets = None
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -83,17 +84,19 @@ class MainWindow(QMainWindow):
         # EXTRA LEFT BOX
         def openCloseLeftBox():
             UIFunctions.toggleLeftBox(self, True)
+
         widgets.toggleLeftBox.clicked.connect(openCloseLeftBox)
         widgets.extraCloseColumnBtn.clicked.connect(openCloseLeftBox)
 
         # EXTRA RIGHT BOX
         def openCloseRightBox():
             UIFunctions.toggleRightBox(self, True)
+
         widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
 
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
-        #self.showMaximized()
+        # self.showMaximized()
         self.show()
 
         # SET CUSTOM THEME
@@ -112,14 +115,16 @@ class MainWindow(QMainWindow):
         # SET HOME PAGE AND SELECT MENU
         # ///////////////////////////////////////////////////////////////
         widgets.stackedWidget.setCurrentWidget(widgets.start_page)
-        widgets.btn_start.setStyleSheet(UIFunctions.selectMenu(widgets.btn_start.styleSheet()))
+        widgets.btn_start.setStyleSheet(
+            UIFunctions.selectMenu(widgets.btn_start.styleSheet())
+        )
 
     def test(self):
-        #////// test
-        a = pm.c3dFile('/home/broxigarchen/projects/Myotion/ERRPT.c3d')
+        # ////// test
+        a = pm.c3dFile("/home/broxigarchen/projects/Myotion/ERRPT.c3d")
         b = a.analog.convertToTST()
 
-        widgets.plot_input.line(b, 'Fx1')
+        widgets.plot_input.line(b, "Fx1")
         widgets.plot_input.show()
 
     # BUTTONS CLICK
@@ -145,16 +150,21 @@ class MainWindow(QMainWindow):
 
         # SHOW STATS PAGE
         if btnName == "btn_stats":
-            widgets.stackedWidget.setCurrentWidget(widgets.stats_page) # SET PAGE
-            UIFunctions.resetStyle(self, btnName) # RESET ANOTHERS BUTTONS SELECTED
-            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet())) # SELECT MENU
+            widgets.stackedWidget.setCurrentWidget(widgets.stats_page)  # SET PAGE
+            UIFunctions.resetStyle(self, btnName)  # RESET ANOTHERS BUTTONS SELECTED
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
+
+        if btnName == "btn_kinematic":
+            widgets.stackedWidget.setCurrentWidget(widgets.kinematic_page)  # SET PAGE
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
+            return
 
         if btnName == "btn_save":
             print("Save BTN clicked!")
 
         # PRINT BTN NAME
         print(f'Button "{btnName}" pressed!')
-
 
     # RESIZE EVENTS
     # ///////////////////////////////////////////////////////////////
@@ -170,14 +180,15 @@ class MainWindow(QMainWindow):
 
         # PRINT MOUSE EVENTS
         if event.buttons() == Qt.LeftButton:
-            print('Mouse click: LEFT CLICK')
+            print("Mouse click: LEFT CLICK")
         if event.buttons() == Qt.RightButton:
-            print('Mouse click: RIGHT CLICK')
+            print("Mouse click: RIGHT CLICK")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("icon.ico"))
     window = MainWindow()
-    app.exec_()
+    app.exec()
     window.rserver.join()
     sys.exit(0)

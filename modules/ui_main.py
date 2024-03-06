@@ -27,6 +27,9 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
 
 from modules.kinematics.bodyrender import BodyRender
 from modules.kinematics.emgwidget import EMGWidget
+
+from modules.kinematics.bodyrender import BodyRender
+from modules.kinematics.emgwidget import EMGWidget
 from . resources_rc import *
 from rserver import RServerBrowser
 from qplotview import *

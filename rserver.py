@@ -38,12 +38,13 @@ class RServerBrowser(QWebEngineView):
 
         self.loadFinished.connect(self.loadFinishedCB)
         self.tryload()
+        
 
     def loadFinishedCB(self, ok):
         if ok:
             self.connected = True
             self.timer.stop()
-            self.parent.update()
+            #self.parent.update()
             return
         
         print("html loaded failed, retry in 5 secs")
@@ -52,13 +53,4 @@ class RServerBrowser(QWebEngineView):
 
     def tryload(self):
         self.load(self.url)
-
-    def event(self, ev):
-        #print(ev.type())
-        rc = super(RServerBrowser, self).event(ev)
-        self.parent.update()
-        return rc
-
-
-
 

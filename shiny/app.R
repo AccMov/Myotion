@@ -1,5 +1,5 @@
 require(shiny)
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source('server.R', local = TRUE)
 source('ui.R', local = TRUE)
 

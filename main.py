@@ -130,7 +130,8 @@ class MainWindow(QMainWindow):
 
     def test(self):
         #////// test
-        a = pm.c3dFile('D:/Myotion/pyMotion/tests/Sample_data/Sample_data/c3d_emg/ERRPT.c3d')
+        f = os.getcwd() + '/ERRPT.c3d'
+        a = pm.c3dFile(f)
         b = a.analog.convertToTST()
         channel = 'Fx1'
 

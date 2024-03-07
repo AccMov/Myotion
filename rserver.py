@@ -17,8 +17,9 @@ class RServer(threading.Thread):
 
     def run(self):
         print("launching R server...")
-        os.chdir("shiny")
-        p = subprocess.Popen("Rscript app.R".split(),
+        shiny = os.getcwd() + '/shiny/app.R'
+        cmd = 'Rscript ' + shiny
+        p = subprocess.Popen(cmd.split(),
                              shell=False,
                              stdout=sys.stdout,
                              stderr=sys.stderr)

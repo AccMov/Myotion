@@ -4,13 +4,13 @@ from .mat import *
 from .xml import *
 from enum import Enum
 
-class emgFilter(Enum):
+class emgFilterEnum(Enum):
     LOW_PASS = 0
     BAND_PASS = 1
     MAX = 2
-
+class emgFilter():
     def __init__(self):
-        self.type = emgFilter.NA
+        self.type = emgFilterEnum.MAX
         self.cutoff_l = 0
         self.cutoff_h = 0
 
@@ -42,7 +42,7 @@ class emgFilter(Enum):
 
     def fromXML(self, xml_element):
         return
-    
+
 class emgActivation:
     def __init__(self):
         self.threhold = 0
@@ -68,24 +68,25 @@ class emgActivation:
     def fromXML(self, xml_element):
         return
 
-class emgConfigure(Enum):
-    # name of steps
-    FILTER = 0
-    FULL_W_RECT = 1
-    DC_OFFSET = 2
-    ACTIVATION = 3
-    NORMALIZATION = 4
-    SUMMARY = 5
-    MAX = 6
+class emgConfigure():
+    class emgConfigureEnum(Enum):
+        # name of steps
+        FILTER = 0
+        FULL_W_RECT = 1
+        DC_OFFSET = 2
+        ACTIVATION = 3
+        NORMALIZATION = 4
+        SUMMARY = 5
+        MAX = 6
 
     def __init__(self):
         # pre-loaded steps
         self.classical_steps = [
-            emgConfigure.DC_OFFSET,
-            emgConfigure.FULL_W_RECT,
-            emgConfigure.FILTER,
-            emgConfigure.NORMALIZATION,
-            emgConfigure.SUMMARY,
+            emgConfigureEnum.DC_OFFSET,
+            emgConfigureEnum.FULL_W_RECT,
+            emgConfigureEnum.FILTER,
+            emgConfigureEnum.NORMALIZATION,
+            emgConfigureEnum.SUMMARY,
         ]
 
         self.nameMap = {
@@ -298,7 +299,7 @@ class emg:
     def __getitem__(self, key):
         return self.data[key]
     def __setitem__(self, key, value):
-        if key is "trials":
+        if key == "trials":
             self.data[key] = value
     def __delitem__(self, key):
         return

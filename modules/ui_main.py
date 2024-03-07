@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
 from . resources_rc import *
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from rserver import RServerBrowser
+from qplotview import *
 
 
 class Ui_MainWindow(object):
@@ -772,10 +773,9 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_3.addWidget(self.leftMenuFrame)
 
-
         self.appLayout.addWidget(self.leftMenuBg)
 
-        self.extraLeftBox = QFrame(self.bgApp)
+        self.extraLeftBox = QFrame()
         self.extraLeftBox.setObjectName(u"extraLeftBox")
         self.extraLeftBox.setMinimumSize(QSize(0, 0))
         self.extraLeftBox.setMaximumSize(QSize(0, 16777215))
@@ -1674,32 +1674,23 @@ class Ui_MainWindow(object):
         self.horizontalLayout_19.addWidget(self.label_11)
 
         self.horizontalSpacer_6 = QSpacerItem(524, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-
         self.horizontalLayout_19.addItem(self.horizontalSpacer_6)
-
         self.frame_11 = QFrame(self.frame_2)
         self.frame_11.setObjectName(u"frame_11")
         self.frame_11.setStyleSheet(u"border:none;")
         self.frame_11.setFrameShape(QFrame.StyledPanel)
         self.frame_11.setFrameShadow(QFrame.Raised)
-
         self.horizontalLayout_19.addWidget(self.frame_11)
-
 
         self.verticalLayout_40.addWidget(self.frame_2)
 
-        self.frame_3 = QFrame(self.data_process_graphic_top)
-        self.frame_3.setObjectName(u"frame_3")
+        self.plot_input = QPlotView() 
         sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         sizePolicy12.setHorizontalStretch(0)
         sizePolicy12.setVerticalStretch(9)
-        sizePolicy12.setHeightForWidth(self.frame_3.sizePolicy().hasHeightForWidth())
-        self.frame_3.setSizePolicy(sizePolicy12)
-        self.frame_3.setFrameShape(QFrame.StyledPanel)
-        self.frame_3.setFrameShadow(QFrame.Raised)
-
-        self.verticalLayout_40.addWidget(self.frame_3)
-
+        sizePolicy12.setHeightForWidth(self.plot_input.sizePolicy().hasHeightForWidth())
+        self.plot_input.setSizePolicy(sizePolicy12)
+        self.verticalLayout_40.addWidget(self.plot_input)
 
         self.verticalLayout_39.addWidget(self.data_process_graphic_top)
 
@@ -1749,14 +1740,13 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_41.addWidget(self.frame_4)
 
-        self.frame_5 = QFrame(self.data_process_graphic_bottom)
-        self.frame_5.setObjectName(u"frame_5")
-        sizePolicy12.setHeightForWidth(self.frame_5.sizePolicy().hasHeightForWidth())
-        self.frame_5.setSizePolicy(sizePolicy12)
-        self.frame_5.setFrameShape(QFrame.StyledPanel)
-        self.frame_5.setFrameShadow(QFrame.Raised)
-
-        self.verticalLayout_41.addWidget(self.frame_5)
+        self.plot_output = QPlotView() 
+        sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy12.setHorizontalStretch(0)
+        sizePolicy12.setVerticalStretch(9)
+        sizePolicy12.setHeightForWidth(self.plot_output.sizePolicy().hasHeightForWidth())
+        self.plot_output.setSizePolicy(sizePolicy12)
+        self.verticalLayout_41.addWidget(self.plot_output)
 
 
         self.verticalLayout_39.addWidget(self.data_process_graphic_bottom)
@@ -2696,7 +2686,7 @@ class Ui_MainWindow(object):
 
         self.stackedWidget.addWidget(self.emg_page)
 
-        self.stats_page = RServerBrowser(self.stackedWidget)
+        self.stats_page = RServerBrowser()
         self.stats_page.setObjectName(u"stats_page")
         self.stackedWidget.addWidget(self.stats_page)
         self.home = QWidget()
@@ -3172,6 +3162,7 @@ class Ui_MainWindow(object):
         self.appMargins.addWidget(self.bgApp)
 
         MainWindow.setCentralWidget(self.styleSheet)
+        #MainWindow.setCentralWidget(self.bgApp)
 
         self.retranslateUi(MainWindow)
 

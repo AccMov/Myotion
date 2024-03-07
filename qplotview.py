@@ -1,5 +1,6 @@
 import plotly
 import plotly.express as px
+from plotly.subplots import make_subplots
 from plotly.graph_objects import Figure, Scatter
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
@@ -36,14 +37,24 @@ class QPlotView(QWebEngineView):
                      markers = True)
         
     # line, plot by timeSeriesTable
-    def line(self, tst, x='', y='', title='', color=[]):
+    def line(self, tst, channel, title='', color=[]):
+        chans = []
+        if type(channel) is not list:
+            chans = [channel]
+
+        for c in chans:    
+            if not tst.hasChannel(c):
+                print("channel not exist")
+                return -1
+        
         df = tst.toPandasFrame()
+        df['t'] = tst.getLinspace()
         self.fig = px.line(df,
-                     x = x,
-                     y = y,
-                     barmode="relative",
+                     x= 't',
+                     y = chans,
                      title = title,
-                     markers = True)
+                     markers = False)
+        return 0
 
     # display on webEngine
     def show(self):
@@ -52,4 +63,12 @@ class QPlotView(QWebEngineView):
         html += '</body></ html>'
 
         self.setHtml(html)
+        self.update()
 
+# QPlotViews with subplot which shared x_axis
+class QPlotViews(QWebEngineView):
+    def __init__(self, rows, cols, parent=None):
+        super(QPlotView, self).__init__(parent)
+
+        self.parent = parent
+        self.fig = None

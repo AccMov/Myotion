@@ -18,6 +18,7 @@ import sys
 import os
 import platform
 from rserver import RServer
+import pyMotion as pm
 
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
@@ -92,13 +93,13 @@ class MainWindow(QMainWindow):
 
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
-        #self.showMaximized()
-        self.show()
+        self.showMaximized()
+        #self.show()
 
         # SET CUSTOM THEME
         # ///////////////////////////////////////////////////////////////
         useCustomTheme = False
-        themeFile = "themes\py_dracula_light.qss"
+        themeFile = "D:/Myotion/themes/py_dracula_test.qss"
 
         # SET THEME AND HACKS
         if useCustomTheme:
@@ -112,6 +113,34 @@ class MainWindow(QMainWindow):
         # ///////////////////////////////////////////////////////////////
         widgets.stackedWidget.setCurrentWidget(widgets.start_page)
         widgets.btn_start.setStyleSheet(UIFunctions.selectMenu(widgets.btn_start.styleSheet()))
+
+        # APPLICATION LOGICS
+        self.workspace = None
+        self.path = None
+
+        class EMGState:
+            self.states = {
+                'idle': 0,
+                'single': 1,
+            }
+            def __init__(self):
+                self.state = 0
+
+        self.test()
+
+    def test(self):
+        #////// test
+        a = pm.c3dFile('D:/Myotion/pyMotion/tests/Sample_data/Sample_data/c3d_emg/ERRPT.c3d')
+        b = a.analog.convertToTST()
+        channel = 'Fx1'
+
+        widgets.plot_input.line(b, channel)
+        widgets.plot_input.show()
+
+        b[channel] = b.rectification(channel)
+
+        widgets.plot_output.line(b, channel)
+        widgets.plot_output.show()
 
     # BUTTONS CLICK
     # Post here your functions for clicked buttons
@@ -132,6 +161,7 @@ class MainWindow(QMainWindow):
             widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
+            self.test()
 
         # SHOW STATS PAGE
         if btnName == "btn_stats":
@@ -144,7 +174,6 @@ class MainWindow(QMainWindow):
 
         # PRINT BTN NAME
         print(f'Button "{btnName}" pressed!')
-
 
     # RESIZE EVENTS
     # ///////////////////////////////////////////////////////////////
@@ -164,10 +193,65 @@ class MainWindow(QMainWindow):
         if event.buttons() == Qt.RightButton:
             print('Mouse click: RIGHT CLICK')
 
+    # Application Logic
+    # ///////////////////////////////////////////////////////////////
+    def __checkValidPath__(self, fpath):
+        return True
+    
+    def newWorkSpace(self, fpath, name=''):
+        if self.workspace is not None:
+            self.saveWorkSpace()
+            self.workspace.clear()
+            self.updateParticipateTable()
+        
+        # create new project
+        self.workspace = pm.workspace(name)
+
+        if self.__checkValidPath__(fpath):
+            #error
+            return -1
+        
+        self.path = fpath
+        return 0
+    
+    def saveWorkSpace(self):
+        return
+    
+    
+    def addSingleEMGFile(self, fpath):
+        if self.__checkValidPath__(fpath):
+            #error
+            return -1
+        
+        # add sub window, blocking
+
+        self.updateParticipateTable()
+        return 0
+    
+    def startSingleEMGProcess(self, nameofperson):
+        if not self.workspace.hasPerson(nameofperson):
+            return -1
+        
+    def startBatchEMGProcess(self, listofpeople, nameofconfig):
+        for p in listofpeople:
+            if not self.workspace.hasPerson(p):
+                return -1
+        
+        if not self.workspace.hasConfigFile(nameofconfig):
+            return -1
+    
+    # update widget of participate table
+    def updateParticipateTable(self):
+        return
+    
+    # update waveform regarding to config step and user input metrics
+    def updateWaveFormTable(self, configName):
+        return
+    
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon("icon.ico"))
+    qApp = QApplication(sys.argv)
+    qApp.setWindowIcon(QIcon("icon.ico"))
     window = MainWindow()
-    app.exec_()
+    qApp.exec_()
     window.rserver.join()
     sys.exit(0)

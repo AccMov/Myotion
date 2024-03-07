@@ -185,7 +185,12 @@ class MainWindow(QMainWindow):
             print("Mouse click: RIGHT CLICK")
 
 
+from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
+
 if __name__ == "__main__":
+    # enorce pyside to use opengl for underlying graphics render. DO NOT REMOVE
+    QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
+    
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("icon.ico"))
     window = MainWindow()

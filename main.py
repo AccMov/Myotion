@@ -188,7 +188,7 @@ class MainWindow(QMainWindow):
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
 
 if __name__ == "__main__":
-    # enorce pyside to use opengl for underlying graphics render. DO NOT REMOVE
+    #DO NOT REMOVE enorce pyside to use opengl for underlying graphics render.
     QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
     
     app = QApplication(sys.argv)

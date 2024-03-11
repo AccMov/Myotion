@@ -60,7 +60,7 @@ class QPlotView(QWebEngineView):
     def show(self):
         html = '<html><body>'
         html += plotly.offline.plot(self.fig, output_type='div', include_plotlyjs='cdn')
-        html += '</body></ html>'
+        html += '</body></html>'
 
         self.setHtml(html)
         self.update()

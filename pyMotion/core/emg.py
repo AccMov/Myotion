@@ -3,6 +3,7 @@ from .c3d import *
 from .mat import *
 from .xml import *
 from enum import Enum
+import re
 
 class emgFilterEnum(Enum):
     LOW_PASS = 0
@@ -58,7 +59,6 @@ class emgActivation:
     def setCutOff_H(self, freq):
         self.cutoff_h = freq
 
-    # add nodes to xml tree
     def toXML(self, e):
         e.addNode('threhold', str(self.threhold))
         e.addNode('n_above', str(self.n_above))
@@ -185,7 +185,15 @@ class emgConfigure():
     def setConfig(self, index, config):
         self.stepConfig[index] = config
     
-    # save steps and config to xml
+    '''
+    <emgConfigure>
+        <remove_dc_offset/>
+        <filter> 
+           <type> </type>
+           ...
+        </filter>
+    </emgConfigure>
+    '''
     def toXML(self):
         # top tree
         e = xmlElement('emgConfigure')
@@ -210,6 +218,9 @@ class emg:
         # key = channels, val = mvc file path
         self.mvcFilesMap = {}
 
+        # filter of channel name, regex
+        self.channel_filter = '(emg|EMG)+'
+
     def isC3D(self, f):
         return f.endswith('.c3d')
     
@@ -229,6 +240,11 @@ class emg:
         self.emgMVCTST = timeSeriesTable()
         self.Channels.clear()
         self.mvcFilesMap.clear()
+
+
+    # filter for channel name, use regex
+    def setChannelFiler(self, filter):
+        self.channel_filter = filter
 
     # set EMG file path
     def setEMGFile(self, f):
@@ -256,6 +272,9 @@ class emg:
                 logger.error("unsupported file format")
         except:
             raise
+
+        # filter channel
+        self.emgTST.filterChannel(self.channel_filter)
 
     # set MVC file path
     def setMVCFile(self, channel, f):
@@ -296,6 +315,10 @@ class emg:
     def getChannels(self):
         return self.Channels
 
+    # filter channels
+    def getFilteredChannels(self):
+        return
+
     def __getitem__(self, key):
         return self.data[key]
     def __setitem__(self, key, value):
@@ -309,4 +332,10 @@ class emg:
     def writeFile(self, file):
         #write to file
         return 0
+        
+    # process data using configure file
+    def processWithConfigure(self, emgConfigure):
+        return
+
+
         

@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.signal as sig
 import pandas as pd
+import re
+from .xml import *
 
 '''
 1. max/min/med/std/var/rms/peak-to-peak-distance
@@ -39,6 +41,8 @@ class timeSeriesTable:
             "n" :  len(input[0]),
             "time" : len(input[0]) / fs
         }
+
+        self.iter = 0
     
     def __getitem__(self, key):
         return self.data[key]
@@ -47,7 +51,7 @@ class timeSeriesTable:
             self.__missing__(key)
         self.data[key] = value
     def __delitem__(self, key):
-        return
+        del self.data[key]
     def __missing__(self, key):
         self.labels.append(key)
         self.data[key] = np.array()
@@ -56,20 +60,57 @@ class timeSeriesTable:
         if key in self.metadata:
             return self.metadata[key]
 
+    # iterator
+    def __iter__(self):
+        self.iter = 0
+        return self
+    def __next__(self):
+        if self.iter < self.size():
+            return self.data[self.labels[self.iter]]
+        else:
+            raise StopIteration
+
     def size(self):
         return self.n
-    
+
+    # check if has channel
     def hasChannel(self, chan):
         if chan in self.labels:
             return True
         else:
             return False
         
+    # convert to pandas
     def toPandasFrame(self):
         return pd.DataFrame(self.data)
 
+    # get time step in linspace format
     def getLinspace(self):
         return np.linspace(0, self.ts, self.n)
+
+    # search channels in regex
+    def searchChannel(self, regex):
+        to_be_ret = []
+        for c in self.labels:
+            if re.search(regex, c) is not None:
+                to_be_ret.append(c)
+
+        return to_be_ret
+
+    # filter out channels not in regex
+    def filterChannel(self, regex):
+        to_be_del = []
+        for c in self.labels:
+            if re.search(regex, c) is None:
+                to_be_del.append(c)
+
+        new_labels = []
+        for c in self.labels:
+            if c in to_be_del:
+                del self.data[c]
+            else:
+                new_labels.append(c)
+        self.labels = new_labels
 
     # method of one channel
     def max(self, key):
@@ -86,7 +127,7 @@ class timeSeriesTable:
         return np.var(self.data[key])
     def rms(self, key):
         return np.sqrt(np.mean(self.data[key]**2))
-    def ptp(self, key):   #peak to peak
+    def ptp(self, key):
         return np.ptp(self.data[key])
     
     # digital butterWorth filter
@@ -117,7 +158,7 @@ class timeSeriesTable:
 
     # rectification
     def rectification(self, key):
-        return np.absolute(self.removeDC(key))
+        return np.absolute(self.data[key])
 
     # normalization
     def normalization(self, key, val):
@@ -194,3 +235,28 @@ class timeSeriesTable:
     def writeFile(self, file):
         #write to file
         return 0
+
+    '''
+    <timeSeriesTable>
+        <channels_num></channels_num>
+        <channels_name> </channels_name>
+        <fs> </fs>
+        <N> </N>
+        <channels>
+            <A>  </A>
+            ...
+        </channels>
+    </timeSeriesTable>
+    '''
+    def toXML(self):
+        e = xmlElement('timeSeriesTable')
+        e.addNode('channels_num', str(len(self.labels)))
+        e.addNode('channels_name', ' '.join(self.labels))
+        e.addNode('fs', str(self.fs))
+        e.addNode('N', str(self.n))
+
+        c = xmlElement('channels')
+        e.addSubTree(c)
+        for k in self.labels:
+            c.addNode(k, ' '.join(format(x, '.6f') for x in self.data[k]))
+        return e

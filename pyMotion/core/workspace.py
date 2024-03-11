@@ -39,8 +39,6 @@ class workspace:
         self.emgList[person.name] = None
         self.reportList[person.name] = None
         return 0
-    
-    
 
     def setEMGFile(self, name, f):
         if not self.ifPersonExist(name):
@@ -58,5 +56,5 @@ class workspace:
     def hasConfigFile(self, name):
         return False
 
-    def generateReport(self, person):
+    def genReport(self, person):
         return

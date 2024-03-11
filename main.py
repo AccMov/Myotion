@@ -19,6 +19,16 @@ import os
 import platform
 from rserver import RServer
 import pyMotion as pm
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTimer, QUrl, Qt, QEvent)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
+    QPushButton, QSizePolicy, QStatusBar, QToolBar,
+    QWidget, QFileDialog)
 
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
@@ -91,6 +101,9 @@ class MainWindow(QMainWindow):
             UIFunctions.toggleRightBox(self, True)
         widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
 
+        # EMG Page
+        widgets.pushButton_10.clicked.connect(self.loadEMGPressEvent)
+
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
         self.showMaximized()
@@ -116,7 +129,7 @@ class MainWindow(QMainWindow):
 
         # APPLICATION LOGICS
         self.workspace = None
-        self.path = None
+        self.home = None
 
         class EMGState:
             self.states = {
@@ -129,6 +142,8 @@ class MainWindow(QMainWindow):
         self.test()
 
     def test(self):
+        self.newWorkSpace('D:/Myotion/test', 'testProject')
+
         #////// test
         f = os.getcwd() + '/ERRPT.c3d'
         a = pm.c3dFile(f)
@@ -194,6 +209,11 @@ class MainWindow(QMainWindow):
         if event.buttons() == Qt.RightButton:
             print('Mouse click: RIGHT CLICK')
 
+    def loadEMGPressEvent(self, event):
+        file = QFileDialog.getOpenFileName(None, 'open EMG file', self.home, "EMG Files (*.c3d *.mat)")
+        print(file)
+        return
+
     # Application Logic
     # ///////////////////////////////////////////////////////////////
     def __checkValidPath__(self, fpath):
@@ -243,6 +263,7 @@ class MainWindow(QMainWindow):
     
     # update widget of participate table
     def updateParticipateTable(self):
+        
         return
     
     # update waveform regarding to config step and user input metrics

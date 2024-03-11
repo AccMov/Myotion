@@ -30,7 +30,7 @@ def createXML(path):
     addNode(element, 'apple')
     addNode(element, 'grape')
     node = addNode(element, 'orange', { 'ppp':'1' })
-    node.text = 'aaa'
+    node.text = 'aaa bbb'
     addSubTree(element)
     tree._setroot(element)
     tree.write(path) 

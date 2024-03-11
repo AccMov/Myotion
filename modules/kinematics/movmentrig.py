@@ -113,6 +113,7 @@ class MovementRig(Object3D):
         rotateAmount = self.degreesPerSecond * 3.1415926 / 180.0 * deltaTime
 
         if inputObejct.isKeyPressed(self.KEY_MOVE_FORWARDS):
+            print("update with ", self.KEY_MOVE_FORWARDS)
             self.translate(0, 0, -moveAmount)
         if inputObejct.isKeyPressed(self.KEY_MOVE_BACKWARDS):
             self.translate(0, 0, moveAmount)

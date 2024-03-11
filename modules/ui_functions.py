@@ -244,7 +244,7 @@ class UIFunctions(MainWindow):
             self.bottom_grip = CustomGrip(self, Qt.BottomEdge, True)
 
         else:
-            self.ui.appMargins.setContentsMargins(0, 0, 0, 0)
+            #self.ui.appMargins.setContentsMargins(0, 0, 0, 0)
             self.ui.minimizeAppBtn.hide()
             self.ui.maximizeRestoreAppBtn.hide()
             self.ui.closeAppBtn.hide()

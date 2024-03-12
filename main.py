@@ -115,7 +115,9 @@ class MainWindow(QMainWindow):
         # SET HOME PAGE AND SELECT MENU
         # ///////////////////////////////////////////////////////////////
         widgets.stackedWidget.setCurrentWidget(widgets.start_page)
-        widgets.btn_start.setStyleSheet(UIFunctions.selectMenu(widgets.btn_start.styleSheet()))
+        widgets.btn_start.setStyleSheet(
+            UIFunctions.selectMenu(widgets.btn_start.styleSheet())
+        )
 
         # APPLICATION LOGICS
         self.workspace = None
@@ -201,7 +203,7 @@ class MainWindow(QMainWindow):
         if event.buttons() == Qt.LeftButton:
             print("Mouse click: LEFT CLICK")
         if event.buttons() == Qt.RightButton:
-            print('Mouse click: RIGHT CLICK')
+            print("Mouse click: RIGHT CLICK")
 
     # Application Logic
     # ///////////////////////////////////////////////////////////////
@@ -259,6 +261,9 @@ class MainWindow(QMainWindow):
         return
     
 if __name__ == "__main__":
+    from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
+    #DO NOT REMOVE enorce pyside to use opengl for underlying graphics render.
+    QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
     qApp = QApplication(sys.argv)
     qApp.setWindowIcon(QIcon("icon.ico"))
     window = MainWindow()

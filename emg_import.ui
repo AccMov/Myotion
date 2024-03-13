@@ -22,7 +22,7 @@
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
        <horstretch>0</horstretch>
-       <verstretch>1</verstretch>
+       <verstretch>2</verstretch>
       </sizepolicy>
      </property>
      <property name="styleSheet">
@@ -34,7 +34,7 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <layout class="QVBoxLayout" name="verticalLayout_3">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -51,14 +51,17 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QFrame" name="name">
+       <widget class="QFrame" name="input">
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
         </property>
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout">
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="spacing">
+          <number>0</number>
+         </property>
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -72,39 +75,97 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="label">
-           <property name="styleSheet">
-            <string notr="true">font-weight:bold;
+          <widget class="QFrame" name="name">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label">
+              <property name="styleSheet">
+               <string notr="true">font-weight:bold;
 color:#f4f4f4;</string>
-           </property>
-           <property name="text">
-            <string>Participant Name:</string>
-           </property>
+              </property>
+              <property name="text">
+               <string>Participant Name:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="lineEdit_3">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>8</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>180</width>
+                <height>32</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">background-color: #21242b;
+</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="placeholderText">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit_3">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>8</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
            </property>
-           <property name="minimumSize">
+           <property name="sizeHint" stdset="0">
             <size>
-             <width>180</width>
-             <height>32</height>
+             <width>213</width>
+             <height>20</height>
             </size>
            </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="import_btn">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
            <property name="styleSheet">
-            <string notr="true">background-color: #21242b;
-</string>
+            <string notr="true">color:#f4f4f4;
+background-color: #333b46;
+padding:8px 8px;
+marging:2px 2px;
+border-radius:8px;</string>
            </property>
            <property name="text">
-            <string/>
+            <string>Import File</string>
            </property>
-           <property name="placeholderText">
-            <string/>
+           <property name="icon">
+            <iconset>
+             <normaloff>images/icons/cil-file.png</normaloff>images/icons/cil-file.png</iconset>
            </property>
           </widget>
          </item>
@@ -112,37 +173,64 @@ color:#f4f4f4;</string>
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+       <widget class="QFrame" name="path">
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>213</width>
-          <height>20</height>
-         </size>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
         </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QPushButton" name="import_btn">
-        <property name="cursor">
-         <cursorShape>PointingHandCursor</cursorShape>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">color:#f4f4f4;
-background-color: #333b46;
-padding:8px 8px;
-marging:2px 2px;
-border-radius:8px;</string>
-        </property>
-        <property name="text">
-         <string>Import File</string>
-        </property>
-        <property name="icon">
-         <iconset>
-          <normaloff>images/icons/cil-file.png</normaloff>images/icons/cil-file.png</iconset>
-        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="styleSheet">
+            <string notr="true">font-weight: 1;
+font-size:11px;
+color:#f4f4f4;</string>
+           </property>
+           <property name="text">
+            <string>EMG File:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="styleSheet">
+            <string notr="true">font-weight: 1;
+font-size:11px;
+color:#f4f4f4;</string>
+           </property>
+           <property name="text">
+            <string>[File Path]</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>499</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>
@@ -153,7 +241,7 @@ border-radius:8px;</string>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
        <horstretch>0</horstretch>
-       <verstretch>6</verstretch>
+       <verstretch>8</verstretch>
       </sizepolicy>
      </property>
      <property name="styleSheet">
@@ -184,6 +272,10 @@ border:none;</string>
       </property>
       <item>
        <widget class="QFrame" name="frame_2">
+        <property name="styleSheet">
+         <string notr="true">background-color: #cccccc;
+padding:2px 0px;</string>
+        </property>
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
         </property>
@@ -191,9 +283,6 @@ border:none;</string>
          <enum>QFrame::Raised</enum>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_5">
-         <property name="spacing">
-          <number>0</number>
-         </property>
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -207,9 +296,17 @@ border:none;</string>
           <number>0</number>
          </property>
          <item>
-          <widget class="QCheckBox" name="checkBox">
+          <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>Select All</string>
+            <string>Filter:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="lineEdit">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgba(255,255,255,1);
+margin:2px 2px;</string>
            </property>
           </widget>
          </item>
@@ -220,7 +317,7 @@ border:none;</string>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
-             <width>531</width>
+             <width>268</width>
              <height>20</height>
             </size>
            </property>
@@ -279,12 +376,12 @@ border:none;</string>
         </row>
         <column>
          <property name="text">
-          <string>Selected</string>
+          <string>Channels</string>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>Channels</string>
+          <string>Muscle Name</string>
          </property>
         </column>
         <column>

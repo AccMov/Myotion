@@ -2210,7 +2210,7 @@ padding:6px 0px;</string>
                       <string notr="true">background: transparent;</string>
                      </property>
                      <property name="currentIndex">
-                      <number>2</number>
+                      <number>1</number>
                      </property>
                      <widget class="QWidget" name="start_page">
                       <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -3580,8 +3580,8 @@ font-weight:bold;</string>
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>144</width>
-                                     <height>244</height>
+                                     <width>190</width>
+                                     <height>286</height>
                                     </rect>
                                    </property>
                                    <attribute name="label">
@@ -3667,8 +3667,8 @@ margin-left:1px;</string>
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>144</width>
-                                     <height>55</height>
+                                     <width>190</width>
+                                     <height>286</height>
                                     </rect>
                                    </property>
                                    <attribute name="label">
@@ -3739,8 +3739,8 @@ font-size:12px;</string>
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>137</width>
-                                     <height>285</height>
+                                     <width>190</width>
+                                     <height>286</height>
                                     </rect>
                                    </property>
                                    <property name="styleSheet">
@@ -4251,8 +4251,8 @@ font-size:12px;</string>
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>144</width>
-                                     <height>55</height>
+                                     <width>190</width>
+                                     <height>286</height>
                                     </rect>
                                    </property>
                                    <attribute name="label">
@@ -4323,8 +4323,8 @@ font-size:12px;</string>
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>100</width>
-                                     <height>195</height>
+                                     <width>190</width>
+                                     <height>286</height>
                                     </rect>
                                    </property>
                                    <attribute name="label">
@@ -5577,7 +5577,7 @@ color:rgba(0,0,0,0.5);
                                      <property name="minimumSize">
                                       <size>
                                        <width>0</width>
-                                       <height>30</height>
+                                       <height>40</height>
                                       </size>
                                      </property>
                                      <property name="styleSheet">

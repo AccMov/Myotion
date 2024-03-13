@@ -853,6 +853,19 @@ class Ui_MainWindow(object):
         self.verticalLayout_11.setSpacing(0)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
+
+        self.btn_new = QPushButton(self.extraTopMenu)
+        self.btn_new.setObjectName(u"btn_new")
+        sizePolicy.setHeightForWidth(self.btn_new.sizePolicy().hasHeightForWidth())
+        self.btn_new.setSizePolicy(sizePolicy)
+        self.btn_new.setMinimumSize(QSize(0, 45))
+        self.btn_new.setFont(font)
+        self.btn_new.setCursor(QCursor(Qt.PointingHandCursor))
+        self.btn_new.setLayoutDirection(Qt.LeftToRight)
+        self.btn_new.setStyleSheet(u"background-image: url(:/icons/images/icons/cil-share-boxed.png);")
+
+        self.verticalLayout_11.addWidget(self.btn_new)
+
         self.btn_share = QPushButton(self.extraTopMenu)
         self.btn_share.setObjectName(u"btn_share")
         sizePolicy.setHeightForWidth(self.btn_share.sizePolicy().hasHeightForWidth())
@@ -2810,8 +2823,8 @@ class Ui_MainWindow(object):
         self.tableWidget_2.setHorizontalHeaderItem(2, __qtablewidgetitem2)
         __qtablewidgetitem3 = QTableWidgetItem()
         self.tableWidget_2.setHorizontalHeaderItem(3, __qtablewidgetitem3)
-        if (self.tableWidget_2.rowCount() < 16):
-            self.tableWidget_2.setRowCount(16)
+        #if (self.tableWidget_2.rowCount() < 16):
+        #    self.tableWidget_2.setRowCount(16)
         font5 = QFont()
         font5.setFamilies([u"Segoe UI"])
         __qtablewidgetitem4 = QTableWidgetItem()
@@ -3694,6 +3707,7 @@ class Ui_MainWindow(object):
         self.extraCloseColumnBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Close left box", None))
 #endif // QT_CONFIG(tooltip)
         self.extraCloseColumnBtn.setText("")
+        self.btn_new.setText(QCoreApplication.translate("MainWindow", u"New Workspace", None))
         self.btn_share.setText(QCoreApplication.translate("MainWindow", u"Save Workspace", None))
         self.btn_adjustments.setText(QCoreApplication.translate("MainWindow", u"Load Workspace", None))
         self.label_38.setText(QCoreApplication.translate("MainWindow", u"Participant List", None))
@@ -3821,6 +3835,7 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindow", u"Data Valid", None));
         ___qtablewidgetitem3 = self.tableWidget_2.horizontalHeaderItem(3)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("MainWindow", u"Report", None));
+        '''
         ___qtablewidgetitem4 = self.tableWidget_2.verticalHeaderItem(0)
         ___qtablewidgetitem4.setText(QCoreApplication.translate("MainWindow", u"New Row", None));
         ___qtablewidgetitem5 = self.tableWidget_2.verticalHeaderItem(1)
@@ -3853,7 +3868,6 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem18.setText(QCoreApplication.translate("MainWindow", u"New Row", None));
         ___qtablewidgetitem19 = self.tableWidget_2.verticalHeaderItem(15)
         ___qtablewidgetitem19.setText(QCoreApplication.translate("MainWindow", u"New Row", None));
-
         __sortingEnabled1 = self.tableWidget_2.isSortingEnabled()
         self.tableWidget_2.setSortingEnabled(False)
         ___qtablewidgetitem20 = self.tableWidget_2.item(0, 1)
@@ -3863,7 +3877,7 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem22 = self.tableWidget_2.item(0, 3)
         ___qtablewidgetitem22.setText(QCoreApplication.translate("MainWindow", u"Yes", None));
         self.tableWidget_2.setSortingEnabled(__sortingEnabled1)
-
+        '''
         self.label_21.setText(QCoreApplication.translate("MainWindow", u"Configuration File", None))
         self.pushButton_15.setText("")
         self.labelBoxBlenderInstalation.setText(QCoreApplication.translate("MainWindow", u"FILE BOX", None))

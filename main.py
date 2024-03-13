@@ -19,6 +19,7 @@ import os
 import platform
 from rserver import RServer
 import pyMotion as pm
+from  pathlib import Path
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTimer, QUrl, Qt, QEvent)
@@ -27,8 +28,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
-    QPushButton, QSizePolicy, QStatusBar, QToolBar,
-    QWidget, QFileDialog)
+    QPushButton, QSizePolicy, QStatusBar, QToolBar, QMessageBox,
+    QWidget, QFileDialog, QTableWidgetItem)
 
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
@@ -101,8 +102,11 @@ class MainWindow(QMainWindow):
             UIFunctions.toggleRightBox(self, True)
         widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
 
+        # Project
+        widgets.btn_new.clicked.connect(self.newProjectButtonClick)
+
         # EMG Page
-        widgets.pushButton_10.clicked.connect(self.loadEMGPressEvent)
+        widgets.pushButton_10.clicked.connect(self.addEMGButtonClick)
 
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
@@ -128,24 +132,28 @@ class MainWindow(QMainWindow):
         widgets.btn_start.setStyleSheet(UIFunctions.selectMenu(widgets.btn_start.styleSheet()))
 
         # APPLICATION LOGICS
-        self.workspace = None
-        self.home = None
-
-        class EMGState:
-            self.states = {
-                'idle': 0,
-                'single': 1,
-            }
-            def __init__(self):
-                self.state = 0
+        self.workspace = None                # workspace (participant list, emg list, reports, configure file list and etc.)
+        self.home = None                     # current project path
+        self.participants = []              # particpate list
+        self.singleEMG = (None, None)        # Participant, Steps
+        self.batchEMG = (None, None)         # Participant list, configure file
 
         self.test()
 
     def test(self):
         self.newWorkSpace('D:/Myotion/test', 'testProject')
 
-        #////// test
+        # add people
+        p1 = pm.person("Guo Chen", "1995/08/05", 'male')
+        self.participants.append(p1)
+
         f = os.getcwd() + '/ERRPT.c3d'
+        # add data
+        self.workspace.addparticipant(p1, f)
+
+        self.updateparticipantBox()
+
+        #////// test
         a = pm.c3dFile(f)
         b = a.analog.convertToTST()
         channel = 'Fx1'
@@ -209,30 +217,58 @@ class MainWindow(QMainWindow):
         if event.buttons() == Qt.RightButton:
             print('Mouse click: RIGHT CLICK')
 
-    def loadEMGPressEvent(self, event):
+    def addEMGButtonClick(self):
+        # create person
+
+        # load EMG file
         file = QFileDialog.getOpenFileName(None, 'open EMG file', self.home, "EMG Files (*.c3d *.mat)")
-        print(file)
+        
+        # add to list
+        #self.participants.insert()
+
+        # update UI
         return
+
+    def newProjectButtonClick(self):
+        dir = QFileDialog.getExistingDirectory(None, 'New Project', self.home, 
+                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        
+        if not self.__checkValidPath__(dir):
+            QMessageBox.critical(None, 'error', 'Selected path does not exist!', QMessageBox.Ok)
+
+        p = Path(dir)
+        if self.newWorkSpace(p.parent, p.name):
+            QMessageBox.critical(None, 'error', 'Failed to create new Workspace!', QMessageBox.Ok)
+        
+        print('workspace path: {}'.format(self.home))
+        print('workspace name: {}'.format(self.workspace.name))
+
+    # UPDATE UI EVENTS
+    # //////////////////////////////////////////////////////////////
+    def updateparticipantBox(self):
+        # emg panel
+        n = len(self.participants)
+        widgets.tableWidget_2.setRowCount(n)
+        for i in range(0, n):
+            q = QTableWidgetItem(self.participants[i].name)
+            q.setTextAlignment(Qt.AlignLeading|Qt.AlignVCenter)
+            widgets.tableWidget_2.setItem(i, 1, q)
 
     # Application Logic
     # ///////////////////////////////////////////////////////////////
     def __checkValidPath__(self, fpath):
-        return True
+        return os.path.exists(fpath)
     
     def newWorkSpace(self, fpath, name=''):
         if self.workspace is not None:
             self.saveWorkSpace()
             self.workspace.clear()
-            self.updateParticipateTable()
+            self.updateparticipantTable()
         
         # create new project
         self.workspace = pm.workspace(name)
-
-        if self.__checkValidPath__(fpath):
-            #error
-            return -1
         
-        self.path = fpath
+        self.home = fpath
         return 0
     
     def saveWorkSpace(self):
@@ -246,7 +282,7 @@ class MainWindow(QMainWindow):
         
         # add sub window, blocking
 
-        self.updateParticipateTable()
+        self.updateparticipantTable()
         return 0
     
     def startSingleEMGProcess(self, nameofperson):
@@ -261,8 +297,8 @@ class MainWindow(QMainWindow):
         if not self.workspace.hasConfigFile(nameofconfig):
             return -1
     
-    # update widget of participate table
-    def updateParticipateTable(self):
+    # update widget of participant table
+    def updateparticipantTable(self):
         
         return
     

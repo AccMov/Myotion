@@ -1,7 +1,16 @@
-import xml.etree.ElementTree as ET
+from .xml import *
 
 class person:
-    def __init__(self, ):
+    def __init__(self,
+                 name, 
+                 dob,
+                 gender,
+                 height='',
+                 weight='',
+                 first_name='', 
+                 middle_name='', 
+                 last_name='',
+                 ):
         self.data = {
             "name": "",
             "first_name": "",
@@ -27,9 +36,8 @@ class person:
         return
     
     def toXML(self, xml):
-        sub = ET.SubElement(xml, "Person")
+        e = xmlElement('Person')
         for key in self.data.keys():
-            t = ET.SubElement(sub, key)
-            t.text = self.data[key]
+            e.addNode(key, str(self.data[key]))        
 
     #def fromXML(self, xml):

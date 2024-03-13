@@ -16,9 +16,9 @@ class emgFilter():
         self.cutoff_h = 0
 
         self.nameMap = {
-            self.LOW_PASS: 'low pass filter',
-            self.BAND_PASS: 'band pass filter',
-            self.MAX: 'N/A',
+            emgFilterEnum.LOW_PASS: 'low pass filter',
+            emgFilterEnum.BAND_PASS: 'band pass filter',
+            emgFilterEnum.MAX: 'N/A',
         }
 
     def setType(self, t):
@@ -67,18 +67,17 @@ class emgActivation:
 
     def fromXML(self, xml_element):
         return
-
+    
+class emgConfigureEnum(Enum):
+    # name of steps
+    FILTER = 0
+    FULL_W_RECT = 1
+    DC_OFFSET = 2
+    ACTIVATION = 3
+    NORMALIZATION = 4
+    SUMMARY = 5
+    MAX = 6
 class emgConfigure():
-    class emgConfigureEnum(Enum):
-        # name of steps
-        FILTER = 0
-        FULL_W_RECT = 1
-        DC_OFFSET = 2
-        ACTIVATION = 3
-        NORMALIZATION = 4
-        SUMMARY = 5
-        MAX = 6
-
     def __init__(self):
         # pre-loaded steps
         self.classical_steps = [
@@ -90,12 +89,12 @@ class emgConfigure():
         ]
 
         self.nameMap = {
-            self.DC_OFFSET: 'remove_dc_offset',
-            self.FULL_W_RECT: 'full_wave_rectification',
-            self.FILTER: 'filter',
-            self.NORMALIZATION: 'normalization',
-            self.ACTIVATION: 'activation',
-            self.SUMMARY: 'summary',
+            emgConfigureEnum.DC_OFFSET: 'remove_dc_offset',
+            emgConfigureEnum.FULL_W_RECT: 'full_wave_rectification',
+            emgConfigureEnum.FILTER: 'filter',
+            emgConfigureEnum.NORMALIZATION: 'normalization',
+            emgConfigureEnum.ACTIVATION: 'activation',
+            emgConfigureEnum.SUMMARY: 'summary',
         }
 
         # current running step at 0
@@ -175,9 +174,9 @@ class emgConfigure():
     
     # create a config for one step
     def initConfig(self, type):
-        if type == emgConfigure.FILTER.value:
+        if type == emgConfigureEnum.FILTER:
             return emgFilter()
-        elif type == emgConfigure.ACTIVATION.value:
+        elif type == emgConfigureEnum.ACTIVATION:
             return emgActivation()
         else:
             return None
@@ -209,10 +208,11 @@ class emgConfigure():
         return
 
 class emg:
-    def __init__(self):
-        self.emgFile = ""
-        self.emgTST = timeSeriesTable()
-        self.emgMVCTST = timeSeriesTable()
+    def __init__(self, file=''):
+        self.emgFile = file                #file path
+        self.emgTST = None                 #emg data
+        self.emgMVCTST = None              #emg MVC data
+        self.config = emgConfigure()       #emg data process configure
         self.Channels = []
         # key:val pair
         # key = channels, val = mvc file path
@@ -221,30 +221,41 @@ class emg:
         # filter of channel name, regex
         self.channel_filter = '(emg|EMG)+'
 
+        if len(file):
+            self.setEMGFile(file)
+
     def isC3D(self, f):
         return f.endswith('.c3d')
     
     def isMAT(self, f):
         return f.endswith('.mat')
     
-    def isMVCValid(self):
-        # check if MVC TST has all channels
+    # check if MVC TST has all channels in place
+    def isMVCComplete(self):
         for c in self.Channels:
             if not self.emgMVCTST.hasChannel(c):
                 return False
         return True
     
+    # remove old data
     def clear(self):
-        # remove old data
-        self.emgTST = timeSeriesTable()
-        self.emgMVCTST = timeSeriesTable()
+        self.emgTST = None
+        self.emgMVCTST = None
         self.Channels.clear()
         self.mvcFilesMap.clear()
+        
+    # return channels
+    def getChannels(self):
+        return self.Channels
 
+    # filter channels
+    def searchChannels(self, filter):
+        return self.emgTST.searchChannel(filter)
 
     # filter for channel name, use regex
-    def setChannelFiler(self, filter):
+    def applyChannelFiler(self, filter):
         self.channel_filter = filter
+        self.emgTST.filterChannel(self.channel_filter)
 
     # set EMG file path
     def setEMGFile(self, f):
@@ -310,14 +321,6 @@ class emg:
         
         self.emgMVCTST[channel] = MVCTST[channel]
         self.mvcFilesMap[channel] = f
-    
-    # return channels
-    def getChannels(self):
-        return self.Channels
-
-    # filter channels
-    def getFilteredChannels(self):
-        return
 
     def __getitem__(self, key):
         return self.data[key]
@@ -328,11 +331,19 @@ class emg:
         return
     def __missing__(self, key):
         return
+    
+    def toXML(self):
+        # top tree
+        root = xmlElement('emg')
+        root.addSubTree(self.emgTST.toXML())
+        root.addSubTree(self.emgMVCTST.toXML())
+        root.addSubTree(self.config.toXML())
+        return root
 
     def writeFile(self, file):
         #write to file
         return 0
-        
+
     # process data using configure file
     def processWithConfigure(self, emgConfigure):
         return

@@ -101,7 +101,6 @@ print("{}'s ptp: {}".format(label_A, b.ptp(label_A)))
 print("{}'s zeros: {}".format(label_A, b.countZeros(label_A)))
 print("{} and {}'s co-contration: {}".format(label_A, label_B, b.cocontraction(label_A, label_B)))
 
-
 # change to xml
 xmlWriter('b_test.xml',b.toXML()).write()
 

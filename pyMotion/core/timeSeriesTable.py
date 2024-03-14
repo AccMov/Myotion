@@ -21,41 +21,53 @@ all returned vector remain same dimension
 '''
 
 class timeSeriesTable:
-    # expect input to be a matrix
-    def __init__(self, fs, labels, input):
+    '''
+    expect input to be a len(labels) x N matrix
+    input can be None, but fs and labels must be defined
+    '''
+    def __init__(self, fs, labels, input=None):
         self.data = {}
 
-        if(len(labels) != len(input)):
-            raise ValueError("labels and input must have same dimension")
-
-        if(len(input) == 0):
-            raise ValueError("input must have at least one channel")
+        if len(labels) == 0:
+            raise ValueError("at least one label required!")
 
         for i in range(0, len(labels)):
-            self.data[labels[i]] = np.array(input[i])
+            if input is None:
+                self.data[labels[i]] = np.array([])
+            else:
+                self.data[labels[i]] = np.array(input[i])
 
         self.metadata = {
             "fs" : fs,
             "ts" : 1.0/fs,
             "labels":  labels,
-            "n" :  len(input[0]),
-            "time" : len(input[0]) / fs
+            "n" :  len(self.data[labels[0]]),
+            "time" : len(self.data[labels[0]]) / fs
         }
 
         self.iter = 0
     
+    # accessor of object
     def __getitem__(self, key):
         return self.data[key]
     def __setitem__(self, key, value):
+        # check dimension
+        if self.n != 0 and len(value) != self.n:
+            raise ValueError("all rows need to have same dimension!")    
         if key not in self.labels:
             self.__missing__(key)
+            # update time if first row added
+            if self.n == 0:
+                self.time = len(value) / self.fs
         self.data[key] = value
     def __delitem__(self, key):
+        if key not in self.labels:
+            return
         del self.data[key]
+        self.labels.remove(key)
     def __missing__(self, key):
         self.labels.append(key)
-        self.data[key] = np.array()
-
+        self.data[key] = np.array([])
     def __getattr__(self, key):
         if key in self.metadata:
             return self.metadata[key]
@@ -72,6 +84,15 @@ class timeSeriesTable:
 
     def size(self):
         return self.n
+    
+    def clear(self):
+        for i in range(0, len(self.labels)):
+            self.data[self.labels[i]] = np.array([])
+        self.n = 0
+        self.time = 0
+
+    def rename(self, old, new):
+        self.data[new] = self.data.pop(old)
 
     # check if has channel
     def hasChannel(self, chan):

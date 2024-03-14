@@ -19,7 +19,9 @@ import os
 import platform
 from rserver import RServer
 import pyMotion as pm
+from pyMotion import logger
 from  pathlib import Path
+import re
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTimer, QUrl, Qt, QEvent)
@@ -28,8 +30,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
-    QPushButton, QSizePolicy, QStatusBar, QToolBar, QMessageBox,
-    QWidget, QFileDialog, QTableWidgetItem)
+    QPushButton, QSizePolicy, QStatusBar, QToolBar, QMessageBox, QDialog,
+    QWidget, QFileDialog, QTableWidgetItem, QComboBox, QLineEdit, QCompleter)
 
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
@@ -40,6 +42,203 @@ os.environ["QT_FONT_DPI"] = "96" # FIX Problem for High DPI and Scale above 100%
 # SET AS GLOBAL WIDGETS
 # ///////////////////////////////////////////////////////////////
 widgets = None
+
+# Global Constant
+# ///////////////////////////////////////////////////////////////
+joint_name = [
+['UT', 'MT', 'LT', 'AD', 'MD', 'PD', 'PM', 'LD', 'BB', 
+'TB', 'BRD', 'ECRL', 'ECRB', 'ECU', 'ED', 'EDM', 'EI', 
+ 'FCR', 'PL', 'FCU', 'FDS', 'FDP', 'FPL', 'SSP', 'ISP', 
+'SSC', 'TM', 'RA', 'EO', 'IO', 'TA', 'ES', 'GM', 'Gme', 
+'BF', 'ST', 'SM', 'VL', 'VM', 'VI', 'RF', 'TA', 'GM', 'GL', 'SOL'],
+
+['Trapezius (upper)', 'Trapezius (middle)', 'Trapezius (lower)', 'Deltoid (anterior)', 
+ 'Deltoid (middle)', 'Deltoid (posterior)', 'Pectoralis Major', 'Latissimus Dorsi', 
+ 'Biceps Brachii', 'Triceps Brachii', 'Brachioradialis', 'Extensor Carpi Radialis Longus', 
+ 'Extensor Carpi Radialis Brevis', 'Extensor Carpi Ulnaris', 'Extensor Digitorum', 
+ 'Extensor Digiti Minimi', 'Extensor Indicis', 'Flexor Carpi Radialis', 'Palmaris Longus',
+ 'Flexor Carpi Ulnaris', 'Flexor Digitorum Superficialis', 'Flexor Digitorum Profundus', 
+ 'Flexor Pollicis Longus', 'Supraspinatus', 'Infraspinatus', 'Subscapularis', 'Teres Major', 
+ 'Rectus Abdominis', 'External Oblique', 'Internal Oblique', 'Transversus Abdominis', 'Erector Spinae',
+ 'Gluteus Maximus', 'Gluteus Medius', 'Biceps Femoris', 'Semitendinosus', 'Semimembranosus', 
+ 'Vastus Lateralis', 'Vastus Medialis', 'Vastus Intermedius', 'Rectus Femoris', 'Tibialis Anterior',
+ 'Gastrocnemius (medial head)', 'Gastrocnemius (lateral head)', 'Soleus']]
+
+def checkValidPath(fpath):
+    return os.path.exists(fpath)
+
+class EMGAddWindow(QDialog):
+    def __init__(self, root, width, height, parent=None):
+        QDialog.__init__(self, parent)
+        self.ui = Ui_Form()
+        self.ui.setupUi(self)
+
+        self.resize(width, height)
+        self.setWindowTitle('Add EMG File')
+
+        self.widgets = self.ui
+        self.root = root
+        self.emg = None
+        self.person = None
+        self.channels = []
+        self.mvcfiles = {}
+        self.formalizedName = {}
+
+        self.widgets.import_btn.clicked.connect(self.importEMGBtnClicked)
+        self.widgets.lineEdit.textChanged.connect(self.updateFilterText)
+        self.widgets.import_btn_2.clicked.connect(self.confirmBtnClicked)
+        self.widgets.import_btn_3.clicked.connect(self.cancelBtnClicked)
+
+    def run(self):
+        self.exec()
+        return self.person, self.emg
+    
+    # update emg and mvc qtablewidget
+    def updateChannelBox(self):
+        self.widgets.tableWidget.clearContents()
+        # column width
+        w = self.frameGeometry().width()
+        # fixed ratio
+        self.widgets.tableWidget.setColumnWidth(1, w * 0.1)
+        self.widgets.tableWidget.setColumnWidth(2, w * 0.4)
+        self.widgets.tableWidget.setColumnWidth(3, w * 0.1)
+
+        n = len(self.channels)
+        self.widgets.tableWidget.setRowCount(n)
+        for i in range(0, n):
+            chan = self.channels[i]
+            q = QTableWidgetItem(chan)
+            q.setTextAlignment(Qt.AlignLeading|Qt.AlignVCenter)
+            q.setFlags(q.flags() ^ Qt.ItemIsEditable)
+            self.widgets.tableWidget.setItem(i, 0, q)
+            # drop down selection
+            self.widgets.tableWidget.setCellWidget(i, 1, self.jointComboBox(chan))
+            # mvc file path
+            p = ""
+            if chan in self.mvcfiles:
+                p = self.mvcfiles[chan]
+            self.widgets.tableWidget.setCellWidget(i, 2, self.mvcFileDisplay(p))
+            # buttons for mvc file
+            self.widgets.tableWidget.setCellWidget(i, 3, self.mvcFileButton(chan))
+
+        self.widgets.tableWidget.resizeColumnToContents(0)
+    
+    def jointComboBox(self, chan):
+        comboBox = QComboBox()
+        comboBox.setObjectName(chan)
+        comboBox.addItems(joint_name[0])
+        comboBox.currentIndexChanged.connect(self.jointBoxChanged)
+        return comboBox
+    
+    def mvcFileButton(self, chan):
+        btn = QPushButton()
+        btn.setText('select file')
+        btn.setObjectName(chan)
+        btn.setStyleSheet(u"color:#f4f4f4;\n"
+        "background-color: #333b46;\n"
+        "padding:8px 8px;\n"
+        "border-radius:8px;")
+        btn.clicked.connect(self.importMVCBtnClicked)
+        return btn
+
+    def mvcFileDisplay(self, str):
+        line = QLineEdit()
+        line.setReadOnly(True)
+        line.setText(str)
+        return line
+
+    # SIGNALS AND SLOT
+    ################################################
+    def jointBoxChanged(self, index):
+        jointbox = self.sender()
+        chan = jointbox.objectName()
+        self.formalizedName[chan] = joint_name[0][index]
+
+    def updateFilterText(self):
+        filter_str = self.widgets.lineEdit.text()
+        if filter_str == "":
+            filter_str = '.*'
+        
+        # check valid regex string
+        try:
+            re.compile(filter_str)
+        except re.error:
+            print('regex not valid')
+            return
+            
+        self.channels = self.emg.searchChannels(filter_str)
+        self.updateChannelBox()
+
+    def importEMGBtnClicked(self):
+        # load EMG file
+        file, extension = QFileDialog.getOpenFileName(None, caption = 'open EMG file', dir = self.root, filter = "EMG Files (*.c3d *.mat)")
+
+        if not checkValidPath(file):
+            return
+        
+        # open up emg file
+        try:
+            self.emg = pm.emg(file)
+        except Exception:
+            QMessageBox.critical(None, 'error', 'Selected emg file is invalid!', QMessageBox.Ok)
+            return
+        
+        # get channels and update list
+        self.channels = self.emg.getChannels()
+
+        self.widgets.label_3.setText(file)
+        self.updateChannelBox()
+
+    def importMVCBtnClicked(self):
+        btn = self.sender()
+        chan = btn.objectName()
+        file, extension = QFileDialog.getOpenFileName(None, caption = 'open MVC file', dir = self.root, filter = "EMG Files (*.c3d *.mat)")
+
+        if not checkValidPath(file):
+            return
+        try:
+            self.emg.setMVCFile(chan, file) 
+        except Exception:
+            QMessageBox.critical(None, 'error', 'Selected mvc file is invalid!', QMessageBox.Ok)
+            return
+        self.mvcfiles[chan] = file
+        self.updateChannelBox()
+
+    def sanity(self):
+        if self.emg is None:
+            QMessageBox.critical(None, 'error', 'No EMG file selected!', QMessageBox.Ok)
+            return False
+        if not self.emg.isMVCComplete():
+            QMessageBox.critical(None, 'error', 'MVC file not complete!', QMessageBox.Ok)
+            return False
+        names = set()
+        for old, new in self.formalizedName:
+            if new in names:
+                QMessageBox.critical(None, 'error', 'Duplicated joint name found, please assign each channel to joints properly!', QMessageBox.Ok)
+                return False
+            names.add(new)
+        return True
+        
+    def confirmBtnClicked(self):
+        #if not self.sanity():
+        #    return
+        
+        # creat person
+        name = self.widgets.lineEdit_3.text()
+        self.person = pm.person(name, 'N/A', 'N/A')
+        # filter and rename channels
+        old = self.emg.getChannels()
+        for c in old:
+            if c not in self.channels:
+                self.emg.removeChannel(c)
+        for old, new in self.formalizedName:
+            self.emg.renameChannel(old, new)
+        self.close()
+    
+    def cancelBtnClicked(self):
+        self.person = None
+        self.emg = None
+        self.close()
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -134,11 +333,11 @@ class MainWindow(QMainWindow):
         # APPLICATION LOGICS
         self.workspace = None                # workspace (participant list, emg list, reports, configure file list and etc.)
         self.home = None                     # current project path
-        self.participants = []              # particpate list
+        self.participants = {}               # particpate list, person:emg
         self.singleEMG = (None, None)        # Participant, Steps
         self.batchEMG = (None, None)         # Participant list, configure file
 
-        self.test()
+        #self.test()
 
     def test(self):
         self.newWorkSpace('D:/Myotion/test', 'testProject')
@@ -185,7 +384,6 @@ class MainWindow(QMainWindow):
             widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
-            self.test()
 
         # SHOW STATS PAGE
         if btnName == "btn_stats":
@@ -219,46 +417,44 @@ class MainWindow(QMainWindow):
 
     def addEMGButtonClick(self):
         # create person
-
-        # load EMG file
-        file = QFileDialog.getOpenFileName(None, 'open EMG file', self.home, "EMG Files (*.c3d *.mat)")
-        
+        p, emgdata = EMGAddWindow(self.home, 1200, 800).run()
+        logger.info('added participate {}'.format(p.name))
         # add to list
-        #self.participants.insert()
+        self.participants[p] = emgdata
 
         # update UI
-        return
+        self.updateparticipantBox()
 
     def newProjectButtonClick(self):
         dir = QFileDialog.getExistingDirectory(None, 'New Project', self.home, 
                     QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
         
-        if not self.__checkValidPath__(dir):
+        if not checkValidPath(dir):
             QMessageBox.critical(None, 'error', 'Selected path does not exist!', QMessageBox.Ok)
 
         p = Path(dir)
-        if self.newWorkSpace(p.parent, p.name):
+        if self.newWorkSpace(p, p.name):
             QMessageBox.critical(None, 'error', 'Failed to create new Workspace!', QMessageBox.Ok)
         
-        print('workspace path: {}'.format(self.home))
-        print('workspace name: {}'.format(self.workspace.name))
+        logger.info('workspace path: {}'.format(self.home))
+        logger.info('workspace name: {}'.format(self.workspace.name))
 
     # UPDATE UI EVENTS
     # //////////////////////////////////////////////////////////////
     def updateparticipantBox(self):
         # emg panel
         n = len(self.participants)
+        print(n)
         widgets.tableWidget_2.setRowCount(n)
-        for i in range(0, n):
-            q = QTableWidgetItem(self.participants[i].name)
+        i = 0
+        for p, emg in self.participants.items():
+            q = QTableWidgetItem(p.name)
             q.setTextAlignment(Qt.AlignLeading|Qt.AlignVCenter)
             widgets.tableWidget_2.setItem(i, 1, q)
+            i = i + 1
 
     # Application Logic
     # ///////////////////////////////////////////////////////////////
-    def __checkValidPath__(self, fpath):
-        return os.path.exists(fpath)
-    
     def newWorkSpace(self, fpath, name=''):
         if self.workspace is not None:
             self.saveWorkSpace()
@@ -268,7 +464,7 @@ class MainWindow(QMainWindow):
         # create new project
         self.workspace = pm.workspace(name)
         
-        self.home = fpath
+        self.home = str(fpath)
         return 0
     
     def saveWorkSpace(self):
@@ -276,7 +472,7 @@ class MainWindow(QMainWindow):
     
     
     def addSingleEMGFile(self, fpath):
-        if self.__checkValidPath__(fpath):
+        if checkValidPath(fpath):
             #error
             return -1
         

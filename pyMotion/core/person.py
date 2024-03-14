@@ -12,14 +12,14 @@ class person:
                  last_name='',
                  ):
         self.data = {
-            "name": "",
-            "first_name": "",
-            "middle_name": "",
-            "last_name": "",
-            "dob": "",
-            "gender": "",
-            "height":"",
-            "weight":"",
+            "name": name,
+            "first_name": first_name,
+            "middle_name": middle_name,
+            "last_name": last_name,
+            "dob": dob,
+            "gender": gender,
+            "height": str(height),
+            "weight": str(weight),
         }
     
     def __getattr__(self, key):

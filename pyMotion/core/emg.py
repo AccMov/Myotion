@@ -3,6 +3,7 @@ from .c3d import *
 from .mat import *
 from .xml import *
 from enum import Enum
+from .logger import *
 import re
 
 class emgFilterEnum(Enum):
@@ -248,7 +249,7 @@ class emg:
     def getChannels(self):
         return self.Channels
 
-    # filter channels
+    # search channels
     def searchChannels(self, filter):
         return self.emgTST.searchChannel(filter)
 
@@ -256,6 +257,19 @@ class emg:
     def applyChannelFiler(self, filter):
         self.channel_filter = filter
         self.emgTST.filterChannel(self.channel_filter)
+        self.emgMVCTST.filterChannel(self.channel_filter)
+
+    def removeChannel(self, channel):
+        del self.emgTST[channel]
+        del self.emgMVCTST[channel]
+
+    def removeChannels(self, channels):
+        for c in channels:
+            self.removeChannel(c)
+
+    def renameChannel(self, old, new):
+        self.emgTST.rename(old, new)
+        self.emgMVCTST.rename(old, new)
 
     # set EMG file path
     def setEMGFile(self, f):
@@ -275,28 +289,32 @@ class emg:
 
             elif self.isMAT(f):
                 mat = matFile(f)
-                self.Channels = mat.analog.labels
-
+                self.Channels = mat.labels
                 #load TST
                 self.emgTST = mat.convertToTST()
             else:
                 logger.error("unsupported file format")
         except:
-            raise
-
-        # filter channel
-        self.emgTST.filterChannel(self.channel_filter)
+            raise Exception(logger.errstr)
+        
+        # sanities
+        assert self.Channels != None, "channels not extracted"
+        assert self.emgTST != None, "emg cannot be convert to TimeSeriesTable"
+        
+        # update MVC TST
+        self.emgMVCTST = timeSeriesTable(self.emgTST.fs, self.emgTST.labels)
 
     # set MVC file path
     def setMVCFile(self, channel, f):
         if len(self.Channels) == 0:
             logger.error("channels is empty!")
-            return -1
+            raise Exception(logger.errstr)
 
         if channel not in self.Channels:
             logger.error("channel {} does not exists!".format(channel))
-            return -1
+            raise Exception(logger.errstr)
         
+        MVCTST = None
         # open file and load TST
         try:
             if self.isC3D(f):
@@ -311,13 +329,15 @@ class emg:
 
             else:
                 logger.error("unsupported file format")
+                raise Exception(logger.errstr)
         except:
-            raise
-
+            logger.error("cannot open mvc file")
+            raise Exception(logger.errstr)
+        
         # check if targetted channel exists in f
         if channel not in MVCChannels:
             logger.error("Targetted channel not found in file")
-            return -1
+            raise Exception(logger.errstr)
         
         self.emgMVCTST[channel] = MVCTST[channel]
         self.mvcFilesMap[channel] = f

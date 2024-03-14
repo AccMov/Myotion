@@ -17,9 +17,6 @@
 import sys
 import os
 import platform
-from rserver import RServer
-import pyMotion as pm
-from pyMotion import logger
 from  pathlib import Path
 import re
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
@@ -31,7 +28,14 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
     QPushButton, QSizePolicy, QStatusBar, QToolBar, QMessageBox, QDialog,
-    QWidget, QFileDialog, QTableWidgetItem, QComboBox, QLineEdit, QCompleter)
+    QWidget, QFileDialog, QTableWidgetItem, QComboBox, QLineEdit, QCompleter,
+    QCheckBox)
+
+from rserver import RServer
+import pyMotion as pm
+from pyMotion import logger
+from miscWidgets import *
+from path import *
 
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
@@ -46,26 +50,45 @@ widgets = None
 # Global Constant
 # ///////////////////////////////////////////////////////////////
 joint_name = [
-['UT', 'MT', 'LT', 'AD', 'MD', 'PD', 'PM', 'LD', 'BB', 
-'TB', 'BRD', 'ECRL', 'ECRB', 'ECU', 'ED', 'EDM', 'EI', 
- 'FCR', 'PL', 'FCU', 'FDS', 'FDP', 'FPL', 'SSP', 'ISP', 
-'SSC', 'TM', 'RA', 'EO', 'IO', 'TA', 'ES', 'GM', 'Gme', 
-'BF', 'ST', 'SM', 'VL', 'VM', 'VI', 'RF', 'TA', 'GM', 'GL', 'SOL'],
+["UT-L", "UT-R", "MT-L", "MT-R", "LT-L", "LT-R", "AD-L", "AD-R", "MD-L", 
+"MD-R", "PD-L", "PD-R", "PM-L", "PM-R", "LD-L", "LD-R", "BB-L", "BB-R", 
+"TB-L", "TB-R", "BRD-L", "BRD-R", "ECRL-L", "ECRL-R", "ECRB-L", "ECRB-R", 
+"ECU-L", "ECU-R", "ED-L", "ED-R", "EDM-L", "EDM-R", "EI-L", "EI-R", "FCR-L", 
+"FCR-R", "PL-L", "PL-R", "FCU-L", "FCU-R", "FDS-L", "FDS-R", "FDP-L", "FDP-R", 
+"FPL-L", "FPL-R", "SSP-L", "SSP-R", "ISP-L", "ISP-R", "SSC-L", "SSC-R", "TM-L",
+"TM-R", "RA-L", "RA-R", "EO-L", "EO-R", "IO-L", "IO-R", "TA-L", "TA-R", "ES-L", 
+"ES-R", "GM-L", "GM-R", "Gme-L", "Gme-R", "BF-L", "BF-R", "ST-L", "ST-R", 
+"SM-L", "SM-R", "VL-L", "VL-R", "VM-L", "VM-R", "VI-L", "VI-R", "RF-L", 
+"RF-R", "TA-L", "TA-R", "GM-L", "GM-R", "GL-L", "GL-R", "SOL-L", "SOL-R"],
 
-['Trapezius (upper)', 'Trapezius (middle)', 'Trapezius (lower)', 'Deltoid (anterior)', 
- 'Deltoid (middle)', 'Deltoid (posterior)', 'Pectoralis Major', 'Latissimus Dorsi', 
- 'Biceps Brachii', 'Triceps Brachii', 'Brachioradialis', 'Extensor Carpi Radialis Longus', 
- 'Extensor Carpi Radialis Brevis', 'Extensor Carpi Ulnaris', 'Extensor Digitorum', 
- 'Extensor Digiti Minimi', 'Extensor Indicis', 'Flexor Carpi Radialis', 'Palmaris Longus',
- 'Flexor Carpi Ulnaris', 'Flexor Digitorum Superficialis', 'Flexor Digitorum Profundus', 
- 'Flexor Pollicis Longus', 'Supraspinatus', 'Infraspinatus', 'Subscapularis', 'Teres Major', 
- 'Rectus Abdominis', 'External Oblique', 'Internal Oblique', 'Transversus Abdominis', 'Erector Spinae',
- 'Gluteus Maximus', 'Gluteus Medius', 'Biceps Femoris', 'Semitendinosus', 'Semimembranosus', 
- 'Vastus Lateralis', 'Vastus Medialis', 'Vastus Intermedius', 'Rectus Femoris', 'Tibialis Anterior',
- 'Gastrocnemius (medial head)', 'Gastrocnemius (lateral head)', 'Soleus']]
+["Trapezius (upper)-L", "Trapezius (upper)-R", "Trapezius (middle)-L", 
+    "Trapezius (middle)-R", "Trapezius (lower)-L", "Trapezius (lower)-R",
+    "Deltoid (anterior)-L", "Deltoid (anterior)-R", "Deltoid (middle)-L",
+    "Deltoid (middle)-R", "Deltoid (posterior)-L", "Deltoid (posterior)-R", 
+    "Pectoralis Major-L", "Pectoralis Major-R", "Latissimus Dorsi-L",
+    "Latissimus Dorsi-R", "Biceps Brachii-L", "Biceps Brachii-R", "Triceps Brachii-L",
+    "Triceps Brachii-R", "Brachioradialis-L", "Brachioradialis-R", 
+    "Extensor Carpi Radialis Longus-L", "Extensor Carpi Radialis Longus-R",
+    "Extensor Carpi Radialis Brevis-L", "Extensor Carpi Radialis Brevis-R", 
+    "Extensor Carpi Ulnaris-L", "Extensor Carpi Ulnaris-R", "Extensor Digitorum-L",
+    "Extensor Digitorum-R", "Extensor Digiti Minimi-L", "Extensor Digiti Minimi-R",
+    "Extensor Indicis-L", "Extensor Indicis-R", "Flexor Carpi Radialis-L",
+    "Flexor Carpi Radialis-R", "Palmaris Longus-L", "Palmaris Longus-R",
+    "Flexor Carpi Ulnaris-L", "Flexor Carpi Ulnaris-R", "Flexor Digitorum Superficialis-L",
+    "Flexor Digitorum Superficialis-R", "Flexor Digitorum Profundus-L",
+    "Flexor Digitorum Profundus-R", "Flexor Pollicis Longus-L", "Flexor Pollicis Longus-R",
+    "Supraspinatus-L", "Supraspinatus-R", "Infraspinatus-L", "Infraspinatus-R", 
+    "Subscapularis-L", "Subscapularis-R", "Teres Major-L", "Teres Major-R",
+    "Rectus Abdominis-L", "Rectus Abdominis-R", "External Oblique-L", "External Oblique-R",
+    "Internal Oblique-L", "Internal Oblique-R", "Transversus Abdominis-L", 
+    "Transversus Abdominis-R", "Erector Spinae-L", "Erector Spinae-R", "Gluteus Maximus-L",
+    "Gluteus Maximus-R", "Gluteus Medius-L", "Gluteus Medius-R", "Biceps Femoris-L", 
+    "Biceps Femoris-R", "Semitendinosus-L", "Semitendinosus-R", "Semimembranosus-L", 
+    "Semimembranosus-R", "Vastus Lateralis-L", "Vastus Lateralis-R", "Vastus Medialis-L",
+    "Vastus Medialis-R", "Vastus Intermedius-L", "Vastus Intermedius-R", "Rectus Femoris-L",
+    "Rectus Femoris-R", "Tibialis Anterior-L", "Tibialis Anterior-R", "Gastrocnemius (medial head)-L",
+    "Gastrocnemius (medial head)-R", "Gastrocnemius (lateral head)-L", "Gastrocnemius (lateral head)-R", "Soleus-L", "Soleus-R"]]
 
-def checkValidPath(fpath):
-    return os.path.exists(fpath)
 
 class EMGAddWindow(QDialog):
     def __init__(self, root, width, height, parent=None):
@@ -99,7 +122,7 @@ class EMGAddWindow(QDialog):
         # column width
         w = self.frameGeometry().width()
         # fixed ratio
-        self.widgets.tableWidget.setColumnWidth(1, w * 0.1)
+        self.widgets.tableWidget.setColumnWidth(1, w * 0.3)
         self.widgets.tableWidget.setColumnWidth(2, w * 0.4)
         self.widgets.tableWidget.setColumnWidth(3, w * 0.1)
 
@@ -126,7 +149,7 @@ class EMGAddWindow(QDialog):
     def jointComboBox(self, chan):
         comboBox = QComboBox()
         comboBox.setObjectName(chan)
-        comboBox.addItems(joint_name[0])
+        comboBox.addItems(joint_name[1])
         comboBox.currentIndexChanged.connect(self.jointBoxChanged)
         return comboBox
     
@@ -231,7 +254,7 @@ class EMGAddWindow(QDialog):
         for c in old:
             if c not in self.channels:
                 self.emg.removeChannel(c)
-        for old, new in self.formalizedName:
+        for old, new in self.formalizedName.items():
             self.emg.renameChannel(old, new)
         self.close()
     
@@ -333,26 +356,30 @@ class MainWindow(QMainWindow):
         # APPLICATION LOGICS
         self.workspace = None                # workspace (participant list, emg list, reports, configure file list and etc.)
         self.home = None                     # current project path
-        self.participants = {}               # particpate list, person:emg
+        self.participants = []               # particpate list, person
+        self.selectedParticipants = []       # selected participants
         self.singleEMG = (None, None)        # Participant, Steps
         self.batchEMG = (None, None)         # Participant list, configure file
 
-        #self.test()
+        self.test()
 
     def test(self):
-        self.newWorkSpace('D:/Myotion/test', 'testProject')
+        self.newWorkSpace(MyotionPath, 'test')
+        f = os.getcwd() + '/ERRPT.c3d'
+        emg = pm.emg(f)
 
         # add people
         p1 = pm.person("Guo Chen", "1995/08/05", 'male')
         self.participants.append(p1)
 
-        f = os.getcwd() + '/ERRPT.c3d'
         # add data
-        self.workspace.addparticipant(p1, f)
+        self.workspace.addParticipant(p1, emg)
 
-        self.updateparticipantBox()
+        self.updateEMGParticipantBox()
+        self.updateWorkSpaceParticipantBox()
 
         #////// test
+        '''
         a = pm.c3dFile(f)
         b = a.analog.convertToTST()
         channel = 'Fx1'
@@ -364,6 +391,7 @@ class MainWindow(QMainWindow):
 
         widgets.plot_output.line(b, channel)
         widgets.plot_output.show()
+        '''
 
     # BUTTONS CLICK
     # Post here your functions for clicked buttons
@@ -420,10 +448,14 @@ class MainWindow(QMainWindow):
         p, emgdata = EMGAddWindow(self.home, 1200, 800).run()
         logger.info('added participate {}'.format(p.name))
         # add to list
-        self.participants[p] = emgdata
+        self.participants.append(p)
+
+        # add to workspace
+        self.workspace.addParticipant(p, emgdata)
 
         # update UI
-        self.updateparticipantBox()
+        self.updateEMGParticipantBox()
+        self.updateWorkSpaceParticipantBox()
 
     def newProjectButtonClick(self):
         dir = QFileDialog.getExistingDirectory(None, 'New Project', self.home, 
@@ -439,19 +471,66 @@ class MainWindow(QMainWindow):
         logger.info('workspace path: {}'.format(self.home))
         logger.info('workspace name: {}'.format(self.workspace.name))
 
+    def singleEMGButtonClick(self):
+        return
+
+    def participantCheckBoxChanged(self, state):
+        sender = self.sender()
+        p = sender.objectName()
+
+        if state:
+            self.selectedParticipants.append(p)
+        else:
+            self.selectedParticipants.remove(p)
+
+    # WIDGET
+    # //////////////////////////////////////////////////////////////
+    def createParticipantCheckBox(self, name):
+        checkbox = QCheckBox()
+        checkbox.setObjectName(name)
+        checkbox.stateChanged.connect(self.participantCheckBoxChanged)
+        return checkbox
+
+    def createHBox(self, w, parent=None):
+        container = QWidget()
+        layout = QHBoxLayout(container)
+        layout.addWidget(w, alignment=Qt.AlignHCenter)
+        w.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        return container
+
     # UPDATE UI EVENTS
     # //////////////////////////////////////////////////////////////
-    def updateparticipantBox(self):
-        # emg panel
+    def updateEMGParticipantBox(self):
         n = len(self.participants)
-        print(n)
         widgets.tableWidget_2.setRowCount(n)
-        i = 0
-        for p, emg in self.participants.items():
-            q = QTableWidgetItem(p.name)
-            q.setTextAlignment(Qt.AlignLeading|Qt.AlignVCenter)
+        for i in range(0, len(self.participants)):
+            p = self.participants[i]
+            name = p.name
+            # checkbox
+            chb = self.createParticipantCheckBox(name)
+            widgets.tableWidget_2.setCellWidget(i, 0, chb)
+            # name
+            q = QTableWidgetItem(name)
+            q.setTextAlignment(Qt.AlignCenter)
             widgets.tableWidget_2.setItem(i, 1, q)
-            i = i + 1
+            # status
+            h = widgets.tableWidget_2.rowHeight(i)
+            col2w = widgets.tableWidget_2.columnWidth(2)
+            col3w = widgets.tableWidget_2.columnWidth(3)
+            ready = statusLED(col2w, h, self.workspace[p].isEMGReady())
+            report = statusLED(col3w, h, self.workspace[p].isReportReady())
+            widgets.tableWidget_2.setCellWidget(i, 2, ready)
+            widgets.tableWidget_2.setCellWidget(i, 3, report)
+
+    def updateWorkSpaceParticipantBox(self):
+        #listwidget_3
+        widgets.listWidget_3.clear()
+        for i in range(0, len(self.participants)):
+            p = self.participants[i]
+            name = p.name
+            # name
+            widgets.listWidget_3.addItem(name)
+            widgets.listWidget_3.item(i).setForeground(Qt.black)
 
     # Application Logic
     # ///////////////////////////////////////////////////////////////

@@ -11,10 +11,16 @@ Workspace maintained a set of people with data
 class workspace:
     # data profile of each participant
     class profile:
-        def __init__(self, file):
-            self.file = file
-            self.emg = emg(file)
+        def __init__(self, emg):
+            self.emg = emg
+            self.proccessed = None
             self.report = None
+
+        def isEMGReady(self):
+            return self.proccessed != None
+
+        def isReportReady(self):
+            return self.report != None
 
         def getDataStatus(self):
             return self.isEMGReady(), self.isReportReady()
@@ -40,34 +46,35 @@ class workspace:
         self.global_emgconfig.clear()
 
     # check if person exist
-    def hasparticipant(self, person):
+    def hasParticipant(self, person):
         return person in self.participants
     
-    def getparticipantId(self, person):
-        if self.hasparticipant(person):
+    def getParticipantId(self, person):
+        if self.hasParticipant(person):
             return self.participants[person]
         else:
             return len(self.participants)
         
-    # use person as key to access emg file
+    # use person as key to access profile
     def __getitem__(self, person):
-        if not self.hasparticipant(person):
+        if not self.hasParticipant(person):
             return self.__missing__(person)
-        id = self.getparticipantId(person)
+        id = self.getParticipantId(person)
         # return emg
-        return self.profileList[id].emg
+        return self.profileList[id]
     
     def __delitem__(self, key):
         return
     def __missing__(self, key):
         return
 
-    def addparticipant(self, person, file):
-        if self.hasparticipant(person):
+    def addParticipant(self, person, emg):
+        if self.hasParticipant(person):
             return -1
         
-        id = self.getparticipantId(person) 
-        self.profileList[id] = self.profile(file)
+        id = self.getParticipantId(person) 
+        self.participants[person] = id 
+        self.profileList[id] = self.profile(emg)
         return 0
 
     def participantStringList(self):

@@ -24,11 +24,12 @@ import pyMotion as pm
 # ///////////////////////////////////////////////////////////////
 from modules import *
 from widgets import *
-os.environ["QT_FONT_DPI"] = "96" # FIX Problem for High DPI and Scale above 100%
 
+os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100%
 # SET AS GLOBAL WIDGETS
 # ///////////////////////////////////////////////////////////////
 widgets = None
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -83,12 +84,14 @@ class MainWindow(QMainWindow):
         # EXTRA LEFT BOX
         def openCloseLeftBox():
             UIFunctions.toggleLeftBox(self, True)
+
         widgets.toggleLeftBox.clicked.connect(openCloseLeftBox)
         widgets.extraCloseColumnBtn.clicked.connect(openCloseLeftBox)
 
         # EXTRA RIGHT BOX
         def openCloseRightBox():
             UIFunctions.toggleRightBox(self, True)
+
         widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
 
         # SHOW APP
@@ -112,7 +115,9 @@ class MainWindow(QMainWindow):
         # SET HOME PAGE AND SELECT MENU
         # ///////////////////////////////////////////////////////////////
         widgets.stackedWidget.setCurrentWidget(widgets.start_page)
-        widgets.btn_start.setStyleSheet(UIFunctions.selectMenu(widgets.btn_start.styleSheet()))
+        widgets.btn_start.setStyleSheet(
+            UIFunctions.selectMenu(widgets.btn_start.styleSheet())
+        )
 
         # APPLICATION LOGICS
         self.workspace = None
@@ -126,7 +131,7 @@ class MainWindow(QMainWindow):
             def __init__(self):
                 self.state = 0
 
-        self.test()
+        # self.test()
 
     def test(self):
         #////// test
@@ -166,9 +171,15 @@ class MainWindow(QMainWindow):
 
         # SHOW STATS PAGE
         if btnName == "btn_stats":
-            widgets.stackedWidget.setCurrentWidget(widgets.stats_page) # SET PAGE
-            UIFunctions.resetStyle(self, btnName) # RESET ANOTHERS BUTTONS SELECTED
-            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet())) # SELECT MENU
+            widgets.stackedWidget.setCurrentWidget(widgets.stats_page)  # SET PAGE
+            UIFunctions.resetStyle(self, btnName)  # RESET ANOTHERS BUTTONS SELECTED
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
+
+        if btnName == "btn_kinematic":
+            widgets.stackedWidget.setCurrentWidget(widgets.kinematic_page)  # SET PAGE
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
+            return
 
         if btnName == "btn_save":
             print("Save BTN clicked!")
@@ -190,9 +201,9 @@ class MainWindow(QMainWindow):
 
         # PRINT MOUSE EVENTS
         if event.buttons() == Qt.LeftButton:
-            print('Mouse click: LEFT CLICK')
+            print("Mouse click: LEFT CLICK")
         if event.buttons() == Qt.RightButton:
-            print('Mouse click: RIGHT CLICK')
+            print("Mouse click: RIGHT CLICK")
 
     # Application Logic
     # ///////////////////////////////////////////////////////////////
@@ -250,9 +261,12 @@ class MainWindow(QMainWindow):
         return
     
 if __name__ == "__main__":
+    from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
+    #DO NOT REMOVE enorce pyside to use opengl for underlying graphics render.
+    QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
     qApp = QApplication(sys.argv)
     qApp.setWindowIcon(QIcon("icon.ico"))
     window = MainWindow()
-    qApp.exec_()
+    qApp.exec()
     window.rserver.join()
     sys.exit(0)

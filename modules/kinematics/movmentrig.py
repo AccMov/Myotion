@@ -11,7 +11,7 @@ class MovementRig(Object3D):
         super().__init__()
 
         # initialize attached Object3d; controls look up/down
-        self.lookAttachment = Objeect3D()
+        self.lookAttachment = Object3D()
         self.children = [self.lookAttachment]
         self.lookAttachment.parent = self
 

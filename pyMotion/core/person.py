@@ -1,5 +1,5 @@
 from .xml import *
-
+import time
 class person:
     def __init__(self,
                  name, 
@@ -21,6 +21,7 @@ class person:
             "height": str(height),
             "weight": str(weight),
         }
+        self.timestamp = str(time.localtime())
     
     def __getattr__(self, key):
         if key in self.data.keys():
@@ -35,6 +36,9 @@ class person:
     def __missing__(self, key):
         return
     
+    def key(self):
+        return hash(self.name + self.timestamp)
+
     def toXML(self, xml):
         e = xmlElement('Person')
         for key in self.data.keys():

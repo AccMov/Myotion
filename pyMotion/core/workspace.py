@@ -13,25 +13,21 @@ class workspace:
     class profile:
         def __init__(self, emg):
             self.emg = emg
-            self.proccessed = None
             self.report = None
 
         def isEMGReady(self):
-            return self.proccessed != None
-
+            return self.emg.isProcessDone()
+        
         def isReportReady(self):
             return self.report != None
 
         def getDataStatus(self):
-            return self.isEMGReady(), self.isReportReady()
+            return self.emg.isEMGReady(), self.isReportReady()
 
     def __init__(self, name = ''):
         self.name = name
-        # total number of participants, use as id
-        # be careful these are multi-thread friendly
-        self.participantCount = 0
-        # list of participants in workspace,  person : id
-        self.participants = {}
+        # list of participants in workspace
+        self.participants = []
         
         # data of participants, hash:profile
         self.profileList = {}
@@ -40,7 +36,6 @@ class workspace:
         self.global_emgconfig = {}
 
     def clear(self):
-        self.participantCount = 0
         self.participants.clear()
         self.profileList.clear()
         self.global_emgconfig.clear()
@@ -48,20 +43,25 @@ class workspace:
     # check if person exist
     def hasParticipant(self, person):
         return person in self.participants
+
+    def getParticipants(self):
+        return self.participants
+
+    def getparticipantStringList(self):
+        return [p.name for p in self.participants]
     
-    def getParticipantId(self, person):
-        if self.hasParticipant(person):
-            return self.participants[person]
-        else:
-            return len(self.participants)
-        
+    def findParticipant(self, key):
+        for s in self.participants:
+            if key == s.key():
+                return s
+        return None
+    
     # use person as key to access profile
     def __getitem__(self, person):
         if not self.hasParticipant(person):
             return self.__missing__(person)
-        id = self.getParticipantId(person)
-        # return emg
-        return self.profileList[id]
+        # return profile
+        return self.profileList[person.key()]
     
     def __delitem__(self, key):
         return
@@ -72,14 +72,10 @@ class workspace:
         if self.hasParticipant(person):
             return -1
         
-        id = self.getParticipantId(person) 
-        self.participants[person] = id 
-        self.profileList[id] = self.profile(emg)
+        self.participants.append(person) 
+        self.profileList[person.key()] = self.profile(emg)
         return 0
 
-    def participantStringList(self):
-        return [p.name for p, id in self.participants]
-    
     def profileStatusList(self):
         return [self.profileList[id].getDataStatus() for p, id in self.participants]
     

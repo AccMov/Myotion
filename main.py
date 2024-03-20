@@ -329,11 +329,12 @@ class MainWindow(QMainWindow):
 
         # EMG Page
         widgets.pushButton_10.clicked.connect(self.addEMGButtonClick)
+        widgets.pushButton_11.clicked.connect(self.singleEMGButtonClick)
+        widgets.listWidget.itemDoubleClicked.connect(self.EMGConfigurationListDoubleClicked)
 
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
         self.showMaximized()
-        #self.show()
 
         # SET CUSTOM THEME
         # ///////////////////////////////////////////////////////////////
@@ -356,9 +357,8 @@ class MainWindow(QMainWindow):
         # APPLICATION LOGICS
         self.workspace = None                # workspace (participant list, emg list, reports, configure file list and etc.)
         self.home = None                     # current project path
-        self.participants = []               # particpate list, person
         self.selectedParticipants = []       # selected participants
-        self.singleEMG = (None, None)        # Participant, Steps
+        self.singleEMG = (None, None, None)  # Participant, Steps, channel
         self.batchEMG = (None, None)         # Participant list, configure file
 
         self.test()
@@ -370,7 +370,6 @@ class MainWindow(QMainWindow):
 
         # add people
         p1 = pm.person("Guo Chen", "1995/08/05", 'male')
-        self.participants.append(p1)
 
         # add data
         self.workspace.addParticipant(p1, emg)
@@ -447,8 +446,6 @@ class MainWindow(QMainWindow):
         # create person
         p, emgdata = EMGAddWindow(self.home, 1200, 800).run()
         logger.info('added participate {}'.format(p.name))
-        # add to list
-        self.participants.append(p)
 
         # add to workspace
         self.workspace.addParticipant(p, emgdata)
@@ -460,6 +457,8 @@ class MainWindow(QMainWindow):
     def newProjectButtonClick(self):
         dir = QFileDialog.getExistingDirectory(None, 'New Project', self.home, 
                     QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        if dir == '':
+            return
         
         if not checkValidPath(dir):
             QMessageBox.critical(None, 'error', 'Selected path does not exist!', QMessageBox.Ok)
@@ -472,7 +471,27 @@ class MainWindow(QMainWindow):
         logger.info('workspace name: {}'.format(self.workspace.name))
 
     def singleEMGButtonClick(self):
-        return
+
+        if len(self.selectedParticipants) == 0:
+            QMessageBox.critical(None, 'error', 'No participant selected!', QMessageBox.Ok)
+            return
+        
+        if len(self.selectedParticipants) > 1:
+            QMessageBox.critical(None, 'error', 'Only one participant can be selected!', QMessageBox.Ok)
+            return
+        
+        if self.singleEMG[0] is not None:
+            QMessageBox.critical(None, 'error', 'Current EMG process is not finished!', QMessageBox.Ok)
+            return
+
+        p_key = self.selectedParticipants[0]
+
+        #deselect checkbox
+        chbox = widgets.tableWidget_2.findChild(QCheckBox, p_key)
+        chbox.stateChanged.emit(False)
+
+        p = self.workspace.findParticipant(int(p_key))
+        self.startSingleEMGProcess(p)
 
     def participantCheckBoxChanged(self, state):
         sender = self.sender()
@@ -483,10 +502,13 @@ class MainWindow(QMainWindow):
         else:
             self.selectedParticipants.remove(p)
 
+    def EMGConfigurationListDoubleClicked(self, item):
+        self.selectSingleEMGStep(widgets.listWidget.currentRow())
+
     # WIDGET
     # //////////////////////////////////////////////////////////////
     def createParticipantCheckBox(self, name):
-        checkbox = QCheckBox()
+        checkbox = QCheckBox(widgets.tableWidget_2)
         checkbox.setObjectName(name)
         checkbox.stateChanged.connect(self.participantCheckBoxChanged)
         return checkbox
@@ -501,13 +523,14 @@ class MainWindow(QMainWindow):
     # UPDATE UI EVENTS
     # //////////////////////////////////////////////////////////////
     def updateEMGParticipantBox(self):
-        n = len(self.participants)
+        participants = self.workspace.getParticipants()
+        n = len(participants)
         widgets.tableWidget_2.setRowCount(n)
-        for i in range(0, len(self.participants)):
-            p = self.participants[i]
+        for i in range(0, n):
+            p = participants[i]
             name = p.name
             # checkbox
-            chb = self.createParticipantCheckBox(name)
+            chb = self.createParticipantCheckBox(str(p.key()))
             widgets.tableWidget_2.setCellWidget(i, 0, chb)
             # name
             q = QTableWidgetItem(name)
@@ -524,15 +547,46 @@ class MainWindow(QMainWindow):
 
     def updateWorkSpaceParticipantBox(self):
         #listwidget_3
+        participants = self.workspace.getParticipants()
+        n = len(participants)
         widgets.listWidget_3.clear()
-        for i in range(0, len(self.participants)):
-            p = self.participants[i]
+        for i in range(0, n):
+            p = participants[i]
             name = p.name
             # name
             widgets.listWidget_3.addItem(name)
             widgets.listWidget_3.item(i).setForeground(Qt.black)
 
-    # Application Logic
+    # update waveform regarding to config step and user input metrics
+    def updateSignalProcessPanel(self):       
+        p = self.singleEMG[0]
+        step = self.singleEMG[1]
+        chan = self.singleEMG[2]
+
+        # data
+        x = self.workspace[p].emg.getLinspace()
+        input = self.workspace[p].emg[chan]
+        output = self.workspace[p].emg.applyConfigStep(chan, step)
+
+        # push data to plot
+        widgets.plot_input.line(x, input, chan)
+        widgets.plot_input.show()
+
+        widgets.plot_output.line(x, output, chan)
+        widgets.plot_output.show()
+    
+    def updateEMGProcessList(self):
+        p = self.singleEMG[0]
+        cfgstrings = self.workspace[p].emg.getProcessConfig().getStepStringList()
+        # update configuration list
+        n = len(cfgstrings)
+        widgets.listWidget.clear()
+        widgets.listWidget.setSortingEnabled(False)
+        for i in range(0, n):
+            widgets.listWidget.addItem(cfgstrings[i])
+            widgets.listWidget.item(i).setForeground(Qt.black)
+
+    # Application Logic/Slots
     # ///////////////////////////////////////////////////////////////
     def newWorkSpace(self, fpath, name=''):
         if self.workspace is not None:
@@ -549,20 +603,29 @@ class MainWindow(QMainWindow):
     def saveWorkSpace(self):
         return
     
-    
-    def addSingleEMGFile(self, fpath):
-        if checkValidPath(fpath):
-            #error
+    def startSingleEMGProcess(self, p):
+        logger.info("started single EMG process for {}".format(p.name))
+        if not self.workspace.hasParticipant(p):
             return -1
         
-        # add sub window, blocking
+        # set fsm
+        self.singleEMG = (p, 0, self.workspace[p].emg.getChannels()[0])
+        self.updateEMGProcessList()
+        self.selectSingleEMGStep(0)
+        
+    def selectSingleEMGStep(self, idx):
+        p, step, chan = self.singleEMG
+        cfgstrings = self.workspace[p].emg.getProcessConfig().getStepStringList()
 
-        self.updateparticipantTable()
-        return 0
-    
-    def startSingleEMGProcess(self, nameofperson):
-        if not self.workspace.hasPerson(nameofperson):
-            return -1
+        if idx > len(cfgstrings):
+            logger.info("single EMG process idx {} out of range".format(idx))
+
+        logger.info("selecting EMG process step {}, {}".format(idx, cfgstrings[idx]))
+        self.singleEMG = (p, idx, chan)
+
+        # select index for EMG config widget
+        widgets.listWidget.setCurrentRow(idx)
+        self.updateSignalProcessPanel()
         
     def startBatchEMGProcess(self, listofpeople, nameofconfig):
         for p in listofpeople:
@@ -571,15 +634,6 @@ class MainWindow(QMainWindow):
         
         if not self.workspace.hasConfigFile(nameofconfig):
             return -1
-    
-    # update widget of participant table
-    def updateparticipantTable(self):
-        
-        return
-    
-    # update waveform regarding to config step and user input metrics
-    def updateWaveFormTable(self, configName):
-        return
     
 if __name__ == "__main__":
     qApp = QApplication(sys.argv)

@@ -29,6 +29,9 @@ class emgFilter():
 
         self.type = t
 
+    def isValidCutOffFreq(self, freq):
+        return freq < self.fs/2 and freq > 0
+    
     def setCutOff_L(self, freq):
         self.cutoff_l = freq
 
@@ -48,8 +51,8 @@ class emgFilter():
 class emgActivation:
     def __init__(self):
         self.threhold = 0
-        self.n_above = 0
-        self.n_below = 0
+        self.n_above = 5
+        self.n_below = 5
 
     def setThreHold(self, t):
         self.threhold = t
@@ -98,80 +101,39 @@ class emgConfigure():
             emgConfigureEnum.SUMMARY: 'summary',
         }
 
-        # current running step at 0
-        self.curr = 0
-
-        # current selecting index
-        self.select = 0
-
-        # default
+        # set default
         self.step = self.classical_steps
 
         # default config for each step
         self.stepConfig = {}
         for s in self.step:
             self.stepConfig[s] = self.initConfig(s)
-    
-    # set the index of current highlighted step
-    def setSelectedIndex(self, idx):
-        if idx > len(self.step):
-            logger.error("selected index out of range!")
-            return -1
-        
-        self.select = idx
-    
-    # set the index of current highlighted step and current running step
-    def setCurrIndex(self, idx):
-        if idx > len(self.step):
-            logger.error("selected index out of range!")
-            return -1
-        
-        self.select = idx
-        self.curr = idx
+
+    # use step id as key to access config file
+    def __getitem__(self, id):
+        return self.step[id]
 
     # add new step
-    def addStep(self, idx):
+    def addStep(self, idx, pos):
         if idx >= emgConfigure.MAX or idx < 0:
             logger.error("invalid emg steps!")
             return -1
-        
-        # insert new step after selection index
-        self.step.insert(self.select, idx)
 
-        # jump to next step
-        self.select += 1
+        self.step.insert(pos, idx)
 
     # remove step
-    def removeStep(self, idx):
-        if idx >= emgConfigure.MAX or idx < 0:
-            logger.error("invalid emg steps!")
-            return -1
-        
-        # insert new step after selection index
-        self.step.remove(self.select, idx)
-        
-        if self.select > 0:
-            self.select -= 1
+    def removeStep(self, pos):        
+        self.step.remove(pos)
+    
+    def getTypeInfo(self, idx):
+        type_id = self.step[idx]
+        return type_id, self.nameMap[type_id]
 
-    def getSelectedIndex(self):
-        return self.select
+    def getStepStringList(self):
+        return [self.nameMap[s] for s in self.step]
     
-    def getCurrIndex(self):
-        return self.curr
-    
-    def getSelectedType(self):
-        type_id = self.step[self.select]
-        return type_id
-    
-    def getSelectedTypeName(self):
-        return self.nameMap[self.getSelectedType()]
-    
-    def getCurrType(self):
-        type_id = self.step[self.curr]
-        return type_id
-    
-    def getCurrTypeName(self):
-        return self.nameMap[self.getCurrType()]
+    def size(self):
+        return len(self.step)
     
     # create a config for one step
     def initConfig(self, type):
@@ -181,9 +143,6 @@ class emgConfigure():
             return emgActivation()
         else:
             return None
-       
-    def setConfig(self, index, config):
-        self.stepConfig[index] = config
     
     '''
     <emgConfigure>
@@ -213,17 +172,25 @@ class emg:
         self.emgFile = file                #file path
         self.emgTST = None                 #emg data
         self.emgMVCTST = None              #emg MVC data
-        self.config = emgConfigure()       #emg data process configure
+        self.processCFG = emgConfigure()   #emg data process configure
         self.Channels = []
         # key:val pair
         # key = channels, val = mvc file path
         self.mvcFilesMap = {}
+        self.isprocessdone = False
 
         # filter of channel name, regex
         self.channel_filter = '(emg|EMG)+'
 
         if len(file):
             self.setEMGFile(file)
+
+    # use channel as key to access TST
+    def __getitem__(self, chan):
+        return self.emgTST[chan]
+    
+    def getLinspace(self):
+        return self.emgTST.getLinspace()
 
     def isC3D(self, f):
         return f.endswith('.c3d')
@@ -342,28 +309,56 @@ class emg:
         self.emgMVCTST[channel] = MVCTST[channel]
         self.mvcFilesMap[channel] = f
 
-    def __getitem__(self, key):
-        return self.data[key]
-    def __setitem__(self, key, value):
-        if key == "trials":
-            self.data[key] = value
-    def __delitem__(self, key):
-        return
-    def __missing__(self, key):
-        return
-    
     def toXML(self):
         # top tree
         root = xmlElement('emg')
         root.addSubTree(self.emgTST.toXML())
         root.addSubTree(self.emgMVCTST.toXML())
-        root.addSubTree(self.config.toXML())
+        root.addSubTree(self.processCFG.toXML())
         return root
+    
+    def isProcessDone(self):
+        return self.isprocessdone
+    
+    def setProcessDone(self):
+        self.isprocessdone = True
+    
+    def getProcessConfig(self):
+        return self.processCFG
+    
+    def applyConfigStep(self, chan, step):
+        if chan not in self.Channels:
+            logger.error("Targetted channel not exist")
+            raise Exception(logger.errstr)
+        
+        if step > self.processCFG.size():
+            logger.error("Selected step out of bound")
+            raise Exception(logger.errstr)
 
-    def writeFile(self, file):
-        #write to file
-        return 0
+        # apply functions
+        type, tname = self.processCFG.getTypeInfo(step)
+        cfg = self.processCFG[step]
+        if type == emgConfigureEnum.FILTER:
+            if cfg.type == emgFilterEnum.LOW_PASS:
+                output = self.emgTST.lowpass(chan, cfg.cutoff_l)
+            elif cfg.type == emgFilterEnum.BAND_PASS:
+                output = self.emgTST.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h)
+        elif type == emgConfigureEnum.FULL_W_RECT:
+            output = self.emgTST.rectification(chan)
+        elif type == emgConfigureEnum.DC_OFFSET:
+            output = self.emgTST.removeDC(chan)
+        elif type == emgConfigureEnum.ACTIVATION:
+            output = self.emgTST.threholdDetection(chan, cfg.threhold, cfg.n_above, cfg.n_below)
+        elif type == emgConfigureEnum.NORMALIZATION:
+            # get max from MVCTST
+            max_v = self.emgMVCTST.max(chan)
+            output = self.emgTST.normalization(chan, max_v)
+        elif type == emgConfigureEnum.SUMMARY:
+            # output remain the same
+            output = input
 
+        return output
+        
     # process data using configure file
     def processWithConfigure(self, emgConfigure):
         return

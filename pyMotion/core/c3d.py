@@ -12,7 +12,7 @@ class Point:
             cam_num:     camera number
         '''
         self.data = {
-                    "xyz":        data[0:2],
+                    "xyz":        data[0:3],
                     "error":      data[3],
                     "camera":     data[4],
                 }

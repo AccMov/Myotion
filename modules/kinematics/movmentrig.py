@@ -110,7 +110,7 @@ class MovementRig(Object3D):
         self.lookAttachment.remove(child)
 
     def update(self, inputObejct, deltaTime):
-        moveAmount = self.unitsPerSecond * deltaTime
+        moveAmount = self.unitsPerSecond * deltaTime*10
         rotateAmount = self.degreesPerSecond * 3.1415926 / 180.0 * deltaTime
 
         if inputObejct.isKeyPressed(self.KEY_MOVE_FORWARDS):
@@ -136,3 +136,13 @@ class MovementRig(Object3D):
             self.lookAttachment.rotateX(rotateAmount)
         if inputObejct.isKeyPressed(self.KEY_LOOK_DOWN):
             self.lookAttachment.rotateX(-rotateAmount)
+
+        if inputObejct.isMouseDown(Qt.MouseButton.LeftButton):
+            print("Left button pressed")
+            x, y = inputObejct.mouseMovement()
+            self.rotateY(x / 10 * rotateAmount)
+            self.rotateX(y / 10 * rotateAmount)
+
+        if inputObejct.wheelMovement != 0:
+            self.translate(0, 0, inputObejct.wheelMovement)
+            inputObejct.wheelMovement = 0

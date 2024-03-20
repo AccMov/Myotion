@@ -1,5 +1,5 @@
 import time
-from PySide6.QtGui import QMouseEvent
+from PySide6.QtGui import QMouseEvent, QWheelEvent
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 from PySide6.QtCore import QTimer
 
@@ -8,11 +8,11 @@ from PySide6.QtCore import Qt
 
 
 class Base(QOpenGLWidget):
-    def __init__(self,parent=None) -> None:
+    def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setObjectName("Base")
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.input=Input()
+        self.input = Input()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
         self.fps = 60
@@ -33,17 +33,24 @@ class Base(QOpenGLWidget):
         super().update()
         # self.hide()
         # self.show()
-    
+
     def keyPressEvent(self, event):
         self.input.receiveKeyEvent(event.key(), event.type())
         self.update()
 
     def keyReleaseEvent(self, event):
         self.input.receiveKeyEvent(event.key(), event.type())
-        self.update() 
-    
+        self.update()
+
     def mousePressEvent(self, event: QMouseEvent) -> None:
-        self.input.mosePressEvent(event)
-    
+        self.input.mousePressEvent(event)
+
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        return super().mouseMoveEvent(event)
+        self.input.mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        self.input.mouseReleaseEvent(event)
+        return super().mouseReleaseEvent(event)
+    
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        self.input.wheelEvent(event)

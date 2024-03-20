@@ -33,6 +33,9 @@ class Matrix(object):
                             [0, c, -s, 0],
                             [0, s,  c, 0],
                             [0, 0,  0, 1]]).astype(float)
+    @staticmethod
+    def makeRotationOrbit(x,y):
+        pass
 
     @staticmethod
     def makeRotationY(angle):

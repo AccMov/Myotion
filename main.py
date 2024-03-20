@@ -331,7 +331,7 @@ class MainWindow(QMainWindow):
         widgets.pushButton_10.clicked.connect(self.addEMGButtonClick)
         widgets.pushButton_11.clicked.connect(self.singleEMGButtonClick)
         widgets.listWidget.itemDoubleClicked.connect(self.EMGConfigurationListDoubleClicked)
-
+        widgets.checkBox_4.stateChanged.connect(self.EMGConfigureToggleDCOffset)
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
         self.showMaximized()
@@ -359,6 +359,8 @@ class MainWindow(QMainWindow):
         self.home = None                     # current project path
         self.selectedParticipants = []       # selected participants
         self.singleEMG = (None, None, None)  # Participant, Steps, channel
+        self.inputBuffer = None
+        self.outputBuffer = None
         self.batchEMG = (None, None)         # Participant list, configure file
 
         self.test()
@@ -503,7 +505,34 @@ class MainWindow(QMainWindow):
             self.selectedParticipants.remove(p)
 
     def EMGConfigurationListDoubleClicked(self, item):
+        curr = widgets.listWidget.currentRow()
+        if curr == self.singleEMG[1]:
+            return
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        
+        idx = widgets.listWidget.currentRow()
+        type, str = cfg.getTypeInfo(idx)
+        self.updateEMGToolBox(type)
         self.selectSingleEMGStep(widgets.listWidget.currentRow())
+
+    def EMGConfigureToggleDCOffset(self, state):
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        if cfg[step].enable == state:
+            return
+        
+        cfg[step].enable = state
+        self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step)
+        self.updateSignalProcessPanel(up=False)
 
     # WIDGET
     # //////////////////////////////////////////////////////////////
@@ -525,6 +554,7 @@ class MainWindow(QMainWindow):
     def updateEMGParticipantBox(self):
         participants = self.workspace.getParticipants()
         n = len(participants)
+        widgets.tableWidget_2.clearContents()
         widgets.tableWidget_2.setRowCount(n)
         for i in range(0, n):
             p = participants[i]
@@ -558,26 +588,35 @@ class MainWindow(QMainWindow):
             widgets.listWidget_3.item(i).setForeground(Qt.black)
 
     # update waveform regarding to config step and user input metrics
-    def updateSignalProcessPanel(self):       
-        p = self.singleEMG[0]
-        step = self.singleEMG[1]
-        chan = self.singleEMG[2]
+    def updateSignalProcessPanel(self, up = True, down = True):       
+        p, step, chan = self.singleEMG
 
-        # data
+        if p is None:
+            widgets.plot_input.hide()
+            widgets.plot_output.hide()
+            return
+
         x = self.workspace[p].emg.getLinspace()
-        input = self.workspace[p].emg[chan]
-        output = self.workspace[p].emg.applyConfigStep(chan, step)
-
         # push data to plot
-        widgets.plot_input.line(x, input, chan)
-        widgets.plot_input.show()
-
-        widgets.plot_output.line(x, output, chan)
-        widgets.plot_output.show()
+        if up:
+            widgets.plot_input.line(x, self.inputBuffer, chan)
+            widgets.plot_input.show()
+        if down:
+            widgets.plot_output.line(x, self.outputBuffer, chan)
+            widgets.plot_output.show()
     
-    def updateEMGProcessList(self):
+    def updateEMGConfigureList(self):
+        widgets.listWidget.clear()
+
+        if self.workspace is None:
+            return
         p = self.singleEMG[0]
-        cfgstrings = self.workspace[p].emg.getProcessConfig().getStepStringList()
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        cfgstrings = cfg.getStepStringList()
         # update configuration list
         n = len(cfgstrings)
         widgets.listWidget.clear()
@@ -586,18 +625,35 @@ class MainWindow(QMainWindow):
             widgets.listWidget.addItem(cfgstrings[i])
             widgets.listWidget.item(i).setForeground(Qt.black)
 
+    def updateEMGToolBox(self, type):
+        type2toolbox = {
+            pm.emgConfigureEnum.DC_OFFSET : 0,
+            pm.emgConfigureEnum.FULL_W_RECT : 1,
+            pm.emgConfigureEnum.FILTER : 2,
+            pm.emgConfigureEnum.NORMALIZATION : 3,
+            pm.emgConfigureEnum.ACTIVATION : 4,
+            pm.emgConfigureEnum.SUMMARY : 5,
+        }
+        print(type2toolbox[type])
+        widgets.toolBox.setCurrentIndex(type2toolbox[type])
+
     # Application Logic/Slots
     # ///////////////////////////////////////////////////////////////
     def newWorkSpace(self, fpath, name=''):
         if self.workspace is not None:
             self.saveWorkSpace()
             self.workspace.clear()
-            self.updateparticipantTable()
-        
+
         # create new project
         self.workspace = pm.workspace(name)
         
         self.home = str(fpath)
+
+        # clear GUI
+        self.updateSignalProcessPanel()
+        self.updateEMGConfigureList()
+        self.updateEMGParticipantBox()
+        self.updateWorkSpaceParticipantBox()
         return 0
     
     def saveWorkSpace(self):
@@ -610,22 +666,37 @@ class MainWindow(QMainWindow):
         
         # set fsm
         self.singleEMG = (p, 0, self.workspace[p].emg.getChannels()[0])
-        self.updateEMGProcessList()
+        self.workspace[p].emg.startProcess()
+        self.updateEMGConfigureList()
         self.selectSingleEMGStep(0)
         
     def selectSingleEMGStep(self, idx):
         p, step, chan = self.singleEMG
-        cfgstrings = self.workspace[p].emg.getProcessConfig().getStepStringList()
 
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        cfgstrings = cfg.getStepStringList()
+        
         if idx > len(cfgstrings):
             logger.info("single EMG process idx {} out of range".format(idx))
 
         logger.info("selecting EMG process step {}, {}".format(idx, cfgstrings[idx]))
         self.singleEMG = (p, idx, chan)
+        if idx == 0:
+            self.inputBuffer = self.workspace[p].emg[chan]
+        else:
+            self.inputBuffer  = self.workspace[p].emg.tryConfigStepTo(chan, idx - 1)
+        self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, idx)
 
         # select index for EMG config widget
         widgets.listWidget.setCurrentRow(idx)
+        # update UI
         self.updateSignalProcessPanel()
+        type, str = cfg.getTypeInfo(idx)
+        self.updateEMGToolBox(type)
         
     def startBatchEMGProcess(self, listofpeople, nameofconfig):
         for p in listofpeople:

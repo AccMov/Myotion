@@ -6,13 +6,29 @@ from enum import Enum
 from .logger import *
 import re
 
+class emgDCOffset():
+    def __init__(self):
+        self.enable = False
+
+class emgRectification():
+    def __init__(self):
+        self.enable = False
+
+class emgNormalization():
+    def __init__(self):
+        self.enable = True
+
+class emgSummary():
+    def __init__(self):
+        self.enable = True
+
 class emgFilterEnum(Enum):
     LOW_PASS = 0
     BAND_PASS = 1
     MAX = 2
 class emgFilter():
     def __init__(self):
-        self.type = emgFilterEnum.MAX
+        self.type = emgFilterEnum.LOW_PASS
         self.cutoff_l = 0
         self.cutoff_h = 0
 
@@ -105,13 +121,13 @@ class emgConfigure():
         self.step = self.classical_steps
 
         # default config for each step
-        self.stepConfig = {}
+        self.stepConfig = []
         for s in self.step:
-            self.stepConfig[s] = self.initConfig(s)
+            self.stepConfig.append(self.initConfig(s))
 
     # use step id as key to access config file
     def __getitem__(self, id):
-        return self.step[id]
+        return self.stepConfig[id]
 
     # add new step
     def addStep(self, idx, pos):
@@ -141,9 +157,16 @@ class emgConfigure():
             return emgFilter()
         elif type == emgConfigureEnum.ACTIVATION:
             return emgActivation()
+        elif type == emgConfigureEnum.DC_OFFSET:
+            return emgDCOffset()
+        elif type == emgConfigureEnum.FULL_W_RECT:
+            return emgRectification()
+        elif type == emgConfigureEnum.NORMALIZATION:
+            return emgNormalization()
+        elif type == emgConfigureEnum.SUMMARY:
+            return emgSummary()
         else:
             return None
-    
     '''
     <emgConfigure>
         <remove_dc_offset/>
@@ -172,7 +195,7 @@ class emg:
         self.emgFile = file                #file path
         self.emgTST = None                 #emg data
         self.emgMVCTST = None              #emg MVC data
-        self.processCFG = emgConfigure()   #emg data process configure
+        self.processCFG = None             #emg data process configure
         self.Channels = []
         # key:val pair
         # key = channels, val = mvc file path
@@ -322,11 +345,14 @@ class emg:
     
     def setProcessDone(self):
         self.isprocessdone = True
+
+    def startProcess(self):
+        self.processCFG = emgConfigure()
     
     def getProcessConfig(self):
         return self.processCFG
     
-    def applyConfigStep(self, chan, step):
+    def __tryConfigStepImpl(self, tst, chan, step):
         if chan not in self.Channels:
             logger.error("Targetted channel not exist")
             raise Exception(logger.errstr)
@@ -338,26 +364,41 @@ class emg:
         # apply functions
         type, tname = self.processCFG.getTypeInfo(step)
         cfg = self.processCFG[step]
+        output = tst[chan]
         if type == emgConfigureEnum.FILTER:
             if cfg.type == emgFilterEnum.LOW_PASS:
-                output = self.emgTST.lowpass(chan, cfg.cutoff_l)
+                output = tst.lowpass(chan, cfg.cutoff_l)
             elif cfg.type == emgFilterEnum.BAND_PASS:
-                output = self.emgTST.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h)
+                output = tst.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h)
+            else:
+                output = None
         elif type == emgConfigureEnum.FULL_W_RECT:
-            output = self.emgTST.rectification(chan)
+            if cfg.enable:
+                output = tst.rectification(chan)
         elif type == emgConfigureEnum.DC_OFFSET:
-            output = self.emgTST.removeDC(chan)
+            if cfg.enable:
+                output = tst.removeDC(chan)
         elif type == emgConfigureEnum.ACTIVATION:
-            output = self.emgTST.threholdDetection(chan, cfg.threhold, cfg.n_above, cfg.n_below)
+            output = tst.threholdDetection(chan, cfg.threhold, cfg.n_above, cfg.n_below)
         elif type == emgConfigureEnum.NORMALIZATION:
-            # get max from MVCTST
-            max_v = self.emgMVCTST.max(chan)
-            output = self.emgTST.normalization(chan, max_v)
+            if cfg.enable:
+                # get max from MVCTST
+                max_v = self.emgMVCTST.max(chan)
+                output = tst.normalization(chan, max_v)
         elif type == emgConfigureEnum.SUMMARY:
             # output remain the same
-            output = input
-
+            output = tst[chan]
         return output
+       
+    def tryConfigStep(self, chan, step):
+        return self.__tryConfigStepImpl(self.emgTST, chan, step)
+    
+    def tryConfigStepTo(self, chan, step):
+        tst = self.emgTST
+        for i in range(0, step + 1):
+            dat = self.__tryConfigStepImpl(tst, chan, step)  
+            tst[chan] = dat
+        return tst[chan]
         
     # process data using configure file
     def processWithConfigure(self, emgConfigure):

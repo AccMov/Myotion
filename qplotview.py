@@ -104,6 +104,13 @@ class QPlotView(QWebEngineView):
 
         self.setHtml(html)
         self.update()
+    
+    def hide(self):
+        html = '<html><body>'
+        html += '</body></html>'
+
+        self.setHtml(html)
+        self.update()
 
 # QPlotViews with subplot which shared x_axis
 class QPlotViews(QWebEngineView):

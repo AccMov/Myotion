@@ -1,7 +1,4 @@
 from math import pi
-import os
-import sys
-from modules.kinematics.attribute import Attribute
 from modules.kinematics.axesitem import AxesItem
 from modules.kinematics.base import Base
 from modules.kinematics.camera import Camera

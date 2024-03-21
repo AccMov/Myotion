@@ -26,7 +26,6 @@ from modules import *
 from widgets import *
 
 os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100%
-os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100%
 # SET AS GLOBAL WIDGETS
 # ///////////////////////////////////////////////////////////////
 widgets = None
@@ -202,7 +201,6 @@ class MainWindow(QMainWindow):
 
         # PRINT MOUSE EVENTS
         if event.buttons() == Qt.LeftButton:
-            print("Mouse click: LEFT CLICK")
             print("Mouse click: LEFT CLICK")
         if event.buttons() == Qt.RightButton:
             print("Mouse click: RIGHT CLICK")

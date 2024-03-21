@@ -721,9 +721,12 @@ class MainWindow(QMainWindow):
                 widgets.comboBox_7.setCurrentIndex(0)
                 widgets.lineEdit_10.setText(str(cfg[step].cutoff_l))
                 widgets.lineEdit_11.setText(str(cfg[step].cutoff_h))
+                widgets.lineEdit_12.setText("")
             else:
                 widgets.comboBox_7.setCurrentIndex(1)
                 widgets.lineEdit_12.setText(str(cfg[step].cutoff_l))
+                widgets.lineEdit_10.setText(''-)
+                widgets.lineEdit_11.setText('')
 
     def updateEMGChannelSelectorContent(self):
         p, step, chan = self.singleEMG

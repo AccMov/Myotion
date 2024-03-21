@@ -82,4 +82,4 @@ class Input:
         self.mousePressed = False
     
     def wheelEvent(self, event):
-        self.wheelMovement= event.angleDelta().y()
+        self.wheelMovement= -event.angleDelta().y()

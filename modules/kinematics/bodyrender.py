@@ -86,7 +86,7 @@ class BodyRender(Base):
 
         self.renderer = Renderer(self)
         self.scene = Object3D()
-        self.camera = Camera(aspectRatio=800 / 600, far=10000)
+        self.camera = Camera(aspectRatio=800 / 600, far=50000)
         self.camera.setPosition([0, 1000, 3000])
         self.rig = MovementRig(unitsPerSecond=100)
         self.rig.add(self.camera)

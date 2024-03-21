@@ -45,8 +45,14 @@ class matdata:
 class matFile:
     def __init__(self, file):
         self.file = file
-        self.reader = scipy.io.loadmat(file, squeeze_me=True)
+        try:
+            self.reader = scipy.io.loadmat(file, squeeze_me=True)
+        except:
+            logger.error("failed to open file")
+            raise Exception(logger.errstr())
         self.keylist = sorted(self.reader.keys())
+
+        assert len(self.keylist) > 3, "mat keylist less then 4"
 
         #['__globals__', '__header__', '__version__', 'TABLE']
         self.raw = self.reader[self.keylist[3]]
@@ -68,9 +74,12 @@ class matFile:
 
         # ['type', 'name', 'time_begin', 'time_end', sources]
         movements = self.raw['movements'].tolist()
-
+   
+        assert 'sources' in movements.dtype.names, "sources is not found in movements"
         # [ 'sources', 'signals' ]
         sources = movements['sources'].tolist()
+
+        assert 'signals' in sources.dtype.names, "signal is not found in sources"
         signals = sources['signals'].tolist()
 
         # matdata type
@@ -81,6 +90,7 @@ class matFile:
             for sub_key in signal_x.dtype.fields:
                 movement_data[sub_key] = np.squeeze(signal_x[sub_key]).tolist()
             movement_datas.append(matdata(movement_data))
+        assert len(movement_datas) != 0, "movement data not extracted from mat"
 
         self.movements = {
             "type" : movements['type'].tolist(),
@@ -94,9 +104,13 @@ class matFile:
         self.metadata["labels"] = [m.name for m in self.movements["channels"]]
         self.metadata["channel_number"] = len(self.movements["channels"])
 
+        logger.info("extracted mat labels {}".format(self.metadata["labels"]))
+
     def __getattr__(self, key):
         if key == "metadata":
             return self.metadata
+        elif key in self.metadata.keys():
+            return self.metadata[key]
         elif key in self.movements.keys():
             return self.movements[key]
 
@@ -111,7 +125,7 @@ class matFile:
     
     def convertToTST(self):
         if self.channel_number == 0:
-            return timeSeriesTable()
+            return None
         
         label = [c.name for c in self.channels]
         data = [c.data for c in self.channels]

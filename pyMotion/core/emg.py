@@ -3,6 +3,24 @@ from .c3d import *
 from .mat import *
 from .xml import *
 from enum import Enum
+from .logger import *
+import re
+
+class emgDCOffset():
+    def __init__(self):
+        self.enable = False
+
+class emgRectification():
+    def __init__(self):
+        self.enable = False
+
+class emgNormalization():
+    def __init__(self):
+        self.enable = True
+
+class emgSummary():
+    def __init__(self):
+        self.enable = True
 
 class emgFilterEnum(Enum):
     LOW_PASS = 0
@@ -10,14 +28,14 @@ class emgFilterEnum(Enum):
     MAX = 2
 class emgFilter():
     def __init__(self):
-        self.type = emgFilterEnum.MAX
+        self.type = emgFilterEnum.LOW_PASS
         self.cutoff_l = 0
         self.cutoff_h = 0
 
         self.nameMap = {
-            self.LOW_PASS: 'low pass filter',
-            self.BAND_PASS: 'band pass filter',
-            self.MAX: 'N/A',
+            emgFilterEnum.LOW_PASS: 'low pass filter',
+            emgFilterEnum.BAND_PASS: 'band pass filter',
+            emgFilterEnum.MAX: 'N/A',
         }
 
     def setType(self, t):
@@ -26,7 +44,7 @@ class emgFilter():
             return -1
 
         self.type = t
-
+    
     def setCutOff_L(self, freq):
         self.cutoff_l = freq
 
@@ -46,8 +64,8 @@ class emgFilter():
 class emgActivation:
     def __init__(self):
         self.threhold = 0
-        self.n_above = 0
-        self.n_below = 0
+        self.n_above = 5
+        self.n_below = 5
 
     def setThreHold(self, t):
         self.threhold = t
@@ -58,7 +76,6 @@ class emgActivation:
     def setCutOff_H(self, freq):
         self.cutoff_h = freq
 
-    # add nodes to xml tree
     def toXML(self, e):
         e.addNode('threhold', str(self.threhold))
         e.addNode('n_above', str(self.n_above))
@@ -67,18 +84,17 @@ class emgActivation:
 
     def fromXML(self, xml_element):
         return
-
+    
+class emgConfigureEnum(Enum):
+    # name of steps
+    FILTER = 0
+    FULL_W_RECT = 1
+    DC_OFFSET = 2
+    ACTIVATION = 3
+    NORMALIZATION = 4
+    SUMMARY = 5
+    MAX = 6
 class emgConfigure():
-    class emgConfigureEnum(Enum):
-        # name of steps
-        FILTER = 0
-        FULL_W_RECT = 1
-        DC_OFFSET = 2
-        ACTIVATION = 3
-        NORMALIZATION = 4
-        SUMMARY = 5
-        MAX = 6
-
     def __init__(self):
         # pre-loaded steps
         self.classical_steps = [
@@ -90,102 +106,73 @@ class emgConfigure():
         ]
 
         self.nameMap = {
-            self.DC_OFFSET: 'remove_dc_offset',
-            self.FULL_W_RECT: 'full_wave_rectification',
-            self.FILTER: 'filter',
-            self.NORMALIZATION: 'normalization',
-            self.ACTIVATION: 'activation',
-            self.SUMMARY: 'summary',
+            emgConfigureEnum.DC_OFFSET: 'remove_dc_offset',
+            emgConfigureEnum.FULL_W_RECT: 'full_wave_rectification',
+            emgConfigureEnum.FILTER: 'filter',
+            emgConfigureEnum.NORMALIZATION: 'normalization',
+            emgConfigureEnum.ACTIVATION: 'activation',
+            emgConfigureEnum.SUMMARY: 'summary',
         }
 
-        # current running step at 0
-        self.curr = 0
-
-        # current selecting index
-        self.select = 0
-
-        # default
+        # set default
         self.step = self.classical_steps
 
         # default config for each step
-        self.stepConfig = {}
+        self.stepConfig = []
         for s in self.step:
-            self.stepConfig[s] = self.initConfig(s)
-    
-    # set the index of current highlighted step
-    def setSelectedIndex(self, idx):
-        if idx > len(self.step):
-            logger.error("selected index out of range!")
-            return -1
-        
-        self.select = idx
-    
-    # set the index of current highlighted step and current running step
-    def setCurrIndex(self, idx):
-        if idx > len(self.step):
-            logger.error("selected index out of range!")
-            return -1
-        
-        self.select = idx
-        self.curr = idx
+            self.stepConfig.append(self.initConfig(s))
+
+    # use step id as key to access config file
+    def __getitem__(self, id):
+        return self.stepConfig[id]
 
     # add new step
-    def addStep(self, idx):
+    def addStep(self, idx, pos):
         if idx >= emgConfigure.MAX or idx < 0:
             logger.error("invalid emg steps!")
             return -1
-        
-        # insert new step after selection index
-        self.step.insert(self.select, idx)
 
-        # jump to next step
-        self.select += 1
+        self.step.insert(pos, idx)
 
     # remove step
-    def removeStep(self, idx):
-        if idx >= emgConfigure.MAX or idx < 0:
-            logger.error("invalid emg steps!")
-            return -1
-        
-        # insert new step after selection index
-        self.step.remove(self.select, idx)
-        
-        if self.select > 0:
-            self.select -= 1
+    def removeStep(self, pos):        
+        self.step.remove(pos)
+    
+    def getTypeInfo(self, idx):
+        type_id = self.step[idx]
+        return type_id, self.nameMap[type_id]
 
-    def getSelectedIndex(self):
-        return self.select
+    def getStepStringList(self):
+        return [self.nameMap[s] for s in self.step]
     
-    def getCurrIndex(self):
-        return self.curr
-    
-    def getSelectedType(self):
-        type_id = self.step[self.select]
-        return type_id
-    
-    def getSelectedTypeName(self):
-        return self.nameMap[self.getSelectedType()]
-    
-    def getCurrType(self):
-        type_id = self.step[self.curr]
-        return type_id
-    
-    def getCurrTypeName(self):
-        return self.nameMap[self.getCurrType()]
+    def size(self):
+        return len(self.step)
     
     # create a config for one step
     def initConfig(self, type):
-        if type == emgConfigure.FILTER.value:
+        if type == emgConfigureEnum.FILTER:
             return emgFilter()
-        elif type == emgConfigure.ACTIVATION.value:
+        elif type == emgConfigureEnum.ACTIVATION:
             return emgActivation()
+        elif type == emgConfigureEnum.DC_OFFSET:
+            return emgDCOffset()
+        elif type == emgConfigureEnum.FULL_W_RECT:
+            return emgRectification()
+        elif type == emgConfigureEnum.NORMALIZATION:
+            return emgNormalization()
+        elif type == emgConfigureEnum.SUMMARY:
+            return emgSummary()
         else:
             return None
-       
-    def setConfig(self, index, config):
-        self.stepConfig[index] = config
-    
-    # save steps and config to xml
+    '''
+    <emgConfigure>
+        <remove_dc_offset/>
+        <filter> 
+           <type> </type>
+           ...
+        </filter>
+    </emgConfigure>
+    '''
     def toXML(self):
         # top tree
         e = xmlElement('emgConfigure')
@@ -201,14 +188,29 @@ class emgConfigure():
         return
 
 class emg:
-    def __init__(self):
-        self.emgFile = ""
-        self.emgTST = timeSeriesTable()
-        self.emgMVCTST = timeSeriesTable()
+    def __init__(self, file=''):
+        self.emgFile = file                #file path
+        self.emgTST = None                 #emg data
+        self.emgMVCTST = None              #emg MVC data
+        self.processCFG = None             #emg data process configure
         self.Channels = []
         # key:val pair
         # key = channels, val = mvc file path
         self.mvcFilesMap = {}
+        self.isprocessdone = False
+
+        # filter of channel name, regex
+        self.channel_filter = '(emg|EMG)+'
+
+        if len(file):
+            self.setEMGFile(file)
+
+    # use channel as key to access TST
+    def __getitem__(self, chan):
+        return self.emgTST[chan]
+    
+    def getLinspace(self):
+        return self.emgTST.getLinspace()
 
     def isC3D(self, f):
         return f.endswith('.c3d')
@@ -216,19 +218,48 @@ class emg:
     def isMAT(self, f):
         return f.endswith('.mat')
     
-    def isMVCValid(self):
-        # check if MVC TST has all channels
+    # check if MVC TST has all channels in place
+    def isMVCComplete(self):
         for c in self.Channels:
             if not self.emgMVCTST.hasChannel(c):
                 return False
         return True
     
+    # remove old data
     def clear(self):
-        # remove old data
-        self.emgTST = timeSeriesTable()
-        self.emgMVCTST = timeSeriesTable()
+        self.emgTST = None
+        self.emgMVCTST = None
         self.Channels.clear()
         self.mvcFilesMap.clear()
+        
+    # return channels
+    def getChannels(self):
+        return self.Channels
+    
+    def getfs(self):
+        return self.emgTST.fs
+
+    # search channels
+    def searchChannels(self, filter):
+        return self.emgTST.searchChannel(filter)
+
+    # filter for channel name, use regex
+    def applyChannelFiler(self, filter):
+        self.channel_filter = filter
+        self.emgTST.filterChannel(self.channel_filter)
+        self.emgMVCTST.filterChannel(self.channel_filter)
+
+    def removeChannel(self, channel):
+        del self.emgTST[channel]
+        del self.emgMVCTST[channel]
+
+    def removeChannels(self, channels):
+        for c in channels:
+            self.removeChannel(c)
+
+    def renameChannel(self, old, new):
+        self.emgTST.rename(old, new)
+        self.emgMVCTST.rename(old, new)
 
     # set EMG file path
     def setEMGFile(self, f):
@@ -248,25 +279,32 @@ class emg:
 
             elif self.isMAT(f):
                 mat = matFile(f)
-                self.Channels = mat.analog.labels
-
+                self.Channels = mat.labels
                 #load TST
                 self.emgTST = mat.convertToTST()
             else:
                 logger.error("unsupported file format")
         except:
-            raise
+            raise Exception(logger.errstr)
+        
+        # sanities
+        assert self.Channels != None, "channels not extracted"
+        assert self.emgTST != None, "emg cannot be convert to TimeSeriesTable"
+        
+        # update MVC TST
+        self.emgMVCTST = timeSeriesTable(self.emgTST.fs, self.emgTST.labels)
 
     # set MVC file path
     def setMVCFile(self, channel, f):
         if len(self.Channels) == 0:
             logger.error("channels is empty!")
-            return -1
+            raise Exception(logger.errstr)
 
         if channel not in self.Channels:
             logger.error("channel {} does not exists!".format(channel))
-            return -1
+            raise Exception(logger.errstr)
         
+        MVCTST = None
         # open file and load TST
         try:
             if self.isC3D(f):
@@ -281,32 +319,94 @@ class emg:
 
             else:
                 logger.error("unsupported file format")
+                raise Exception(logger.errstr)
         except:
-            raise
-
+            logger.error("cannot open mvc file")
+            raise Exception(logger.errstr)
+        
         # check if targetted channel exists in f
         if channel not in MVCChannels:
             logger.error("Targetted channel not found in file")
-            return -1
+            raise Exception(logger.errstr)
         
         self.emgMVCTST[channel] = MVCTST[channel]
         self.mvcFilesMap[channel] = f
+
+    def toXML(self):
+        # top tree
+        root = xmlElement('emg')
+        root.addSubTree(self.emgTST.toXML())
+        root.addSubTree(self.emgMVCTST.toXML())
+        root.addSubTree(self.processCFG.toXML())
+        return root
     
-    # return channels
-    def getChannels(self):
-        return self.Channels
+    def isProcessDone(self):
+        return self.isprocessdone
+    
+    def setProcessDone(self):
+        self.isprocessdone = True
 
-    def __getitem__(self, key):
-        return self.data[key]
-    def __setitem__(self, key, value):
-        if key == "trials":
-            self.data[key] = value
-    def __delitem__(self, key):
-        return
-    def __missing__(self, key):
+    def startProcess(self):
+        self.processCFG = emgConfigure()
+    
+    def getProcessConfig(self):
+        return self.processCFG
+    
+    def __tryConfigStepImpl(self, tst, chan, step):
+        if chan not in self.Channels:
+            logger.error("Targetted channel not exist")
+            raise Exception(logger.errstr)
+        
+        if step > self.processCFG.size():
+            logger.error("Selected step out of bound")
+            raise Exception(logger.errstr)
+
+        # apply functions
+        type, tname = self.processCFG.getTypeInfo(step)
+        cfg = self.processCFG[step]
+        output = tst[chan]
+        try:
+            if type == emgConfigureEnum.FILTER:
+                if cfg.type == emgFilterEnum.LOW_PASS:
+                    output = tst.lowpass(chan, cfg.cutoff_l)
+                elif cfg.type == emgFilterEnum.BAND_PASS:
+                    output = tst.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h)
+                else:
+                    output = None
+            elif type == emgConfigureEnum.FULL_W_RECT:
+                if cfg.enable:
+                    output = tst.rectification(chan)
+            elif type == emgConfigureEnum.DC_OFFSET:
+                if cfg.enable:
+                    output = tst.removeDC(chan)
+            elif type == emgConfigureEnum.ACTIVATION:
+                output = tst.threholdDetection(chan, cfg.threhold, cfg.n_above, cfg.n_below)
+            elif type == emgConfigureEnum.NORMALIZATION:
+                if cfg.enable:
+                    # get max from MVCTST
+                    max_v = self.emgMVCTST.max(chan)
+                    output = tst.normalization(chan, max_v)
+            elif type == emgConfigureEnum.SUMMARY:
+                # output remain the same
+                output = tst[chan]
+        except:
+            output = [0] * tst.size()
+            logger.error("cannot apply configuration")
+        return output
+       
+    def tryConfigStep(self, chan, step):
+        return self.__tryConfigStepImpl(self.emgTST, chan, step)
+    
+    def tryConfigStepTo(self, chan, step):
+        tst = self.emgTST.copy()
+        for i in range(0, step + 1):
+            dat = self.__tryConfigStepImpl(tst, chan, step)  
+            tst[chan] = dat
+        return tst[chan]
+        
+    # process data using configure file
+    def processWithConfigure(self, emgConfigure):
         return
 
-    def writeFile(self, file):
-        #write to file
-        return 0
+
         

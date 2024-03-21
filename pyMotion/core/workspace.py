@@ -3,60 +3,87 @@ from .report import *
 from .freq_analysis import *
 from .person import *
 from .timeSeriesTable import *
+import threading
 
 '''
 Workspace maintained a set of people with data
 '''
 class workspace:
+    # data profile of each participant
+    class profile:
+        def __init__(self, emg):
+            self.emg = emg
+            self.report = None
+
+        def isEMGReady(self):
+            return self.emg.isProcessDone()
+        
+        def isReportReady(self):
+            return self.report != None
+
+        def getDataStatus(self):
+            return self.emg.isEMGReady(), self.isReportReady()
+
     def __init__(self, name = ''):
         self.name = name
-        # list of people in workspace, name:people
-        self.peopleList = {}
-        # list of workplace item
-        self.emgList = {}
-        self.reportList = {}
-        self.emgstatus = {}
-        self.reportstatus = {}
-        # list of emgConfigure
-        self.emg_configs = {}
+        # list of participants in workspace
+        self.participants = []
+        
+        # data of participants, hash:profile
+        self.profileList = {}
 
-    def getPeopleList(self):
-        return self.peopleList
-    def getEMGStatus(self):
-        return self.emgstatus
-    def getReportStatus(self):
-        return self.reportstatus
+        # list of global emg config
+        self.global_emgconfig = {}
 
-    def hasPerson(self, name):
-        if name in self.peopleList.keys:
-            return True
-        return False
+    def clear(self):
+        self.participants.clear()
+        self.profileList.clear()
+        self.global_emgconfig.clear()
+
+    # check if person exist
+    def hasParticipant(self, person):
+        return person in self.participants
+
+    def getParticipants(self):
+        return self.participants
+
+    def getparticipantStringList(self):
+        return [p.name for p in self.participants]
     
-    def addPerson(self, person):
-        if self.hasPerson(person.name):
+    def findParticipant(self, key):
+        for s in self.participants:
+            if key == s.key():
+                return s
+        return None
+    
+    # use person as key to access profile
+    def __getitem__(self, person):
+        if not self.hasParticipant(person):
+            return self.__missing__(person)
+        # return profile
+        return self.profileList[person.key()]
+    
+    def __delitem__(self, key):
+        return
+    def __missing__(self, key):
+        return
+
+    def addParticipant(self, person, emg):
+        if self.hasParticipant(person):
             return -1
-        self.peopleList[person.name] = person
-        self.emgList[person.name] = None
-        self.reportList[person.name] = None
+        
+        self.participants.append(person) 
+        self.profileList[person.key()] = self.profile(emg)
         return 0
-    
-    
 
-    def setEMGFile(self, name, f):
-        if not self.ifPersonExist(name):
-            return -1
-        return self.emgList[name].setEMGFile(f)
-
-    def addMVCFile(self, name, channel, f):
-        if not self.ifPersonExist(name):
-            return -1
-        return self.emgList[name].setMVCFile(channel, f)
+    def profileStatusList(self):
+        return [self.profileList[id].getDataStatus() for p, id in self.participants]
     
-    def addConfigFile(self, name):
+    def saveCurrentConfigure(self, name):
         return
     
     def hasConfigFile(self, name):
         return False
 
-    def generateReport(self, person):
+    def genReport(self, person):
         return

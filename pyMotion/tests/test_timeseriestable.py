@@ -3,7 +3,8 @@ sys.path.insert(0, '../')
 
 from core.timeSeriesTable import * 
 from core.mat import * 
-from core.c3d import * 
+from core.c3d import *
+from core.xml import * 
 import matplotlib.pyplot as plt
 
 # get TST / c3d-analogdata
@@ -15,6 +16,13 @@ b = a.analog.convertToTST()
 #b = a.convertToTST()
 
 # print labels and data
+for label in b.labels:
+    print("{} : {}".format(label, b[label]))
+
+print("search channel with regex: {}".format(b.searchChannel('F+')))
+
+b.filterChannel('F+')
+print("filtered channel with regex:")
 for label in b.labels:
     print("{} : {}".format(label, b[label]))
 
@@ -92,5 +100,8 @@ print("{}'s rms: {}".format(label_A, b.rms(label_A)))
 print("{}'s ptp: {}".format(label_A, b.ptp(label_A)))
 print("{}'s zeros: {}".format(label_A, b.countZeros(label_A)))
 print("{} and {}'s co-contration: {}".format(label_A, label_B, b.cocontraction(label_A, label_B)))
+
+# change to xml
+xmlWriter('b_test.xml',b.toXML()).write()
 
 plt.show()

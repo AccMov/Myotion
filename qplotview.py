@@ -17,6 +17,9 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
     QSpacerItem, QStackedWidget, QTableWidget, QTableWidgetItem,
     QTextEdit, QVBoxLayout, QWidget)
 from PySide6.QtWebEngineWidgets import QWebEngineView
+import pandas as pd
+import pyMotion as pm
+from pyMotion import logger
 
 # Plot timerSeriesTable using plotly
 class QPlotView(QWebEngineView):
@@ -44,13 +47,50 @@ class QPlotView(QWebEngineView):
 
         for c in chans:    
             if not tst.hasChannel(c):
-                print("channel not exist")
+                logger.error("channel {} not exist".format(c))
                 return -1
         
         df = tst.toPandasFrame()
         df['t'] = tst.getLinspace()
         self.fig = px.line(df,
-                     x= 't',
+                     x = 't',
+                     y = chans,
+                     title = title,
+                     markers = False)
+        return 0
+    
+    # line, plot by list
+    def line(self, x_, y_, channel, title='', color=[]):
+        chans = []
+        data = []
+        if type(channel) is not list:
+            chans = [channel]
+        else:
+            chans = channel
+        if len(y_) == 0:
+            logger.error('data y is empty')
+            return -1
+        if type(y_[0]) is list:
+            n = len(y_[0])
+            m = len(y_)
+            data = y_
+        else:
+            n = len(y_)
+            m = 1
+            data = [ y_ ]
+        if n != len(x_):
+            logger.error('x and y need to have same dimension')
+            return -1
+        if m != len(chans):
+            logger.error('row of data and channel labels should have same dimension')
+            return -1
+        table = {}
+        for i in range(0, m):
+            table[chans[i]] = data[i]
+        df = pd.DataFrame(table)
+        df['t'] = x_
+        self.fig = px.line(df,
+                     x = 't',
                      y = chans,
                      title = title,
                      markers = False)
@@ -60,7 +100,14 @@ class QPlotView(QWebEngineView):
     def show(self):
         html = '<html><body>'
         html += plotly.offline.plot(self.fig, output_type='div', include_plotlyjs='cdn')
-        html += '</body></ html>'
+        html += '</body></html>'
+
+        self.setHtml(html)
+        self.update()
+    
+    def hide(self):
+        html = '<html><body>'
+        html += '</body></html>'
 
         self.setHtml(html)
         self.update()

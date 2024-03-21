@@ -123,7 +123,7 @@ class MainWindow(QMainWindow):
         # we create html code of the figure
         html = '<html><body>'
         html += plotly.offline.plot(fig, output_type='div', include_plotlyjs='cdn')
-        html += '</body></html>'
+        html += '</body></ html>'
 
         # we create an instance of QWebEngineView and set the html code
         plot_widget = QWebEngineView()

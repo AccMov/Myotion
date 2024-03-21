@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.signal as sig
 import pandas as pd
+import re
+from .xml import *
 
 """
 1. max/min/med/std/var/rms/peak-to-peak-distance
@@ -20,60 +22,127 @@ all returned vector remain same dimension
 
 
 class timeSeriesTable:
-    # expect input to be a matrix
-    def __init__(self, fs, labels, input):
+    '''
+    expect input to be a len(labels) x N matrix
+    input can be None, but fs and labels must be defined
+    '''
+    def __init__(self, fs, labels, input=None):
         self.data = {}
 
-        if len(labels) != len(input):
-            raise ValueError("labels and input must have same dimension")
 
-        if len(input) == 0:
-            raise ValueError("input must have at least one channel")
-
-        for i in range(0, len(labels)):
-            self.data[labels[i]] = np.array(input[i])
+        if len(labels) == 0:
+            raise ValueError("at least one label required!")
+        
+        if type(input) is dict:
+            self.data = input
+        else:
+            for i in range(0, len(labels)):
+                if input is None:
+                    self.data[labels[i]] = np.array([])
+                else:
+                    self.data[labels[i]] = np.array(input[i])
+        
 
         self.metadata = {
-            "fs": fs,
-            "ts": 1.0 / fs,
-            "labels": labels,
-            "n": len(input[0]),
-            "time": len(input[0]) / fs,
+            "fs" : fs,
+            "ts" : 1.0/fs,
+            "labels":  labels,
+            "n" :  len(self.data[labels[0]]),
+            "time" : len(self.data[labels[0]]) / fs
         }
 
+        self.iter = 0
+    
+    # accessor of object
     def __getitem__(self, key):
         return self.data[key]
 
     def __setitem__(self, key, value):
+        # check dimension
+        if self.n != 0 and len(value) != self.n:
+            raise ValueError("all rows need to have same dimension!")    
         if key not in self.labels:
             self.__missing__(key)
+            # update time if first row added
+            if self.n == 0:
+                self.time = len(value) / self.fs
         self.data[key] = value
 
     def __delitem__(self, key):
-        return
-
+        if key not in self.labels:
+            return
+        del self.data[key]
+        self.labels.remove(key)
     def __missing__(self, key):
         self.labels.append(key)
-        self.data[key] = np.array()
-
+        self.data[key] = np.array([])
     def __getattr__(self, key):
         if key in self.metadata:
             return self.metadata[key]
 
+    # iterator
+    def __iter__(self):
+        self.iter = 0
+        return self
+    def __next__(self):
+        if self.iter < self.size():
+            return self.data[self.labels[self.iter]]
+        else:
+            raise StopIteration
+
+    def copy(self):
+        return timeSeriesTable(self.fs, self.labels.copy(), self.data.copy())
+
     def size(self):
         return self.n
+    
+    def clear(self):
+        for i in range(0, len(self.labels)):
+            self.data[self.labels[i]] = np.array([])
+        self.n = 0
+        self.time = 0
 
+    def rename(self, old, new):
+        self.data[new] = self.data.pop(old)
+
+    # check if has channel
     def hasChannel(self, chan):
         if chan in self.labels:
             return True
         else:
             return False
-
+        
+    # convert to pandas
     def toPandasFrame(self):
         return pd.DataFrame(self.data)
 
+    # get time step in linspace format
     def getLinspace(self):
-        return np.linspace(0, self.ts, self.n)
+        return np.linspace(0, self.time, self.n)
+
+    # search channels in regex
+    def searchChannel(self, regex):
+        to_be_ret = []
+        for c in self.labels:
+            if re.search(regex, c) is not None:
+                to_be_ret.append(c)
+
+        return to_be_ret
+
+    # filter out channels not in regex
+    def filterChannel(self, regex):
+        to_be_del = []
+        for c in self.labels:
+            if re.search(regex, c) is None:
+                to_be_del.append(c)
+
+        new_labels = []
+        for c in self.labels:
+            if c in to_be_del:
+                del self.data[c]
+            else:
+                new_labels.append(c)
+        self.labels = new_labels
 
     # method of one channel
     def max(self, key):
@@ -95,9 +164,8 @@ class timeSeriesTable:
         return np.var(self.data[key])
 
     def rms(self, key):
-        return np.sqrt(np.mean(self.data[key] ** 2))
-
-    def ptp(self, key):  # peak to peak
+        return np.sqrt(np.mean(self.data[key]**2))
+    def ptp(self, key):
         return np.ptp(self.data[key])
 
     # digital butterWorth filter
@@ -128,7 +196,7 @@ class timeSeriesTable:
 
     # rectification
     def rectification(self, key):
-        return np.absolute(self.removeDC(key))
+        return np.absolute(self.data[key])
 
     # normalization
     def normalization(self, key, val):
@@ -208,3 +276,28 @@ class timeSeriesTable:
     def writeFile(self, file):
         # write to file
         return 0
+
+    '''
+    <timeSeriesTable>
+        <channels_num></channels_num>
+        <channels_name> </channels_name>
+        <fs> </fs>
+        <N> </N>
+        <channels>
+            <A>  </A>
+            ...
+        </channels>
+    </timeSeriesTable>
+    '''
+    def toXML(self):
+        e = xmlElement('timeSeriesTable')
+        e.addNode('channels_num', str(len(self.labels)))
+        e.addNode('channels_name', ' '.join(self.labels))
+        e.addNode('fs', str(self.fs))
+        e.addNode('N', str(self.n))
+
+        c = xmlElement('channels')
+        e.addSubTree(c)
+        for k in self.labels:
+            c.addNode(k, ' '.join(format(x, '.6f') for x in self.data[k]))
+        return e

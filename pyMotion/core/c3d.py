@@ -139,7 +139,7 @@ class AnalogData:
 
     def convertToTST(self):
         if self.channels() == 0:
-            return timeSeriesTable()
+            return None
 
         data = [self.analog_data[key] for key in self.labels]  #convert to list
         return timeSeriesTable(self.fs, self.labels, data)

@@ -1,17 +1,27 @@
-import xml.etree.ElementTree as ET
-
+from .xml import *
+import time
 class person:
-    def __init__(self, ):
+    def __init__(self,
+                 name, 
+                 dob,
+                 gender,
+                 height='',
+                 weight='',
+                 first_name='', 
+                 middle_name='', 
+                 last_name='',
+                 ):
         self.data = {
-            "name": "",
-            "first_name": "",
-            "middle_name": "",
-            "last_name": "",
-            "dob": "",
-            "gender": "",
-            "height":"",
-            "weight":"",
+            "name": name,
+            "first_name": first_name,
+            "middle_name": middle_name,
+            "last_name": last_name,
+            "dob": dob,
+            "gender": gender,
+            "height": str(height),
+            "weight": str(weight),
         }
+        self.timestamp = str(time.localtime())
     
     def __getattr__(self, key):
         if key in self.data.keys():
@@ -26,10 +36,12 @@ class person:
     def __missing__(self, key):
         return
     
+    def key(self):
+        return hash(self.name + self.timestamp)
+
     def toXML(self, xml):
-        sub = ET.SubElement(xml, "Person")
+        e = xmlElement('Person')
         for key in self.data.keys():
-            t = ET.SubElement(sub, key)
-            t.text = self.data[key]
+            e.addNode(key, str(self.data[key]))        
 
     #def fromXML(self, xml):

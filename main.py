@@ -523,8 +523,8 @@ class MainWindow(QMainWindow):
         
         idx = widgets.listWidget.currentRow()
         type, str = cfg.getTypeInfo(idx)
-        self.updateEMGToolBox(type)
         self.selectSingleEMGStep(widgets.listWidget.currentRow())
+        self.updateEMGToolBox(type)
 
     def EMGConfigureToggleConfiguration(self, state):
         p, step, chan = self.singleEMG
@@ -703,8 +703,27 @@ class MainWindow(QMainWindow):
             pm.emgConfigureEnum.ACTIVATION : 4,
             pm.emgConfigureEnum.SUMMARY : 5,
         }
-        print(type2toolbox[type])
-        widgets.toolBox.setCurrentIndex(type2toolbox[type])
+        idx = type2toolbox[type] 
+        widgets.toolBox.setCurrentIndex(idx)
+        # update toolbox with current config
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        if type == pm.emgConfigureEnum.DC_OFFSET:
+            widgets.checkBox_4.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
+        elif type == pm.emgConfigureEnum.FULL_W_RECT:
+            widgets.checkBox_11.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
+        elif type == pm.emgConfigureEnum.FILTER:
+            if cfg[step].type ==  pm.emgFilterEnum.BAND_PASS:
+                widgets.comboBox_7.setCurrentIndex(0)
+                widgets.lineEdit_10.setText(str(cfg[step].cutoff_l))
+                widgets.lineEdit_11.setText(str(cfg[step].cutoff_h))
+            else:
+                widgets.comboBox_7.setCurrentIndex(1)
+                widgets.lineEdit_12.setText(str(cfg[step].cutoff_l))
 
     def updateEMGChannelSelectorContent(self):
         p, step, chan = self.singleEMG

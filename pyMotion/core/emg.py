@@ -101,6 +101,7 @@ class emgConfigure():
             emgConfigureEnum.DC_OFFSET,
             emgConfigureEnum.FULL_W_RECT,
             emgConfigureEnum.FILTER,
+            emgConfigureEnum.FILTER,
             emgConfigureEnum.NORMALIZATION,
             emgConfigureEnum.SUMMARY,
         ]

@@ -23,9 +23,10 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
     QProgressBar, QPushButton, QRadioButton, QScrollArea,
     QScrollBar, QSizePolicy, QSlider, QSpacerItem,
     QStackedWidget, QTableWidget, QTableWidgetItem, QToolBox,
-    QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
-import resources_rc
-import Myotion_logo_rc
+    QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget, QTreeView)
+from . resources_rc import *
+from rserver import RServerBrowser
+from qplotview import *
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -776,7 +777,7 @@ class Ui_MainWindow(object):
 
         self.extraLeftBox = QFrame(self.bgApp)
         self.extraLeftBox.setObjectName(u"extraLeftBox")
-        self.extraLeftBox.setMinimumSize(QSize(210, 0))
+        self.extraLeftBox.setMinimumSize(QSize(300, 0))
         self.extraLeftBox.setMaximumSize(QSize(0, 16777215))
         self.extraLeftBox.setFrameShape(QFrame.NoFrame)
         self.extraLeftBox.setFrameShadow(QFrame.Raised)
@@ -852,6 +853,19 @@ class Ui_MainWindow(object):
         self.verticalLayout_11.setSpacing(0)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
         self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
+
+        self.btn_new = QPushButton(self.extraTopMenu)
+        self.btn_new.setObjectName(u"btn_new")
+        sizePolicy.setHeightForWidth(self.btn_new.sizePolicy().hasHeightForWidth())
+        self.btn_new.setSizePolicy(sizePolicy)
+        self.btn_new.setMinimumSize(QSize(0, 45))
+        self.btn_new.setFont(font)
+        self.btn_new.setCursor(QCursor(Qt.PointingHandCursor))
+        self.btn_new.setLayoutDirection(Qt.LeftToRight)
+        self.btn_new.setStyleSheet(u"background-image: url(:/icons/images/icons/cil-share-boxed.png);")
+
+        self.verticalLayout_11.addWidget(self.btn_new)
+
         self.btn_share = QPushButton(self.extraTopMenu)
         self.btn_share.setObjectName(u"btn_share")
         sizePolicy.setHeightForWidth(self.btn_share.sizePolicy().hasHeightForWidth())
@@ -944,10 +958,13 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_79.addWidget(self.frame_55)
 
-        self.treeWidget = QTreeWidget(self.workspace_tree)
-        self.treeWidget.setObjectName(u"treeWidget")
+        self.treeView = QTreeView(self.workspace_tree)
+        self.treeView.setObjectName(u"treeView")
+        self.treeView.setStyleSheet(u"font-size:14px;\n"
+"color: rgba(0,0,0,0.8);\n"
+"")
 
-        self.verticalLayout_79.addWidget(self.treeWidget)
+        self.verticalLayout_79.addWidget(self.treeView)
 
 
         self.verticalLayout_64.addWidget(self.workspace_tree)
@@ -1850,15 +1867,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_38.setObjectName(u"horizontalLayout_38")
         self.horizontalLayout_38.setContentsMargins(0, 0, 0, 0)
         self.comboBox_2 = QComboBox(self.frame_11)
-        self.comboBox_2.addItem("")
-        self.comboBox_2.addItem("")
-        self.comboBox_2.addItem("")
         self.comboBox_2.setObjectName(u"comboBox_2")
         self.comboBox_2.setFont(font)
         self.comboBox_2.setAutoFillBackground(False)
         self.comboBox_2.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
 "border-radius:0;\n"
-"")
+"font-size:12px;\n"
+"color: rgba(0,0,0,0.8);\n")
         self.comboBox_2.setIconSize(QSize(16, 16))
         self.comboBox_2.setFrame(True)
 
@@ -1870,17 +1885,15 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_40.addWidget(self.frame_2)
 
-        self.frame_3 = QFrame(self.data_process_graphic_top)
-        self.frame_3.setObjectName(u"frame_3")
+        self.plot_input = QPlotView()
+        self.plot_input.setObjectName(u"QPlotView_input")
         sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         sizePolicy12.setHorizontalStretch(0)
         sizePolicy12.setVerticalStretch(9)
-        sizePolicy12.setHeightForWidth(self.frame_3.sizePolicy().hasHeightForWidth())
-        self.frame_3.setSizePolicy(sizePolicy12)
-        self.frame_3.setFrameShape(QFrame.StyledPanel)
-        self.frame_3.setFrameShadow(QFrame.Raised)
+        sizePolicy12.setHeightForWidth(self.plot_input.sizePolicy().hasHeightForWidth())
+        self.plot_input.setSizePolicy(sizePolicy12)
 
-        self.verticalLayout_40.addWidget(self.frame_3)
+        self.verticalLayout_40.addWidget(self.plot_input)
 
 
         self.verticalLayout_39.addWidget(self.data_process_graphic_top)
@@ -1931,14 +1944,12 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_41.addWidget(self.frame_4)
 
-        self.frame_5 = QFrame(self.data_process_graphic_bottom)
-        self.frame_5.setObjectName(u"frame_5")
-        sizePolicy12.setHeightForWidth(self.frame_5.sizePolicy().hasHeightForWidth())
-        self.frame_5.setSizePolicy(sizePolicy12)
-        self.frame_5.setFrameShape(QFrame.StyledPanel)
-        self.frame_5.setFrameShadow(QFrame.Raised)
+        self.plot_output = QPlotView()
+        self.plot_output.setObjectName(u"QPlotView_output")
+        sizePolicy12.setHeightForWidth(self.plot_output.sizePolicy().hasHeightForWidth())
+        self.plot_output.setSizePolicy(sizePolicy12)
 
-        self.verticalLayout_41.addWidget(self.frame_5)
+        self.verticalLayout_41.addWidget(self.plot_output)
 
 
         self.verticalLayout_39.addWidget(self.data_process_graphic_bottom)
@@ -2287,12 +2298,23 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_74.addWidget(self.frame_41)
 
+        self.pushButton_21 = QPushButton(self.frame_29)
+        self.pushButton_21.setObjectName(u"pushButton_20")
+        self.pushButton_21.setMinimumSize(QSize(150, 40))
+        self.pushButton_21.setFont(font5)
+        self.pushButton_21.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pushButton_21.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"margin:6px 6px;\n"
+"border:1px solid rgba(0,0,0,0.1);\n"
+"")
+        self.verticalLayout_74.addWidget(self.pushButton_21)
+
         self.verticalSpacer_8 = QSpacerItem(20, 7, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.verticalLayout_74.addItem(self.verticalSpacer_8)
 
-
         self.verticalLayout_43.addWidget(self.frame_13)
+        
 
         self.toolBox.addItem(self.page_3_filter, u"\u00b7 Filter")
         self.page_4_norm = QWidget()
@@ -2923,8 +2945,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_56.addWidget(self.frame_49)
 
         self.tableWidget_2 = QTableWidget(self.frame_48)
-        if (self.tableWidget_2.columnCount() < 4):
-            self.tableWidget_2.setColumnCount(4)
+        self.tableWidget_2.setColumnCount(4)
         __qtablewidgetitem = QTableWidgetItem()
         self.tableWidget_2.setHorizontalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
@@ -3027,7 +3048,7 @@ class Ui_MainWindow(object):
 "\n"
 "QTableWidget::item:selected\n"
 "{\n"
-"    color:#red;\n"
+"    color:#ff0000;\n"
 "    background:#454a55;\n"
 "}\n"
 "\n"
@@ -3041,18 +3062,16 @@ class Ui_MainWindow(object):
         self.tableWidget_2.setShowGrid(True)
         self.tableWidget_2.setGridStyle(Qt.SolidLine)
         self.tableWidget_2.setSortingEnabled(False)
-        self.tableWidget_2.horizontalHeader().setVisible(False)
+        self.tableWidget_2.horizontalHeader().setVisible(True)
         self.tableWidget_2.horizontalHeader().setCascadingSectionResizes(True)
         self.tableWidget_2.horizontalHeader().setMinimumSectionSize(66)
         self.tableWidget_2.horizontalHeader().setDefaultSectionSize(106)
         self.tableWidget_2.horizontalHeader().setProperty("showSortIndicator", True)
-        self.tableWidget_2.horizontalHeader().setStretchLastSection(True)
-        self.tableWidget_2.verticalHeader().setVisible(False)
-        self.tableWidget_2.verticalHeader().setCascadingSectionResizes(False)
-        self.tableWidget_2.verticalHeader().setMinimumSectionSize(20)
-        self.tableWidget_2.verticalHeader().setDefaultSectionSize(30)
-        self.tableWidget_2.verticalHeader().setHighlightSections(False)
-        self.tableWidget_2.verticalHeader().setStretchLastSection(True)
+        self.tableWidget_2.horizontalHeader().setStretchLastSection(False)
+        self.tableWidget_2.horizontalHeader().setSectionResizeMode(0,QHeaderView.ResizeToContents)
+        self.tableWidget_2.horizontalHeader().setSectionResizeMode(1,QHeaderView.Stretch)
+        self.tableWidget_2.horizontalHeader().setSectionResizeMode(2,QHeaderView.ResizeToContents)
+        self.tableWidget_2.horizontalHeader().setSectionResizeMode(3,QHeaderView.ResizeToContents)
 
         self.verticalLayout_56.addWidget(self.tableWidget_2)
 
@@ -3303,18 +3322,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout_36.addWidget(self.kinematics_right)
 
         self.stackedWidget.addWidget(self.kinematics_page)
-        self.stats_page = QWidget()
+        self.stats_page = RServerBrowser()
         self.stats_page.setObjectName(u"stats_page")
-        self.horizontalLayout_15 = QHBoxLayout(self.stats_page)
-        self.horizontalLayout_15.setObjectName(u"horizontalLayout_15")
-        self.horizontalLayout_15.setContentsMargins(0, 0, 0, 0)
-        self.r_container = QFrame(self.stats_page)
-        self.r_container.setObjectName(u"r_container")
-        self.r_container.setStyleSheet(u"background-color:#f4f4f4;")
-        self.r_container.setFrameShape(QFrame.StyledPanel)
-        self.r_container.setFrameShadow(QFrame.Raised)
-
-        self.horizontalLayout_15.addWidget(self.r_container)
 
         self.stackedWidget.addWidget(self.stats_page)
         self.home = QWidget()
@@ -3817,6 +3826,7 @@ class Ui_MainWindow(object):
         self.extraCloseColumnBtn.setToolTip(QCoreApplication.translate("MainWindow", u"Close left box", None))
 #endif // QT_CONFIG(tooltip)
         self.extraCloseColumnBtn.setText("")
+        self.btn_new.setText(QCoreApplication.translate("MainWindow", u"New Workspace", None))
         self.btn_share.setText(QCoreApplication.translate("MainWindow", u"Save Workspace", None))
         self.btn_adjustments.setText(QCoreApplication.translate("MainWindow", u"Load Workspace", None))
         self.label_39.setText(QCoreApplication.translate("MainWindow", u"Workspace", None))
@@ -3869,9 +3879,6 @@ class Ui_MainWindow(object):
         self.plainTextEdit_5.setPlainText(QCoreApplication.translate("MainWindow", u"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", None))
         self.pushButton_9.setText(QCoreApplication.translate("MainWindow", u"Learn More", None))
         self.label_11.setText(QCoreApplication.translate("MainWindow", u"Previous Process", None))
-        self.comboBox_2.setItemText(0, QCoreApplication.translate("MainWindow", u"Channel-01", None))
-        self.comboBox_2.setItemText(1, QCoreApplication.translate("MainWindow", u"Channel-02", None))
-        self.comboBox_2.setItemText(2, QCoreApplication.translate("MainWindow", u"Channel-03", None))
 
         self.label_12.setText(QCoreApplication.translate("MainWindow", u"Current Process", None))
         self.checkBox_4.setText(QCoreApplication.translate("MainWindow", u" Click to process", None))
@@ -3880,6 +3887,7 @@ class Ui_MainWindow(object):
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_1_remove_dc), QCoreApplication.translate("MainWindow", u"\u00b7 Remove dc offset", None))
         self.checkBox_11.setText(QCoreApplication.translate("MainWindow", u" Click to process", None))
         self.pushButton_20.setText(QCoreApplication.translate("MainWindow", u"Confirm", None))
+        self.pushButton_21.setText(QCoreApplication.translate("MainWindow", u"Confirm", None))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_2_full_wave), QCoreApplication.translate("MainWindow", u"\u00b7 Full wave rectification", None))
         self.label_34.setText(QCoreApplication.translate("MainWindow", u"-Filter Type-", None))
         self.comboBox_7.setItemText(0, QCoreApplication.translate("MainWindow", u"band pass", None))

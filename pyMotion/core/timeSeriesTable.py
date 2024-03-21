@@ -30,12 +30,16 @@ class timeSeriesTable:
 
         if len(labels) == 0:
             raise ValueError("at least one label required!")
-
-        for i in range(0, len(labels)):
-            if input is None:
-                self.data[labels[i]] = np.array([])
-            else:
-                self.data[labels[i]] = np.array(input[i])
+        
+        if type(input) is dict:
+            self.data = input
+        else:
+            for i in range(0, len(labels)):
+                if input is None:
+                    self.data[labels[i]] = np.array([])
+                else:
+                    self.data[labels[i]] = np.array(input[i])
+        
 
         self.metadata = {
             "fs" : fs,
@@ -82,6 +86,9 @@ class timeSeriesTable:
         else:
             raise StopIteration
 
+    def copy(self):
+        return timeSeriesTable(self.fs, self.labels.copy(), self.data.copy())
+
     def size(self):
         return self.n
     
@@ -107,7 +114,7 @@ class timeSeriesTable:
 
     # get time step in linspace format
     def getLinspace(self):
-        return np.linspace(0, self.ts, self.n)
+        return np.linspace(0, self.time, self.n)
 
     # search channels in regex
     def searchChannel(self, regex):

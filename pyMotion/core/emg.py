@@ -44,9 +44,6 @@ class emgFilter():
             return -1
 
         self.type = t
-
-    def isValidCutOffFreq(self, freq):
-        return freq < self.fs/2 and freq > 0
     
     def setCutOff_L(self, freq):
         self.cutoff_l = freq
@@ -238,6 +235,9 @@ class emg:
     # return channels
     def getChannels(self):
         return self.Channels
+    
+    def getfs(self):
+        return self.emgTST.fs
 
     # search channels
     def searchChannels(self, filter):
@@ -365,36 +365,40 @@ class emg:
         type, tname = self.processCFG.getTypeInfo(step)
         cfg = self.processCFG[step]
         output = tst[chan]
-        if type == emgConfigureEnum.FILTER:
-            if cfg.type == emgFilterEnum.LOW_PASS:
-                output = tst.lowpass(chan, cfg.cutoff_l)
-            elif cfg.type == emgFilterEnum.BAND_PASS:
-                output = tst.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h)
-            else:
-                output = None
-        elif type == emgConfigureEnum.FULL_W_RECT:
-            if cfg.enable:
-                output = tst.rectification(chan)
-        elif type == emgConfigureEnum.DC_OFFSET:
-            if cfg.enable:
-                output = tst.removeDC(chan)
-        elif type == emgConfigureEnum.ACTIVATION:
-            output = tst.threholdDetection(chan, cfg.threhold, cfg.n_above, cfg.n_below)
-        elif type == emgConfigureEnum.NORMALIZATION:
-            if cfg.enable:
-                # get max from MVCTST
-                max_v = self.emgMVCTST.max(chan)
-                output = tst.normalization(chan, max_v)
-        elif type == emgConfigureEnum.SUMMARY:
-            # output remain the same
-            output = tst[chan]
+        try:
+            if type == emgConfigureEnum.FILTER:
+                if cfg.type == emgFilterEnum.LOW_PASS:
+                    output = tst.lowpass(chan, cfg.cutoff_l)
+                elif cfg.type == emgFilterEnum.BAND_PASS:
+                    output = tst.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h)
+                else:
+                    output = None
+            elif type == emgConfigureEnum.FULL_W_RECT:
+                if cfg.enable:
+                    output = tst.rectification(chan)
+            elif type == emgConfigureEnum.DC_OFFSET:
+                if cfg.enable:
+                    output = tst.removeDC(chan)
+            elif type == emgConfigureEnum.ACTIVATION:
+                output = tst.threholdDetection(chan, cfg.threhold, cfg.n_above, cfg.n_below)
+            elif type == emgConfigureEnum.NORMALIZATION:
+                if cfg.enable:
+                    # get max from MVCTST
+                    max_v = self.emgMVCTST.max(chan)
+                    output = tst.normalization(chan, max_v)
+            elif type == emgConfigureEnum.SUMMARY:
+                # output remain the same
+                output = tst[chan]
+        except:
+            output = [0] * tst.size()
+            logger.error("cannot apply configuration")
         return output
        
     def tryConfigStep(self, chan, step):
         return self.__tryConfigStepImpl(self.emgTST, chan, step)
     
     def tryConfigStepTo(self, chan, step):
-        tst = self.emgTST
+        tst = self.emgTST.copy()
         for i in range(0, step + 1):
             dat = self.__tryConfigStepImpl(tst, chan, step)  
             tst[chan] = dat

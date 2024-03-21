@@ -20,7 +20,7 @@ import platform
 from  pathlib import Path
 import re
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-    QMetaObject, QObject, QPoint, QRect,
+    QMetaObject, QObject, QPoint, QRect, QDir,
     QSize, QTimer, QUrl, Qt, QEvent)
 from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
@@ -29,7 +29,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
     QPushButton, QSizePolicy, QStatusBar, QToolBar, QMessageBox, QDialog,
     QWidget, QFileDialog, QTableWidgetItem, QComboBox, QLineEdit, QCompleter,
-    QCheckBox)
+    QCheckBox, QFileSystemModel )
 
 from rserver import RServer
 import pyMotion as pm
@@ -186,7 +186,7 @@ class EMGAddWindow(QDialog):
         try:
             re.compile(filter_str)
         except re.error:
-            print('regex not valid')
+            logger.error('regex not valid')
             return
             
         self.channels = self.emg.searchChannels(filter_str)
@@ -331,7 +331,10 @@ class MainWindow(QMainWindow):
         widgets.pushButton_10.clicked.connect(self.addEMGButtonClick)
         widgets.pushButton_11.clicked.connect(self.singleEMGButtonClick)
         widgets.listWidget.itemDoubleClicked.connect(self.EMGConfigurationListDoubleClicked)
-        widgets.checkBox_4.stateChanged.connect(self.EMGConfigureToggleDCOffset)
+        widgets.checkBox_4.stateChanged.connect(self.EMGConfigureToggleConfiguration)
+        widgets.checkBox_11.stateChanged.connect(self.EMGConfigureToggleConfiguration)
+        widgets.pushButton_21.clicked.connect(self.EMGConfigureFilterConfiguration)
+        widgets.comboBox_2.currentIndexChanged.connect(self.EMGChannelSelectorIndexChanged)
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
         self.showMaximized()
@@ -357,6 +360,7 @@ class MainWindow(QMainWindow):
         # APPLICATION LOGICS
         self.workspace = None                # workspace (participant list, emg list, reports, configure file list and etc.)
         self.home = None                     # current project path
+        self.filesystemTree = QFileSystemModel()
         self.selectedParticipants = []       # selected participants
         self.singleEMG = (None, None, None)  # Participant, Steps, channel
         self.inputBuffer = None
@@ -472,8 +476,10 @@ class MainWindow(QMainWindow):
         logger.info('workspace path: {}'.format(self.home))
         logger.info('workspace name: {}'.format(self.workspace.name))
 
-    def singleEMGButtonClick(self):
+        # Jump to EMG page
+        widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
 
+    def singleEMGButtonClick(self):
         if len(self.selectedParticipants) == 0:
             QMessageBox.critical(None, 'error', 'No participant selected!', QMessageBox.Ok)
             return
@@ -520,19 +526,82 @@ class MainWindow(QMainWindow):
         self.updateEMGToolBox(type)
         self.selectSingleEMGStep(widgets.listWidget.currentRow())
 
-    def EMGConfigureToggleDCOffset(self, state):
+    def EMGConfigureToggleConfiguration(self, state):
         p, step, chan = self.singleEMG
         if p is None:
             return
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
             return
+        
+        state = not not state
         if cfg[step].enable == state:
             return
         
         cfg[step].enable = state
+        logger.info('EMG process step {}, configuration {} set to {}'.format(step, cfg.getStepStringList()[step], state))
         self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step)
-        self.updateSignalProcessPanel(up=False)
+        self.updateEMGSignalProcessPanel(up=False)
+
+    def EMGConfigureFilterConfiguration(self):
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        
+        filtertypename = {
+            0 : pm.emgFilterEnum.BAND_PASS,
+            1 : pm.emgFilterEnum.LOW_PASS,
+        }
+        filter_type = filtertypename[widgets.comboBox_7.currentIndex()]
+        cutoff_b_l_text = widgets.lineEdit_10.text()
+        cutoff_b_h_text = widgets.lineEdit_11.text()
+        cutoff_l_l_text = widgets.lineEdit_12.text()
+        cutoff_b_l = None
+        cutoff_b_h = None
+        cutoff_l_l = None
+        if cutoff_b_l_text != '':
+            cutoff_b_l = int(cutoff_b_l_text)
+        if cutoff_b_h_text != '':
+            cutoff_b_h = int(cutoff_b_h_text)
+        if cutoff_l_l_text != '':
+            cutoff_l_l = int(cutoff_l_l_text)
+
+        fs = self.workspace[p].emg.getfs()
+        #sanity
+        if filter_type == pm.emgFilterEnum.BAND_PASS:
+            if cutoff_b_h is None or cutoff_b_l is None:
+                QMessageBox.critical(None, 'error', 'cut off frequency is not complete!', QMessageBox.Ok)
+                return
+            if cutoff_b_h >= fs/2 or cutoff_b_h < 0 or cutoff_b_l >= fs/2 or cutoff_b_l < 0:
+                QMessageBox.critical(None, 'error', 'cut off frequency has to be between 0 and {}!'.format(fs/2), QMessageBox.Ok)
+                return
+        elif filter_type == pm.emgFilterEnum.LOW_PASS:
+            if cutoff_l_l is None:
+                QMessageBox.critical(None, 'error', 'cut off frequency is not complete!', QMessageBox.Ok)
+                return
+            if cutoff_l_l >= fs/2 or cutoff_l_l < 0:
+                QMessageBox.critical(None, 'error', 'cut off frequency has to be between 0 and {}!'.format(fs/2), QMessageBox.Ok)
+                return
+
+        cfg[step].type = filter_type
+        if filter_type == pm.emgFilterEnum.BAND_PASS:
+            cfg[step].cutoff_l = cutoff_b_l
+            cfg[step].cutoff_h = cutoff_b_h
+        elif filter_type == pm.emgFilterEnum.LOW_PASS:
+            cfg[step].cutoff_l = cutoff_l_l
+ 
+        self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step)
+        self.updateEMGSignalProcessPanel(up=False)
+
+    def EMGChannelSelectorIndexChanged(self, idx):
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        newchan = widgets.comboBox_2.currentText()
+        self.selectSingleEMGChannel(newchan)
 
     # WIDGET
     # //////////////////////////////////////////////////////////////
@@ -588,7 +657,7 @@ class MainWindow(QMainWindow):
             widgets.listWidget_3.item(i).setForeground(Qt.black)
 
     # update waveform regarding to config step and user input metrics
-    def updateSignalProcessPanel(self, up = True, down = True):       
+    def updateEMGSignalProcessPanel(self, up = True, down = True):       
         p, step, chan = self.singleEMG
 
         if p is None:
@@ -637,23 +706,53 @@ class MainWindow(QMainWindow):
         print(type2toolbox[type])
         widgets.toolBox.setCurrentIndex(type2toolbox[type])
 
+    def updateEMGChannelSelectorContent(self):
+        p, step, chan = self.singleEMG
+        widgets.comboBox_2.clear()
+        chan = self.workspace[p].emg.getChannels()
+        widgets.comboBox_2.addItems(chan)
+
+    def updateEMGChannelSelectorText(self, chan):
+        widgets.comboBox_2.setCurrentText(chan)
+
+    def updateWorkProjectTreeWidget(self):
+        widgets.treeView.setForegroundRole(QPalette.Base)
+        if self.home is not None:
+            widgets.treeView.setModel(self.filesystemTree)
+            widgets.treeView.setRootIndex(self.filesystemTree.index(self.home));
+        else:
+            widgets.treeView.setModel(None)
+
     # Application Logic/Slots
     # ///////////////////////////////////////////////////////////////
+    def reset(self):
+        self.singleEMG = (None, None, None)
+        self.inputBuffer = None
+        self.outputBuffer = None
+        self.batchEMG = (None, None)
+        self.workspace = None
+        self.home = None
+        self.filesystemTree = QFileSystemModel()
+        self.selectedParticipants = []
+
     def newWorkSpace(self, fpath, name=''):
         if self.workspace is not None:
             self.saveWorkSpace()
-            self.workspace.clear()
+            self.reset()
 
         # create new project
         self.workspace = pm.workspace(name)
-        
         self.home = str(fpath)
 
+        # load workspace file exploer
+        self.filesystemTree.setRootPath(self.home)
+
         # clear GUI
-        self.updateSignalProcessPanel()
+        self.updateEMGSignalProcessPanel()
         self.updateEMGConfigureList()
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
+        self.updateWorkProjectTreeWidget()
         return 0
     
     def saveWorkSpace(self):
@@ -665,11 +764,28 @@ class MainWindow(QMainWindow):
             return -1
         
         # set fsm
-        self.singleEMG = (p, 0, self.workspace[p].emg.getChannels()[0])
+        chan = self.workspace[p].emg.getChannels()[0]
+        self.singleEMG = (p, 0, chan)
         self.workspace[p].emg.startProcess()
         self.updateEMGConfigureList()
+        self.updateEMGChannelSelectorContent()
+        self.updateEMGChannelSelectorText(chan)
         self.selectSingleEMGStep(0)
-        
+
+    def __updateEMGRenderBuffer(self):
+        p, step, chan = self.singleEMG
+        if step == 0:
+            self.inputBuffer = self.workspace[p].emg[chan]
+        else:
+            self.inputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step - 1)
+        self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step)
+
+    def selectSingleEMGChannel(self, chan):
+        p, step, oldchan = self.singleEMG
+        self.singleEMG = (p, step, chan)
+        self.__updateEMGRenderBuffer()
+        self.updateEMGSignalProcessPanel()
+
     def selectSingleEMGStep(self, idx):
         p, step, chan = self.singleEMG
 
@@ -680,21 +796,18 @@ class MainWindow(QMainWindow):
             return
         cfgstrings = cfg.getStepStringList()
         
-        if idx > len(cfgstrings):
+        if idx > len(cfgstrings) or idx < 0:
             logger.info("single EMG process idx {} out of range".format(idx))
 
         logger.info("selecting EMG process step {}, {}".format(idx, cfgstrings[idx]))
         self.singleEMG = (p, idx, chan)
-        if idx == 0:
-            self.inputBuffer = self.workspace[p].emg[chan]
-        else:
-            self.inputBuffer  = self.workspace[p].emg.tryConfigStepTo(chan, idx - 1)
-        self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, idx)
+        logger.info("Current channel {}".format(chan))
 
+        self.__updateEMGRenderBuffer()
         # select index for EMG config widget
         widgets.listWidget.setCurrentRow(idx)
         # update UI
-        self.updateSignalProcessPanel()
+        self.updateEMGSignalProcessPanel()
         type, str = cfg.getTypeInfo(idx)
         self.updateEMGToolBox(type)
         

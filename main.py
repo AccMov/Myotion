@@ -333,6 +333,8 @@ class MainWindow(QMainWindow):
         widgets.listWidget.itemDoubleClicked.connect(self.EMGConfigurationListDoubleClicked)
         widgets.checkBox_4.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.checkBox_11.stateChanged.connect(self.EMGConfigureToggleConfiguration)
+        widgets.checkBox_12.stateChanged.connect(self.EMGConfigureToggleConfiguration)
+        widgets.checkBox_13.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.pushButton_21.clicked.connect(self.EMGConfigureFilterConfiguration)
         widgets.comboBox_2.currentIndexChanged.connect(self.EMGChannelSelectorIndexChanged)
         # SHOW APP
@@ -480,6 +482,8 @@ class MainWindow(QMainWindow):
         widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
 
     def singleEMGButtonClick(self):
+        p, step, chan = self.singleEMG
+        
         if len(self.selectedParticipants) == 0:
             QMessageBox.critical(None, 'error', 'No participant selected!', QMessageBox.Ok)
             return
@@ -488,7 +492,7 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(None, 'error', 'Only one participant can be selected!', QMessageBox.Ok)
             return
         
-        if self.singleEMG[0] is not None:
+        if p is not None:
             QMessageBox.critical(None, 'error', 'Current EMG process is not finished!', QMessageBox.Ok)
             return
 
@@ -550,7 +554,7 @@ class MainWindow(QMainWindow):
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
             return
-        
+
         filtertypename = {
             0 : pm.emgFilterEnum.BAND_PASS,
             1 : pm.emgFilterEnum.LOW_PASS,
@@ -601,6 +605,9 @@ class MainWindow(QMainWindow):
         if p is None:
             return
         newchan = widgets.comboBox_2.currentText()
+        if chan == newchan:
+            return
+        logger.info('EMG channel selector index changed to {}'.format(newchan))
         self.selectSingleEMGChannel(newchan)
 
     # WIDGET
@@ -667,6 +674,7 @@ class MainWindow(QMainWindow):
 
         x = self.workspace[p].emg.getLinspace()
         # push data to plot
+             
         if up:
             widgets.plot_input.line(x, self.inputBuffer, chan)
             widgets.plot_input.show()
@@ -717,6 +725,7 @@ class MainWindow(QMainWindow):
         elif type == pm.emgConfigureEnum.FULL_W_RECT:
             widgets.checkBox_11.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
         elif type == pm.emgConfigureEnum.FILTER:
+            widgets.checkBox_13.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
             if cfg[step].type ==  pm.emgFilterEnum.BAND_PASS:
                 widgets.comboBox_7.setCurrentIndex(0)
                 widgets.lineEdit_10.setText(str(cfg[step].cutoff_l))
@@ -725,15 +734,24 @@ class MainWindow(QMainWindow):
             else:
                 widgets.comboBox_7.setCurrentIndex(1)
                 widgets.lineEdit_12.setText(str(cfg[step].cutoff_l))
-                widgets.lineEdit_10.setText(''-)
+                widgets.lineEdit_10.setText('')
                 widgets.lineEdit_11.setText('')
+        elif type == pm.emgConfigureEnum.NORMALIZATION:
+            widgets.checkBox_12.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
+        elif type == pm.emgConfigureEnum.SUMMARY:
+            widgets.label_23.setText("{:.4f}".format(cfg[step].max))
+            widgets.label_25.setText("{:.4f}".format(cfg[step].min))
+            widgets.label_27.setText("{:.4f}".format(cfg[step].med))
+            widgets.label_29.setText("{:.4f}".format(cfg[step].rms))
+            widgets.label_31.setText("{:.4f}".format(cfg[step].ptp))
+            widgets.label_33.setText("{:.4f}".format(cfg[step].zeros))
 
     def updateEMGChannelSelectorContent(self):
         p, step, chan = self.singleEMG
         widgets.comboBox_2.clear()
         chan = self.workspace[p].emg.getChannels()
         widgets.comboBox_2.addItems(chan)
-
+    
     def updateEMGChannelSelectorText(self, chan):
         widgets.comboBox_2.setCurrentText(chan)
 
@@ -741,7 +759,7 @@ class MainWindow(QMainWindow):
         widgets.treeView.setForegroundRole(QPalette.Base)
         if self.home is not None:
             widgets.treeView.setModel(self.filesystemTree)
-            widgets.treeView.setRootIndex(self.filesystemTree.index(self.home));
+            widgets.treeView.setRootIndex(self.filesystemTree.index(self.home))
         else:
             widgets.treeView.setModel(None)
 

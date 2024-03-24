@@ -16,11 +16,16 @@ class emgRectification():
 
 class emgNormalization():
     def __init__(self):
-        self.enable = True
+        self.enable = False
 
 class emgSummary():
     def __init__(self):
-        self.enable = True
+        self.max = 0
+        self.min = 0
+        self.med = 0
+        self.rms = 0
+        self.ptp = 0
+        self.zeros = 0
 
 class emgFilterEnum(Enum):
     LOW_PASS = 0
@@ -28,6 +33,7 @@ class emgFilterEnum(Enum):
     MAX = 2
 class emgFilter():
     def __init__(self):
+        self.enable = False
         self.type = emgFilterEnum.LOW_PASS
         self.cutoff_l = 0
         self.cutoff_h = 0
@@ -315,9 +321,8 @@ class emg:
 
             elif self.isMAT(f):
                 mat = matFile(f)
-                MVCChannels = mat.analog.labels
+                MVCChannels = mat.labels
                 MVCTST = mat.convertToTST()
-
             else:
                 logger.error("unsupported file format")
                 raise Exception(logger.errstr)
@@ -368,12 +373,13 @@ class emg:
         output = tst[chan]
         try:
             if type == emgConfigureEnum.FILTER:
-                if cfg.type == emgFilterEnum.LOW_PASS:
-                    output = tst.lowpass(chan, cfg.cutoff_l)
-                elif cfg.type == emgFilterEnum.BAND_PASS:
-                    output = tst.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h)
-                else:
-                    output = None
+                if cfg.enable:
+                    if cfg.type == emgFilterEnum.LOW_PASS:
+                        output = tst.lowpass(chan, cfg.cutoff_l)
+                    elif cfg.type == emgFilterEnum.BAND_PASS:
+                        output = tst.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h)
+                    else:
+                        output = None
             elif type == emgConfigureEnum.FULL_W_RECT:
                 if cfg.enable:
                     output = tst.rectification(chan)
@@ -387,9 +393,16 @@ class emg:
                     # get max from MVCTST
                     max_v = self.emgMVCTST.max(chan)
                     output = tst.normalization(chan, max_v)
+                    print(max_v)
+                    print(output)
             elif type == emgConfigureEnum.SUMMARY:
                 # output remain the same
-                output = tst[chan]
+                cfg.max = tst.max(chan)
+                cfg.min = tst.min(chan)
+                cfg.med = tst.median(chan)
+                cfg.rms = tst.rms(chan)
+                cfg.ptp = tst.ptp(chan)
+                cfg.zeros = tst.countZeros(chan)
         except:
             output = [0] * tst.size()
             logger.error("cannot apply configuration")
@@ -401,8 +414,7 @@ class emg:
     def tryConfigStepTo(self, chan, step):
         tst = self.emgTST.copy()
         for i in range(0, step + 1):
-            dat = self.__tryConfigStepImpl(tst, chan, step)  
-            tst[chan] = dat
+            tst[chan] = self.__tryConfigStepImpl(tst, chan, i)
         return tst[chan]
         
     # process data using configure file

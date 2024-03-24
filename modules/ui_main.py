@@ -2141,6 +2141,15 @@ class Ui_MainWindow(object):
         self.verticalLayout_59.setSpacing(0)
         self.verticalLayout_59.setObjectName(u"verticalLayout_59")
         self.verticalLayout_59.setContentsMargins(0, 0, 0, 0)
+
+        self.checkBox_13 = QCheckBox(self.frame_40)
+        self.checkBox_13.setObjectName(u"checkBox_13")
+        sizePolicy13.setHeightForWidth(self.checkBox_13.sizePolicy().hasHeightForWidth())
+        self.checkBox_13.setSizePolicy(sizePolicy13)
+        self.checkBox_13.setStyleSheet(u"font-weight:1;\n"
+"font-size:12px;")
+        self.verticalLayout_59.addWidget(self.checkBox_13)
+        
         self.comboBox_7 = QComboBox(self.frame_40)
         self.comboBox_7.addItem("")
         self.comboBox_7.addItem("")
@@ -3905,6 +3914,7 @@ class Ui_MainWindow(object):
         self.lineEdit_12.setPlaceholderText(QCoreApplication.translate("MainWindow", u"cut-off frequency low", None))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_3_filter), QCoreApplication.translate("MainWindow", u"\u00b7 Filter", None))
         self.checkBox_12.setText(QCoreApplication.translate("MainWindow", u" Click to process", None))
+        self.checkBox_13.setText(QCoreApplication.translate("MainWindow", u" Click to process", None))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_4_norm), QCoreApplication.translate("MainWindow", u"\u00b7 Normalization", None))
         self.label_18.setText(QCoreApplication.translate("MainWindow", u"Threhold", None))
         self.lineEdit_7.setInputMask("")

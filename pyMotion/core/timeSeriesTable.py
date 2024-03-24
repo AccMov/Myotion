@@ -192,7 +192,7 @@ class timeSeriesTable:
     def normalization(self, key, val):
         if val <= 0:
             raise ValueError("normalization val has be bigger than zero")
-        return self.data[key] / val
+        return np.divide(self.data[key], float(val))
     
     # threhold detection
     # https://github.com/BMClab/BMC/blob/master/notebooks/DetectOnset.ipynb

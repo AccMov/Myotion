@@ -337,6 +337,7 @@ class MainWindow(QMainWindow):
         widgets.checkBox_13.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.pushButton_21.clicked.connect(self.EMGConfigureFilterConfiguration)
         widgets.comboBox_2.currentIndexChanged.connect(self.EMGChannelSelectorIndexChanged)
+        widgets.toolBox.currentChanged.connect(self.EMGChannelToolBoxIndexChanged)
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
         self.showMaximized()
@@ -544,8 +545,8 @@ class MainWindow(QMainWindow):
         
         cfg[step].enable = state
         logger.info('EMG process step {}, configuration {} set to {}'.format(step, cfg.getStepStringList()[step], state))
-        self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step)
-        self.updateEMGSignalProcessPanel(up=False)
+        self.__updateEMGRenderBuffer(prev=False)
+        self.updateEMGSignalProcessPanel(prev=False)
 
     def EMGConfigureFilterConfiguration(self):
         p, step, chan = self.singleEMG
@@ -554,15 +555,17 @@ class MainWindow(QMainWindow):
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
             return
-
+        # according to UI layout
         filtertypename = {
             0 : pm.emgFilterEnum.BAND_PASS,
             1 : pm.emgFilterEnum.LOW_PASS,
         }
         filter_type = filtertypename[widgets.comboBox_7.currentIndex()]
-        cutoff_b_l_text = widgets.lineEdit_10.text()
-        cutoff_b_h_text = widgets.lineEdit_11.text()
+        cutoff_b_h_text = widgets.lineEdit_10.text()
+        cutoff_b_l_text = widgets.lineEdit_11.text()
         cutoff_l_l_text = widgets.lineEdit_12.text()
+        print(cutoff_b_h_text)
+        print(cutoff_b_l_text)
         cutoff_b_l = None
         cutoff_b_h = None
         cutoff_l_l = None
@@ -582,6 +585,9 @@ class MainWindow(QMainWindow):
             if cutoff_b_h >= fs/2 or cutoff_b_h < 0 or cutoff_b_l >= fs/2 or cutoff_b_l < 0:
                 QMessageBox.critical(None, 'error', 'cut off frequency has to be between 0 and {}!'.format(fs/2), QMessageBox.Ok)
                 return
+            if cutoff_b_l >= cutoff_b_h:
+                QMessageBox.critical(None, 'error', 'cut off low has to be smaller than cut off high!', QMessageBox.Ok)
+                return
         elif filter_type == pm.emgFilterEnum.LOW_PASS:
             if cutoff_l_l is None:
                 QMessageBox.critical(None, 'error', 'cut off frequency is not complete!', QMessageBox.Ok)
@@ -597,8 +603,8 @@ class MainWindow(QMainWindow):
         elif filter_type == pm.emgFilterEnum.LOW_PASS:
             cfg[step].cutoff_l = cutoff_l_l
  
-        self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step)
-        self.updateEMGSignalProcessPanel(up=False)
+        self.__updateEMGRenderBuffer(prev=False)
+        self.updateEMGSignalProcessPanel(prev=False)
 
     def EMGChannelSelectorIndexChanged(self, idx):
         p, step, chan = self.singleEMG
@@ -609,6 +615,17 @@ class MainWindow(QMainWindow):
             return
         logger.info('EMG channel selector index changed to {}'.format(newchan))
         self.selectSingleEMGChannel(newchan)
+
+    def EMGChannelToolBoxIndexChanged(self, idx):
+        # do not allow user change
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        type, str = cfg.getTypeInfo(step)
+        self.updateEMGToolBox(type)
 
     # WIDGET
     # //////////////////////////////////////////////////////////////
@@ -664,7 +681,7 @@ class MainWindow(QMainWindow):
             widgets.listWidget_3.item(i).setForeground(Qt.black)
 
     # update waveform regarding to config step and user input metrics
-    def updateEMGSignalProcessPanel(self, up = True, down = True):       
+    def updateEMGSignalProcessPanel(self, prev = True, post = True):       
         p, step, chan = self.singleEMG
 
         if p is None:
@@ -675,10 +692,10 @@ class MainWindow(QMainWindow):
         x = self.workspace[p].emg.getLinspace()
         # push data to plot
              
-        if up:
+        if prev:
             widgets.plot_input.line(x, self.inputBuffer, chan)
             widgets.plot_input.show()
-        if down:
+        if post:
             widgets.plot_output.line(x, self.outputBuffer, chan)
             widgets.plot_output.show()
     
@@ -728,8 +745,8 @@ class MainWindow(QMainWindow):
             widgets.checkBox_13.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
             if cfg[step].type ==  pm.emgFilterEnum.BAND_PASS:
                 widgets.comboBox_7.setCurrentIndex(0)
-                widgets.lineEdit_10.setText(str(cfg[step].cutoff_l))
-                widgets.lineEdit_11.setText(str(cfg[step].cutoff_h))
+                widgets.lineEdit_10.setText(str(cfg[step].cutoff_h))
+                widgets.lineEdit_11.setText(str(cfg[step].cutoff_l))
                 widgets.lineEdit_12.setText("")
             else:
                 widgets.comboBox_7.setCurrentIndex(1)
@@ -812,13 +829,15 @@ class MainWindow(QMainWindow):
         self.updateEMGChannelSelectorText(chan)
         self.selectSingleEMGStep(0)
 
-    def __updateEMGRenderBuffer(self):
+    def __updateEMGRenderBuffer(self, prev=True, post=True):
         p, step, chan = self.singleEMG
-        if step == 0:
-            self.inputBuffer = self.workspace[p].emg[chan]
-        else:
-            self.inputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step - 1)
-        self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step)
+        if prev:
+            if step == 0:
+                self.inputBuffer = self.workspace[p].emg[chan]
+            else:
+                self.inputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step - 1)
+        if post:
+            self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step)
 
     def selectSingleEMGChannel(self, chan):
         p, step, oldchan = self.singleEMG

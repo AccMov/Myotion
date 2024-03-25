@@ -363,7 +363,7 @@ class emg:
             logger.error("Targetted channel not exist")
             raise Exception(logger.errstr)
         
-        if step > self.processCFG.size():
+        if step >= self.processCFG.size():
             logger.error("Selected step out of bound")
             raise Exception(logger.errstr)
 

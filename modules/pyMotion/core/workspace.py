@@ -32,13 +32,13 @@ class workspace:
         # data of participants, hash:profile
         self.profileList = {}
 
-        # list of global emg config
-        self.global_emgconfig = {}
+        # list of saved emg config
+        self.saved_emgconfig = {}
 
     def clear(self):
         self.participants.clear()
         self.profileList.clear()
-        self.global_emgconfig.clear()
+        self.saved_emgconfig.clear()
 
     # check if person exist
     def hasParticipant(self, person):
@@ -79,8 +79,11 @@ class workspace:
     def profileStatusList(self):
         return [self.profileList[id].getDataStatus() for p, id in self.participants]
     
-    def saveCurrentConfigure(self, name):
-        return
+    def saveConfigure(self, person, cfgname):
+        if not self.hasParticipant(person):
+            return -1
+        self.saved_emgconfig[cfgname] = self.profileList[person].emg.getProcessConfig()
+        return 0
     
     def hasConfigFile(self, name):
         return False

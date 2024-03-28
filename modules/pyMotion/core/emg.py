@@ -393,8 +393,6 @@ class emg:
                     # get max from MVCTST
                     max_v = self.emgMVCTST.max(chan)
                     output = tst.normalization(chan, max_v)
-                    print(max_v)
-                    print(output)
             elif type == emgConfigureEnum.SUMMARY:
                 # output remain the same
                 cfg.max = tst.max(chan)

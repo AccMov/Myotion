@@ -18,8 +18,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
     QTextEdit, QVBoxLayout, QWidget)
 from PySide6.QtWebEngineWidgets import QWebEngineView
 import pandas as pd
-import pyMotion as pm
-from pyMotion import logger
+from modules import *
 
 # ploty seems having problem when number of points is lagger than 40k
 PLOTY_MAX_POINTS = 40000

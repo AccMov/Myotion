@@ -29,3 +29,5 @@ from . ui_functions import *
 
 # APP FUNCTIONS
 from . app_functions import *
+
+from . pyMotion import *

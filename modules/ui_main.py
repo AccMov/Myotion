@@ -2308,7 +2308,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_74.addWidget(self.frame_41)
 
         self.pushButton_21 = QPushButton(self.frame_29)
-        self.pushButton_21.setObjectName(u"pushButton_20")
+        self.pushButton_21.setObjectName(u"pushButton_21")
         self.pushButton_21.setMinimumSize(QSize(150, 40))
         self.pushButton_21.setFont(font5)
         self.pushButton_21.setCursor(QCursor(Qt.PointingHandCursor))
@@ -2317,6 +2317,17 @@ class Ui_MainWindow(object):
 "border:1px solid rgba(0,0,0,0.1);\n"
 "")
         self.verticalLayout_74.addWidget(self.pushButton_21)
+
+        self.pushButton_22 = QPushButton(self.frame_29)
+        self.pushButton_22.setObjectName(u"pushButton_22")
+        self.pushButton_22.setMinimumSize(QSize(150, 40))
+        self.pushButton_22.setFont(font5)
+        self.pushButton_22.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pushButton_22.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"margin:6px 6px;\n"
+"border:1px solid rgba(0,0,0,0.1);\n"
+"")
+        self.verticalLayout_74.addWidget(self.pushButton_22)
 
         self.verticalSpacer_8 = QSpacerItem(20, 7, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -2347,6 +2358,17 @@ class Ui_MainWindow(object):
 "font-size:12px;")
 
         self.verticalLayout_66.addWidget(self.checkBox_12)
+
+        self.pushButton_23 = QPushButton(self.frame_32)
+        self.pushButton_23.setObjectName(u"pushButton_23")
+        self.pushButton_23.setMinimumSize(QSize(150, 40))
+        self.pushButton_23.setFont(font5)
+        self.pushButton_23.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pushButton_23.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"margin:6px 6px;\n"
+"border:1px solid rgba(0,0,0,0.1);\n"
+"")
+        self.verticalLayout_66.addWidget(self.pushButton_23)
 
         self.verticalSpacer_5 = QSpacerItem(20, 219, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -2473,13 +2495,33 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_69.addWidget(self.lineEdit_9)
 
+        self.pushButton_24 = QPushButton(self.frame_33)
+        self.pushButton_24.setObjectName(u"pushButton_24")
+        self.pushButton_24.setMinimumSize(QSize(150, 40))
+        self.pushButton_24.setFont(font5)
+        self.pushButton_24.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pushButton_24.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"margin:6px 6px;\n"
+"border:1px solid rgba(0,0,0,0.1);\n"
+"")
+        self.verticalLayout_69.addWidget(self.pushButton_24)
+
+        self.pushButton_25 = QPushButton(self.frame_33)
+        self.pushButton_25.setObjectName(u"pushButton_25")
+        self.pushButton_25.setMinimumSize(QSize(150, 40))
+        self.pushButton_25.setFont(font5)
+        self.pushButton_25.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pushButton_25.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"margin:6px 6px;\n"
+"border:1px solid rgba(0,0,0,0.1);\n"
+"")
+        self.verticalLayout_69.addWidget(self.pushButton_25)
 
         self.verticalLayout_53.addWidget(self.frame_33)
 
         self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.verticalLayout_53.addItem(self.verticalSpacer_6)
-
 
         self.verticalLayout_52.addWidget(self.frame_20)
 
@@ -2657,6 +2699,28 @@ class Ui_MainWindow(object):
 
 
         self.verticalLayout_55.addWidget(self.frame_39)
+
+        self.pushButton_26 = QPushButton(self.frame_22)
+        self.pushButton_26.setObjectName(u"pushButton_26")
+        self.pushButton_26.setMinimumSize(QSize(150, 40))
+        self.pushButton_26.setFont(font5)
+        self.pushButton_26.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pushButton_26.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"margin:6px 6px;\n"
+"border:1px solid rgba(0,0,0,0.1);\n"
+"")
+        self.verticalLayout_55.addWidget(self.pushButton_26)
+
+        self.pushButton_27 = QPushButton(self.frame_22)
+        self.pushButton_27.setObjectName(u"pushButton_27")
+        self.pushButton_27.setMinimumSize(QSize(150, 40))
+        self.pushButton_27.setFont(font5)
+        self.pushButton_27.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pushButton_27.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"margin:6px 6px;\n"
+"border:1px solid rgba(0,0,0,0.1);\n"
+"")
+        self.verticalLayout_55.addWidget(self.pushButton_27)
 
         self.verticalSpacer_7 = QSpacerItem(20, 64, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
@@ -3892,11 +3956,17 @@ class Ui_MainWindow(object):
         self.label_12.setText(QCoreApplication.translate("MainWindow", u"Current Process", None))
         self.checkBox_4.setText(QCoreApplication.translate("MainWindow", u" Click to process", None))
         self.label_17.setText(QCoreApplication.translate("MainWindow", u"[Value] of dc offset that is removed.", None))
-        self.pushButton_19.setText(QCoreApplication.translate("MainWindow", u"Confirm", None))
+        self.pushButton_19.setText(QCoreApplication.translate("MainWindow", u"Next", None))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_1_remove_dc), QCoreApplication.translate("MainWindow", u"\u00b7 Remove dc offset", None))
         self.checkBox_11.setText(QCoreApplication.translate("MainWindow", u" Click to process", None))
-        self.pushButton_20.setText(QCoreApplication.translate("MainWindow", u"Confirm", None))
+        self.pushButton_20.setText(QCoreApplication.translate("MainWindow", u"Next", None))
         self.pushButton_21.setText(QCoreApplication.translate("MainWindow", u"Confirm", None))
+        self.pushButton_22.setText(QCoreApplication.translate("MainWindow", u"Next", None))
+        self.pushButton_23.setText(QCoreApplication.translate("MainWindow", u"Next", None))
+        self.pushButton_24.setText(QCoreApplication.translate("MainWindow", u"Confirm", None))
+        self.pushButton_25.setText(QCoreApplication.translate("MainWindow", u"Next", None))
+        self.pushButton_26.setText(QCoreApplication.translate("MainWindow", u"Generate Report", None))
+        self.pushButton_27.setText(QCoreApplication.translate("MainWindow", u"Save Configuration", None))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_2_full_wave), QCoreApplication.translate("MainWindow", u"\u00b7 Full wave rectification", None))
         self.label_34.setText(QCoreApplication.translate("MainWindow", u"-Filter Type-", None))
         self.comboBox_7.setItemText(0, QCoreApplication.translate("MainWindow", u"band pass", None))

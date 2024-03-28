@@ -32,8 +32,6 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
     QCheckBox, QFileSystemModel )
 
 from rserver import RServer
-import pyMotion as pm
-from pyMotion import logger
 from miscWidgets import *
 from path import *
 
@@ -201,7 +199,7 @@ class EMGAddWindow(QDialog):
         
         # open up emg file
         try:
-            self.emg = pm.emg(file)
+            self.emg = emg(file)
         except Exception:
             QMessageBox.critical(None, 'error', 'Selected emg file is invalid!', QMessageBox.Ok)
             return
@@ -248,7 +246,7 @@ class EMGAddWindow(QDialog):
         
         # creat person
         name = self.widgets.lineEdit_3.text()
-        self.person = pm.person(name, 'N/A', 'N/A')
+        self.person = person(name, 'N/A', 'N/A')
         # filter and rename channels
         old = self.emg.getChannels()
         for c in old:
@@ -280,7 +278,7 @@ class MainWindow(QMainWindow):
 
         # USE CUSTOM TITLE BAR | USE AS "False" FOR MAC OR LINUX
         # ///////////////////////////////////////////////////////////////
-        Settings.ENABLE_CUSTOM_TITLE_BAR = False
+        Settings.ENABLE_CUSTOM_TITLE_BAR = True
 
         # APP NAME
         # ///////////////////////////////////////////////////////////////
@@ -335,9 +333,16 @@ class MainWindow(QMainWindow):
         widgets.checkBox_11.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.checkBox_12.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.checkBox_13.stateChanged.connect(self.EMGConfigureToggleConfiguration)
-        widgets.pushButton_21.clicked.connect(self.EMGConfigureFilterConfiguration)
         widgets.comboBox_2.currentIndexChanged.connect(self.EMGChannelSelectorIndexChanged)
         widgets.toolBox.currentChanged.connect(self.EMGChannelToolBoxIndexChanged)
+        widgets.pushButton_19.clicked.connect(self.EMGStepNextButtonClicked)
+        widgets.pushButton_20.clicked.connect(self.EMGStepNextButtonClicked)
+        widgets.pushButton_21.clicked.connect(self.EMGConfigureFilterConfiguration)
+        widgets.pushButton_22.clicked.connect(self.EMGStepNextButtonClicked)
+        widgets.pushButton_23.clicked.connect(self.EMGStepNextButtonClicked)
+        widgets.pushButton_25.clicked.connect(self.EMGStepNextButtonClicked)
+        widgets.pushButton_26.clicked.connect(self.EMGGenerateReportButtonClicked)
+        widgets.pushButton_27.clicked.connect(self.EMGSaveConfigurationButtonClicked)
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
         self.showMaximized()
@@ -365,30 +370,31 @@ class MainWindow(QMainWindow):
         self.home = None                     # current project path
         self.filesystemTree = QFileSystemModel()
         self.selectedParticipants = []       # selected participants
+        self.savedEMGConfiguration = {}      # saved emg configuration
         self.singleEMG = (None, None, None)  # Participant, Steps, channel
         self.inputBuffer = None
         self.outputBuffer = None
         self.batchEMG = (None, None)         # Participant list, configure file
 
-        self.test()
+        #self.test()
 
     def test(self):
         self.newWorkSpace(MyotionPath, 'test')
         f = os.getcwd() + '/ERRPT.c3d'
-        emg = pm.emg(f)
+        memg = emg(f)
 
         # add people
-        p1 = pm.person("Guo Chen", "1995/08/05", 'male')
+        p1 = person("Guo Chen", "1995/08/05", 'male')
 
         # add data
-        self.workspace.addParticipant(p1, emg)
+        self.workspace.addParticipant(p1, memg)
 
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
 
         #////// test
         '''
-        a = pm.c3dFile(f)
+        a = c3dFile(f)
         b = a.analog.convertToTST()
         channel = 'Fx1'
 
@@ -557,8 +563,8 @@ class MainWindow(QMainWindow):
             return
         # according to UI layout
         filtertypename = {
-            0 : pm.emgFilterEnum.BAND_PASS,
-            1 : pm.emgFilterEnum.LOW_PASS,
+            0 : emgFilterEnum.BAND_PASS,
+            1 : emgFilterEnum.LOW_PASS,
         }
         filter_type = filtertypename[widgets.comboBox_7.currentIndex()]
         cutoff_b_h_text = widgets.lineEdit_10.text()
@@ -578,7 +584,7 @@ class MainWindow(QMainWindow):
 
         fs = self.workspace[p].emg.getfs()
         #sanity
-        if filter_type == pm.emgFilterEnum.BAND_PASS:
+        if filter_type == emgFilterEnum.BAND_PASS:
             if cutoff_b_h is None or cutoff_b_l is None:
                 QMessageBox.critical(None, 'error', 'cut off frequency is not complete!', QMessageBox.Ok)
                 return
@@ -588,7 +594,7 @@ class MainWindow(QMainWindow):
             if cutoff_b_l >= cutoff_b_h:
                 QMessageBox.critical(None, 'error', 'cut off low has to be smaller than cut off high!', QMessageBox.Ok)
                 return
-        elif filter_type == pm.emgFilterEnum.LOW_PASS:
+        elif filter_type == emgFilterEnum.LOW_PASS:
             if cutoff_l_l is None:
                 QMessageBox.critical(None, 'error', 'cut off frequency is not complete!', QMessageBox.Ok)
                 return
@@ -597,10 +603,10 @@ class MainWindow(QMainWindow):
                 return
 
         cfg[step].type = filter_type
-        if filter_type == pm.emgFilterEnum.BAND_PASS:
+        if filter_type == emgFilterEnum.BAND_PASS:
             cfg[step].cutoff_l = cutoff_b_l
             cfg[step].cutoff_h = cutoff_b_h
-        elif filter_type == pm.emgFilterEnum.LOW_PASS:
+        elif filter_type == emgFilterEnum.LOW_PASS:
             cfg[step].cutoff_l = cutoff_l_l
  
         self.__updateEMGRenderBuffer(prev=False)
@@ -626,6 +632,49 @@ class MainWindow(QMainWindow):
             return
         type, str = cfg.getTypeInfo(step)
         self.updateEMGToolBox(type)
+
+    def EMGStepNextButtonClicked(self):
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        
+        if step + 1 >= cfg.size():
+            QMessageBox.critical(None, 'error', 'end of emg process!', QMessageBox.Ok)
+            return
+        
+        widgets.listWidget.setCurrentRow(step + 1)
+        # equivent to double click on EMG configuration list
+        self.EMGConfigurationListDoubleClicked(None)
+    
+    def EMGGenerateReportButtonClicked(self):
+        # sanity
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        
+        if step != cfg.size():
+            return
+        self.workspace.genReport(p)
+    
+    def EMGSaveConfigurationButtonClicked(self):
+        p, step, chan = self.singleEMG
+        if p is None:
+            QMessageBox.critical(None, 'error', 'Single EMG not started!', QMessageBox.Ok)
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            QMessageBox.critical(None, 'error', 'EMG process file not available!', QMessageBox.Ok)
+            return
+        
+        cfgname = p.name + "'s EMGConfig"
+        self.workspace.saveConfigure(p, cfgname)
+        self.updateEMGSavedConfigureList()
 
     # WIDGET
     # //////////////////////////////////////////////////////////////
@@ -721,12 +770,12 @@ class MainWindow(QMainWindow):
 
     def updateEMGToolBox(self, type):
         type2toolbox = {
-            pm.emgConfigureEnum.DC_OFFSET : 0,
-            pm.emgConfigureEnum.FULL_W_RECT : 1,
-            pm.emgConfigureEnum.FILTER : 2,
-            pm.emgConfigureEnum.NORMALIZATION : 3,
-            pm.emgConfigureEnum.ACTIVATION : 4,
-            pm.emgConfigureEnum.SUMMARY : 5,
+            emgConfigureEnum.DC_OFFSET : 0,
+            emgConfigureEnum.FULL_W_RECT : 1,
+            emgConfigureEnum.FILTER : 2,
+            emgConfigureEnum.NORMALIZATION : 3,
+            emgConfigureEnum.ACTIVATION : 4,
+            emgConfigureEnum.SUMMARY : 5,
         }
         idx = type2toolbox[type] 
         widgets.toolBox.setCurrentIndex(idx)
@@ -737,13 +786,13 @@ class MainWindow(QMainWindow):
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
             return
-        if type == pm.emgConfigureEnum.DC_OFFSET:
+        if type == emgConfigureEnum.DC_OFFSET:
             widgets.checkBox_4.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
-        elif type == pm.emgConfigureEnum.FULL_W_RECT:
+        elif type == emgConfigureEnum.FULL_W_RECT:
             widgets.checkBox_11.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
-        elif type == pm.emgConfigureEnum.FILTER:
+        elif type == emgConfigureEnum.FILTER:
             widgets.checkBox_13.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
-            if cfg[step].type ==  pm.emgFilterEnum.BAND_PASS:
+            if cfg[step].type ==  emgFilterEnum.BAND_PASS:
                 widgets.comboBox_7.setCurrentIndex(0)
                 widgets.lineEdit_10.setText(str(cfg[step].cutoff_h))
                 widgets.lineEdit_11.setText(str(cfg[step].cutoff_l))
@@ -753,9 +802,9 @@ class MainWindow(QMainWindow):
                 widgets.lineEdit_12.setText(str(cfg[step].cutoff_l))
                 widgets.lineEdit_10.setText('')
                 widgets.lineEdit_11.setText('')
-        elif type == pm.emgConfigureEnum.NORMALIZATION:
+        elif type == emgConfigureEnum.NORMALIZATION:
             widgets.checkBox_12.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
-        elif type == pm.emgConfigureEnum.SUMMARY:
+        elif type == emgConfigureEnum.SUMMARY:
             widgets.label_23.setText("{:.4f}".format(cfg[step].max))
             widgets.label_25.setText("{:.4f}".format(cfg[step].min))
             widgets.label_27.setText("{:.4f}".format(cfg[step].med))
@@ -780,6 +829,26 @@ class MainWindow(QMainWindow):
         else:
             widgets.treeView.setModel(None)
 
+    def updateEMGSavedConfigureList(self):
+        if self.workspace is None:
+            return
+        p = self.singleEMG[0]
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        # update configuration list
+        n = len(self.savedEMGConfiguration)
+        widgets.listWidget_2.clear()
+        widgets.listWidget_2.setSortingEnabled(False)
+        i = 0
+        for key, item in self.savedEMGConfiguration.items():
+            widgets.listWidget_2.addItem(key)
+            widgets.listWidget_2.item(i).setForeground(Qt.black)
+            i += 1
+
+
     # Application Logic/Slots
     # ///////////////////////////////////////////////////////////////
     def reset(self):
@@ -798,7 +867,7 @@ class MainWindow(QMainWindow):
             self.reset()
 
         # create new project
-        self.workspace = pm.workspace(name)
+        self.workspace = workspace(name)
         self.home = str(fpath)
 
         # load workspace file exploer
@@ -880,7 +949,7 @@ class MainWindow(QMainWindow):
     
 if __name__ == "__main__":
     qApp = QApplication(sys.argv)
-    qApp.setWindowIcon(QIcon("icon.ico"))
+    qApp.setWindowIcon(QIcon("Myotion_logo.png"))
     window = MainWindow()
     qApp.exec_()
     window.rserver.join()

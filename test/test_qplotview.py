@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
     QPushButton, QSizePolicy, QStatusBar, QToolBar,
     QWidget)
 from PySide6.QtWebEngineWidgets import QWebEngineView
-import pyMotion as pm
+from modules import *
 from qplotview import *
 
 
@@ -33,7 +33,7 @@ class MainWindow(QMainWindow):
 
         self.plot_widget = QPlotView()
 
-        a = pm.c3dFile('D:/Myotion/pyMotion/tests/Sample_data/Sample_data/c3d_emg/ERRPT.c3d')
+        a = c3dFile('D:/Myotion/pyMotion/tests/Sample_data/Sample_data/c3d_emg/ERRPT.c3d')
         b = a.analog.convertToTST()
         channel = 'Fx1'
         self.plot_widget.line(b, channel)

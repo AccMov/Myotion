@@ -18,8 +18,10 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
     QTextEdit, QVBoxLayout, QWidget)
 from PySide6.QtWebEngineWidgets import QWebEngineView
 import pandas as pd
-import pyMotion as pm
-from pyMotion import logger
+from modules import *
+
+# ploty seems having problem when number of points is lagger than 40k
+PLOTY_MAX_POINTS = 40000
 
 # Plot timerSeriesTable using plotly
 class QPlotView(QWebEngineView):
@@ -52,11 +54,13 @@ class QPlotView(QWebEngineView):
         
         df = tst.toPandasFrame()
         df['t'] = tst.getLinspace()
+        df = df[:PLOTY_MAX_POINTS]
         self.fig = px.line(df,
                      x = 't',
                      y = chans,
                      title = title,
-                     markers = False)
+                     markers = False,
+                     ender_mode='webgl')
         return 0
     
     # line, plot by list
@@ -89,11 +93,13 @@ class QPlotView(QWebEngineView):
             table[chans[i]] = data[i]
         df = pd.DataFrame(table)
         df['t'] = x_
+        df = df[:PLOTY_MAX_POINTS]
         self.fig = px.line(df,
                      x = 't',
                      y = chans,
                      title = title,
-                     markers = False)
+                     markers = False,
+                     render_mode='webgl')
         return 0
 
     # display on webEngine

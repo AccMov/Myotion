@@ -5,6 +5,7 @@ infoBuffer = collections.deque(maxlen=1000)
 
 class logger:
     def __init__(self):
+
         self.dummy = None
 
     @staticmethod
@@ -24,4 +25,4 @@ class logger:
     @staticmethod
     def infostr():
         return infoBuffer[0]
-    
+

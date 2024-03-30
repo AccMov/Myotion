@@ -31,8 +31,6 @@ class Base(QOpenGLWidget):
 
     def update(self):
         super().update()
-        # self.hide()
-        # self.show()
 
     def keyPressEvent(self, event):
         self.input.receiveKeyEvent(event.key(), event.type())
@@ -50,7 +48,6 @@ class Base(QOpenGLWidget):
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self.input.mouseReleaseEvent(event)
-        return super().mouseReleaseEvent(event)
     
     def wheelEvent(self, event: QWheelEvent) -> None:
         self.input.wheelEvent(event)

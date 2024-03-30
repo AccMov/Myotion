@@ -63,7 +63,7 @@ class Matrix(object):
                             [0, 0, 0, 1]]).astype(float)
 
     @staticmethod
-    def makePersepctive(angleOfView=60, aspectRatio=1, near=0.1, far=1000):
+    def makePerspective(angleOfView=60, aspectRatio=1, near=0.1, far=1000):
         a = angleOfView * pi / 180.0
         d = 1.0 / tan(a / 2)
         r = aspectRatio

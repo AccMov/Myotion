@@ -439,7 +439,7 @@ class MainWindow(QMainWindow):
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
 
         if btnName == "btn_kinematic":
-            widgets.stackedWidget.setCurrentWidget(widgets.kinematic_page)  # SET PAGE
+            widgets.stackedWidget.setCurrentWidget(widgets.kinematics_page)  # SET PAGE
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
             return

@@ -1784,16 +1784,7 @@ class Ui_MainWindow(object):
 
         self.stackedWidget.addWidget(self.start_page)
         
-        self.kinematic_page=QWidget()
-        self.kinematic_page.setObjectName(u"kinematic_page")
-        self.kinematicLayout = QGridLayout(self.kinematic_page)
-        self.kinematicWidget = BodyRender()
-        self.kinematicWidget.setSizePolicy(QSizePolicy.Policy.Expanding,QSizePolicy.Policy.Expanding)
-        self.emgWidget=EMGWidget(self.kinematic_page)
-        self.kinematicLayout.addWidget(self.kinematicWidget,0,0,1,1)
-        self.kinematicLayout.addWidget(self.emgWidget,0,1,1,1)
         
-        self.stackedWidget.addWidget(self.kinematic_page)
         
         
         self.emg_page = QWidget()
@@ -3255,6 +3246,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_16.addWidget(self.emg_right_body)
 
         self.stackedWidget.addWidget(self.emg_page)
+        
+        # self.emgWidget=EMGWidget(self.kinematic_page)
+        
         self.kinematics_page = QWidget()
         self.kinematics_page.setObjectName(u"kinematics_page")
         self.horizontalLayout_36 = QHBoxLayout(self.kinematics_page)
@@ -3295,7 +3289,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_48.setSpacing(0)
         self.verticalLayout_48.setObjectName(u"verticalLayout_48")
         self.verticalLayout_48.setContentsMargins(0, 0, 0, 0)
-        self.openGLWidget = QOpenGLWidget(self.kinematics_render)
+        self.openGLWidget = BodyRender(self.kinematics_render)
         self.openGLWidget.setObjectName(u"openGLWidget")
 
         self.verticalLayout_48.addWidget(self.openGLWidget)
@@ -3388,12 +3382,11 @@ class Ui_MainWindow(object):
         self.kinematics_left_bottom.setFrameShadow(QFrame.Raised)
         self.verticalLayout_49 = QVBoxLayout(self.kinematics_left_bottom)
         self.verticalLayout_49.setObjectName(u"verticalLayout_49")
-        self.progressBar = QProgressBar(self.kinematics_left_bottom)
-        self.progressBar.setObjectName(u"progressBar")
-        self.progressBar.setStyleSheet(u"")
-        self.progressBar.setValue(24)
+        self.playSlider = QSlider(self.kinematics_left_bottom, orientation=Qt.Horizontal)
+        self.playSlider.setObjectName(u"playSlider")
+        self.playSlider.setStyleSheet(u"")
 
-        self.verticalLayout_49.addWidget(self.progressBar)
+        self.verticalLayout_49.addWidget(self.playSlider)
 
 
         self.verticalLayout_44.addWidget(self.kinematics_left_bottom)

@@ -11,7 +11,7 @@ from modules.kinematics.object3d import Object3D
 class Camera(Object3D):
     def __init__(self, angleOfView=60, aspectRatio=1, near=0.1, far=1000):
         super().__init__()
-        self.projectionMatrix = Matrix.makePersepctive(
+        self.projectionMatrix = Matrix.makePerspective(
             angleOfView, aspectRatio, near, far
         )
         self.viewMatrix = Matrix.makeIdentity()

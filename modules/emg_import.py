@@ -99,6 +99,17 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addWidget(self.import_btn)
 
+        self.importMVC_btn = QPushButton(self.input)
+        self.importMVC_btn.setObjectName(u"importMVC_btn")
+        self.importMVC_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.importMVC_btn.setStyleSheet(u"color:#f4f4f4;\n"
+"background-color: #333b46;\n"
+"padding:8px 8px;\n"
+"marging:2px 2px;\n"
+"border-radius:8px;")
+        self.importMVC_btn.setIcon(icon)
+
+        self.horizontalLayout_2.addWidget(self.importMVC_btn)
 
         self.verticalLayout_3.addWidget(self.input)
 
@@ -191,15 +202,13 @@ class Ui_Form(object):
         self.tableWidget.setObjectName(u"tableWidget")
         self.tableWidget.setMinimumSize(QSize(0, 0))
         self.tableWidget.setStyleSheet(u"font-size:14px;")
-        self.tableWidget.setColumnCount(4)
+        self.tableWidget.setColumnCount(3)
         __qtablewidgetitem = QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(1, __qtablewidgetitem1)
         __qtablewidgetitem2 = QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(2, __qtablewidgetitem2)
-        __qtablewidgetitem3 = QTableWidgetItem()
-        self.tableWidget.setHorizontalHeaderItem(3, __qtablewidgetitem3)
         self.verticalLayout_2.addWidget(self.tableWidget)
 
 
@@ -270,6 +279,7 @@ class Ui_Form(object):
         self.lineEdit_3.setText("")
         self.lineEdit_3.setPlaceholderText("")
         self.import_btn.setText(QCoreApplication.translate("Form", u"Import File", None))
+        self.importMVC_btn.setText(QCoreApplication.translate("Form", u"Import MVC Files", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"EMG File:", None))
         self.label_3.setText(QCoreApplication.translate("Form", u"[File Path]", None))
         self.label_4.setText(QCoreApplication.translate("Form", u"Filter:", None))
@@ -279,8 +289,6 @@ class Ui_Form(object):
         ___qtablewidgetitem1.setText(QCoreApplication.translate("Form", u"Muscle Name", None));
         ___qtablewidgetitem2 = self.tableWidget.horizontalHeaderItem(2)
         ___qtablewidgetitem2.setText(QCoreApplication.translate("Form", u"MVC Trail File", None));
-        ___qtablewidgetitem3 = self.tableWidget.horizontalHeaderItem(3)
-        ___qtablewidgetitem3.setText(QCoreApplication.translate("Form", u"", None));
         self.import_btn_2.setText(QCoreApplication.translate("Form", u"Confirm", None))
         self.import_btn_3.setText(QCoreApplication.translate("Form", u"Cancel", None))
     # retranslateUi

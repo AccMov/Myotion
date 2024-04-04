@@ -35,6 +35,9 @@ class workspace:
         # list of saved emg config
         self.saved_emgconfig = {}
 
+        # fuzzy match for channels and mvc file name
+        self.fuzzforChanAndMVC = {}
+
     def clear(self):
         self.participants.clear()
         self.profileList.clear()
@@ -82,11 +85,32 @@ class workspace:
     def saveConfigure(self, person, cfgname):
         if not self.hasParticipant(person):
             return -1
-        self.saved_emgconfig[cfgname] = self.profileList[person].emg.getProcessConfig()
+        self.saved_emgconfig[cfgname] = self.profileList[person.key()].emg.getProcessConfig()
         return 0
+
+    def getConfigures(self):
+        return self.saved_emgconfig
     
     def hasConfigFile(self, name):
         return False
 
     def genReport(self, person):
-        return
+        if not self.hasParticipant(person):
+            return
+        profile = self.profileList[person.key()]
+
+        root = xmlElement('report')
+        root.addSubTree(person.toXML())
+        root.addSubTree(profile.emg.toXML())
+        profile.report = root
+
+    def saveReport(self, person, path):
+        if not self.hasParticipant(person):
+            return
+        profile = self.profileList[person.key()]
+        if profile.report is None:
+            return
+
+        writer = xmlWriter(path + '/' + person.name + '.xml', profile.report)
+        writer.write()
+

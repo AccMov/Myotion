@@ -103,13 +103,15 @@ class EMGAddWindow(QDialog):
         self.emg = None
         self.person = None
         self.channels = []
-        self.mvcfiles = {}
+        self.mvcfiles = []
+        self.mvcfilesMap = {}
         self.formalizedName = {}
 
         self.widgets.import_btn.clicked.connect(self.importEMGBtnClicked)
         self.widgets.lineEdit.textChanged.connect(self.updateFilterText)
         self.widgets.import_btn_2.clicked.connect(self.confirmBtnClicked)
         self.widgets.import_btn_3.clicked.connect(self.cancelBtnClicked)
+        self.widgets.importMVC_btn.clicked.connect(self.importMVCBtnClicked)
 
     def run(self):
         self.exec()
@@ -136,12 +138,7 @@ class EMGAddWindow(QDialog):
             # drop down selection
             self.widgets.tableWidget.setCellWidget(i, 1, self.jointComboBox(chan))
             # mvc file path
-            p = ""
-            if chan in self.mvcfiles:
-                p = self.mvcfiles[chan]
-            self.widgets.tableWidget.setCellWidget(i, 2, self.mvcFileDisplay(p))
-            # buttons for mvc file
-            self.widgets.tableWidget.setCellWidget(i, 3, self.mvcFileButton(chan))
+            self.widgets.tableWidget.setCellWidget(i, 2, self.mvcFileDisplay(chan))
 
         self.widgets.tableWidget.resizeColumnToContents(0)
     
@@ -149,9 +146,14 @@ class EMGAddWindow(QDialog):
         comboBox = QComboBox()
         comboBox.setObjectName(chan)
         comboBox.addItems(joint_name[1])
+        if chan in self.formalizedName:
+            comboBox.setCurrentText(self.formalizedName[chan])
+        else:
+            comboBox.setCurrentIndex(0)
         comboBox.currentIndexChanged.connect(self.jointBoxChanged)
         return comboBox
     
+    '''
     def mvcFileButton(self, chan):
         btn = QPushButton()
         btn.setText('select file')
@@ -162,12 +164,21 @@ class EMGAddWindow(QDialog):
         "border-radius:8px;")
         btn.clicked.connect(self.importMVCBtnClicked)
         return btn
+    '''
 
-    def mvcFileDisplay(self, str):
-        line = QLineEdit()
-        line.setReadOnly(True)
-        line.setText(str)
-        return line
+    def mvcFileDisplay(self, chan):
+        comboBox = QComboBox()
+        comboBox.setObjectName(chan)
+
+        # only display  file name instead of full path
+        for f in self.mvcfiles:
+            comboBox.addItem(os.path.basename(f))
+        if chan in self.mvcfilesMap:
+            comboBox.setCurrentIndex(self.mvcfilesMap[chan])
+        else:
+            comboBox.setCurrentIndex(-1)
+        comboBox.currentIndexChanged.connect(self.MVCFilesChanged)
+        return comboBox
 
     # SIGNALS AND SLOT
     ################################################
@@ -175,6 +186,17 @@ class EMGAddWindow(QDialog):
         jointbox = self.sender()
         chan = jointbox.objectName()
         self.formalizedName[chan] = joint_name[0][index]
+
+    def MVCFilesChanged(self, index):
+        mvcBox = self.sender()
+        chan = mvcBox.objectName()
+        self.mvcfilesMap[chan] = index
+        # apply MVC
+        try:
+            self.emg.setMVCFile(chan, self.mvcfiles[index]) 
+        except Exception:
+            QMessageBox.critical(None, 'error', 'Selected mvc file is invalid!', QMessageBox.Ok)
+            return
 
     def updateFilterText(self):
         filter_str = self.widgets.lineEdit.text()
@@ -194,11 +216,8 @@ class EMGAddWindow(QDialog):
     def importEMGBtnClicked(self):
         # load EMG file
         file, extension = QFileDialog.getOpenFileName(None, caption = 'open EMG file', dir = self.root, filter = "EMG Files (*.c3d *.mat)")
-
-        if not checkValidPath(file):
-            return
         
-        # open up emg file
+        # open up emg MVC file
         try:
             self.emg = emg(file)
         except Exception:
@@ -212,18 +231,18 @@ class EMGAddWindow(QDialog):
         self.updateChannelBox()
 
     def importMVCBtnClicked(self):
+        if len(self.channels) == 0:
+            QMessageBox.critical(None, 'error', 'Please select emg file before MVC file!', QMessageBox.Ok)
+            return
+
         btn = self.sender()
         chan = btn.objectName()
-        file, extension = QFileDialog.getOpenFileName(None, caption = 'open MVC file', dir = self.root, filter = "EMG Files (*.c3d *.mat)")
 
-        if not checkValidPath(file):
-            return
-        try:
-            self.emg.setMVCFile(chan, file) 
-        except Exception:
-            QMessageBox.critical(None, 'error', 'Selected mvc file is invalid!', QMessageBox.Ok)
-            return
-        self.mvcfiles[chan] = file
+        files, extension = QFileDialog.getOpenFileNames(None, caption = 'open MVC file', dir = self.root, filter = "EMG Files (*.c3d *.mat)")
+
+        # clear old, set new val
+        self.mvcfilesMap.clear()
+        self.mvcfiles = files
         self.updateChannelBox()
 
     def sanity(self):
@@ -248,6 +267,7 @@ class EMGAddWindow(QDialog):
         # creat person
         name = self.widgets.lineEdit_3.text()
         self.person = person(name, 'N/A', 'N/A')
+
         # filter and rename channels
         old = self.emg.getChannels()
         for c in old:
@@ -346,6 +366,7 @@ class MainWindow(QMainWindow):
         widgets.pushButton_25.clicked.connect(self.EMGStepNextButtonClicked)
         widgets.pushButton_26.clicked.connect(self.EMGGenerateReportButtonClicked)
         widgets.pushButton_27.clicked.connect(self.EMGSaveConfigurationButtonClicked)
+        widgets.pushButton_12.clicked.connect(self.EMGBatchProcessButtonClicked)
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
 
@@ -375,17 +396,15 @@ class MainWindow(QMainWindow):
         self.workspace = None                # workspace (participant list, emg list, reports, configure file list and etc.)
         self.home = None                     # current project path
         self.filesystemTree = QFileSystemModel()
-        self.selectedParticipants = []       # selected participants
-        self.savedEMGConfiguration = {}      # saved emg configuration
+        self.selectedParticipants = []       # key of selected participants
         self.singleEMG = (None, None, None)  # Participant, Steps, channel
         self.inputBuffer = None
         self.outputBuffer = None
-        self.batchEMG = (None, None)         # Participant list, configure file
         #self.test()
 
     def test(self):
-        self.newWorkSpace(MyotionPath, 'test')
-        f = os.getcwd() + '/ERRPT.c3d'
+        self.newWorkSpace("D:\\test\\myotion", 'test')
+        f = "D:\\test\\myotion\\lifting+bending\\Normal\\caoshaoying\\2021-11-04-19-11_lift.mat"
         memg = emg(f)
 
         # add people
@@ -396,21 +415,6 @@ class MainWindow(QMainWindow):
 
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
-
-        #////// test
-        '''
-        a = c3dFile(f)
-        b = a.analog.convertToTST()
-        channel = 'Fx1'
-
-        widgets.plot_input.line(b, channel)
-        widgets.plot_input.show()
-
-        b[channel] = b.rectification(channel)
-
-        widgets.plot_output.line(b, channel)
-        widgets.plot_output.show()
-        '''
 
     # BUTTONS CLICK
     # Post here your functions for clicked buttons
@@ -515,10 +519,6 @@ class MainWindow(QMainWindow):
             return
 
         p_key = self.selectedParticipants[0]
-
-        #deselect checkbox
-        chbox = widgets.tableWidget_2.findChild(QCheckBox, p_key)
-        chbox.stateChanged.emit(False)
 
         p = self.workspace.findParticipant(int(p_key))
         self.startSingleEMGProcess(p)
@@ -665,13 +665,22 @@ class MainWindow(QMainWindow):
         p, step, chan = self.singleEMG
         if p is None:
             return
-        cfg = self.workspace[p].emg.getProcessConfig()
-        if cfg is None:
-            return
         
-        if step != cfg.size():
-            return
+        # apply configuration on all chans in EMG and MVC
+        # this might takes a while
+        self.workspace[p].emg.processWithConfigure()
+
+        # save report
         self.workspace.genReport(p)
+        self.workspace.saveReport(p, self.home)
+
+        # exit single process stage
+        self.singleEMG = (None, None, None)
+        self.updateEMGSignalProcessPanel()
+        self.updateEMGConfigureList()
+
+        self.selectedParticipants.clear()
+        self.updateEMGParticipantBox()
     
     def EMGSaveConfigurationButtonClicked(self):
         p, step, chan = self.singleEMG
@@ -687,11 +696,52 @@ class MainWindow(QMainWindow):
         self.workspace.saveConfigure(p, cfgname)
         self.updateEMGSavedConfigureList()
 
+    def EMGBatchProcessButtonClicked(self):
+        # sanity for pariticpants
+        if len(self.selectedParticipants) == 0:
+            QMessageBox.critical(None, 'error', 'Please select participants first!', QMessageBox.Ok)
+            return
+        
+        listofpeople = []
+        for p_key in self.selectedParticipants:
+            p = self.workspace.findParticipant(int(p_key))
+            if p is not None:
+                listofpeople.append(p)
+
+        logger.info("batch process: selected participants {}".format([','.join(p.name) for p in listofpeople]))
+        
+        # if report has been generated, generate warning
+
+        # check configure file
+        configureList = self.workspace.getConfigures()
+        if len(configureList) == 0:
+            QMessageBox.critical(None, 'error', 'No saved configuration file found, please use single EMG to generate configure file!', QMessageBox.Ok)
+            return
+        
+        # get current selected one
+        selectedConfigs = widgets.listWidget_2.selectedItems()
+        if len(selectedConfigs) >= 1:
+            config_name = selectedConfigs[0].text()
+            config = configureList[config_name]
+        else:
+            # pick any one
+            config_name = configureList.keys()[0]
+            config = configureList[config_name]
+            
+        logger.info("batch process: select configure {}".format(config_name))
+        self.startBatchEMGProcess(listofpeople, config)
+
     # WIDGET
     # //////////////////////////////////////////////////////////////
     def createParticipantCheckBox(self, name):
         checkbox = QCheckBox(widgets.tableWidget_2)
         checkbox.setObjectName(name)
+
+        # select state according to selectedpartipant
+        if name in self.selectedParticipants:
+            checkbox.setChecked(True)
+        else:
+            checkbox.setChecked(False)
         checkbox.stateChanged.connect(self.participantCheckBoxChanged)
         return checkbox
 
@@ -764,7 +814,7 @@ class MainWindow(QMainWindow):
 
         if self.workspace is None:
             return
-        p = self.singleEMG[0]
+        p, step, chan = self.singleEMG
         if p is None:
             return
         cfg = self.workspace[p].emg.getProcessConfig()
@@ -826,6 +876,8 @@ class MainWindow(QMainWindow):
     def updateEMGChannelSelectorContent(self):
         p, step, chan = self.singleEMG
         widgets.comboBox_2.clear()
+        if p is None:
+            return
         chan = self.workspace[p].emg.getChannels()
         widgets.comboBox_2.addItems(chan)
     
@@ -843,22 +895,21 @@ class MainWindow(QMainWindow):
     def updateEMGSavedConfigureList(self):
         if self.workspace is None:
             return
-        p = self.singleEMG[0]
+        p, step, chan = self.singleEMG
         if p is None:
             return
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
             return
         # update configuration list
-        n = len(self.savedEMGConfiguration)
+        n = len(self.workspace.getConfigures())
         widgets.listWidget_2.clear()
         widgets.listWidget_2.setSortingEnabled(False)
         i = 0
-        for key, item in self.savedEMGConfiguration.items():
+        for key, item in self.workspace.getConfigures().items():
             widgets.listWidget_2.addItem(key)
             widgets.listWidget_2.item(i).setForeground(Qt.black)
             i += 1
-
 
     # Application Logic/Slots
     # ///////////////////////////////////////////////////////////////
@@ -866,7 +917,6 @@ class MainWindow(QMainWindow):
         self.singleEMG = (None, None, None)
         self.inputBuffer = None
         self.outputBuffer = None
-        self.batchEMG = (None, None)
         self.workspace = None
         self.home = None
         self.filesystemTree = QFileSystemModel()
@@ -890,6 +940,7 @@ class MainWindow(QMainWindow):
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
         self.updateWorkProjectTreeWidget()
+        self.updateEMGChannelSelectorContent()
         return 0
     
     def saveWorkSpace(self):
@@ -950,13 +1001,18 @@ class MainWindow(QMainWindow):
         type, str = cfg.getTypeInfo(idx)
         self.updateEMGToolBox(type)
         
-    def startBatchEMGProcess(self, listofpeople, nameofconfig):
-        for p in listofpeople:
-            if not self.workspace.hasPerson(p):
-                return -1
-        
-        if not self.workspace.hasConfigFile(nameofconfig):
-            return -1
+    def startBatchEMGProcess(self, people, configure):
+        for p in people:
+            # process data
+            self.workspace[p].emg.setProcessConfig(configure)
+            self.workspace[p].emg.processWithConfigure()
+            # save report
+            self.workspace.genReport(p)
+            self.workspace.saveReport(p, self.home)
+
+        # clear selectedparitipant
+        self.selectedParticipants.clear()
+        self.updateEMGParticipantBox()
     
 if __name__ == "__main__":
     from PySide6.QtQuick import QQuickWindow, QSGRendererInterface

@@ -39,9 +39,10 @@ class person:
     def key(self):
         return hash(self.name + self.timestamp)
 
-    def toXML(self, xml):
+    def toXML(self):
         e = xmlElement('Person')
         for key in self.data.keys():
-            e.addNode(key, str(self.data[key]))        
+            e.addNode(key, str(self.data[key]))
+        return e     
 
     #def fromXML(self, xml):

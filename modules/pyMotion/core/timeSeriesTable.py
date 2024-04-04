@@ -28,6 +28,7 @@ class timeSeriesTable:
     '''
     def __init__(self, fs, labels, input=None):
         self.data = {}
+        self.name = ""
 
 
         if len(labels) == 0:
@@ -102,7 +103,10 @@ class timeSeriesTable:
         self.n = 0
         self.time = 0
 
-    def rename(self, old, new):
+    def setname(self, name):
+        self.name = name
+
+    def renameChannel(self, old, new):
         self.data[new] = self.data.pop(old)
 
     # check if has channel
@@ -187,7 +191,7 @@ class timeSeriesTable:
         if Whigh < 0 or Whigh >= self.fs / 2:
             raise ValueError("frequency must be 0 < Wn < fs/2")
         # create band pass filter
-        sos = self.__butterWorth(2, [Wlow, Whigh], "bandpass")
+        sos = self.__butterWorth(2, [Wlow, Whigh], "band")
         return sig.sosfilt(sos, self.data[key])
 
     # return ndarray with dc removed
@@ -289,9 +293,9 @@ class timeSeriesTable:
     </timeSeriesTable>
     '''
     def toXML(self):
-        e = xmlElement('timeSeriesTable')
+        e = xmlElement('timeSeriesTable', {"name":self.name})
         e.addNode('channels_num', str(len(self.labels)))
-        e.addNode('channels_name', ' '.join(self.labels))
+        e.addNode('channels_name','"' + '" "'.join(self.labels) + '"')
         e.addNode('fs', str(self.fs))
         e.addNode('N', str(self.n))
 

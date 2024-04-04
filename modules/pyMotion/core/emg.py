@@ -9,14 +9,26 @@ import re
 class emgDCOffset():
     def __init__(self):
         self.enable = False
+    
+    def toXML(self, e):
+        e.addNode('enable', self.enable)
+        return e
 
 class emgRectification():
     def __init__(self):
         self.enable = False
 
+    def toXML(self, e):
+        e.addNode('enable', self.enable)
+        return e
+
 class emgNormalization():
     def __init__(self):
         self.enable = False
+    
+    def toXML(self, e):
+        e.addNode('enable', self.enable)
+        return e
 
 class emgSummary():
     def __init__(self):
@@ -26,6 +38,10 @@ class emgSummary():
         self.rms = 0
         self.ptp = 0
         self.zeros = 0
+
+    def toXML(self, e):
+        # we don't save temp calculation to config file
+        return e
 
 class emgFilterEnum(Enum):
     LOW_PASS = 0
@@ -183,10 +199,10 @@ class emgConfigure():
     def toXML(self):
         # top tree
         e = xmlElement('emgConfigure')
-        for s in self.step:
+        for i in range(0, len(self.step)):
             # subtree for each step
-            subElement = xmlElement(self.nameMap[s])
-            config = self.stepConfig[s]
+            subElement = xmlElement(self.nameMap[self.step[i]])
+            config = self.stepConfig[i]
             if config is not None:
                 config.toXML(subElement)
         return e
@@ -265,8 +281,8 @@ class emg:
             self.removeChannel(c)
 
     def renameChannel(self, old, new):
-        self.emgTST.rename(old, new)
-        self.emgMVCTST.rename(old, new)
+        self.emgTST.renameChannel(old, new)
+        self.emgMVCTST.renameChannel(old, new)
 
     # set EMG file path
     def setEMGFile(self, f):
@@ -339,6 +355,8 @@ class emg:
         self.mvcFilesMap[channel] = f
 
     def toXML(self):
+        self.emgTST.setname('EMG')
+        self.emgMVCTST.setname('MVC')
         # top tree
         root = xmlElement('emg')
         root.addSubTree(self.emgTST.toXML())
@@ -355,8 +373,12 @@ class emg:
     def startProcess(self):
         self.processCFG = emgConfigure()
     
+    # return EMG configure file
     def getProcessConfig(self):
         return self.processCFG
+    # assign EMG configure file
+    def setProcessConfig(self, cfg):
+        self.processCFG = cfg
     
     def __tryConfigStepImpl(self, tst, chan, step):
         if chan not in self.Channels:
@@ -415,9 +437,12 @@ class emg:
             tst[chan] = self.__tryConfigStepImpl(tst, chan, i)
         return tst[chan]
         
-    # process data using configure file
-    def processWithConfigure(self, emgConfigure):
-        return
+    # process EMG and MVC using configure file
+    def processWithConfigure(self):
+        for chan in self.Channels:
+            for step in range(0, self.processCFG.size()):
+                self.emgTST[chan] = self.__tryConfigStepImpl(self.emgTST, chan, step)
+                self.emgMVCTST[chan] = self.__tryConfigStepImpl(self.emgMVCTST, chan, step)
 
 
         

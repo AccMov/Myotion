@@ -1,8 +1,8 @@
 import xml.etree.ElementTree as ET
 
 class xmlElement():
-    def __init__(self, name):
-        self.element = ET.Element(name)
+    def __init__(self, name, attrib={}):
+        self.element = ET.Element(name, attrib)
     
     # return ET.element
     def addSubTree(self, xmlElement):
@@ -35,4 +35,4 @@ class xmlWriter():
         self.tree._setroot(self.root)
         # pretty print
         ET.indent(self.tree)
-        self.tree.write(self.path)
+        self.tree.write(self.path, encoding='utf-8')

@@ -181,13 +181,13 @@ class c3dFile:
         analog_labels = [s.strip() for s in analog_labels]
 
         #create storage
-        self.points = Points(point_labels, self.point_fs)
+        points = Points(point_labels, self.point_fs)
         self.analogdata = AnalogData(analog_labels, self.analog_fs)
 
         #load data
         for frame_no, p, analog_data in self.reader.read_frames():
             for i in range(0, point_number):
-                self.points.insertPoint(point_labels[i],p[i])
+                points.insertPoint(point_labels[i],p[i])
                 '''
                     analog data : a matrix of
                           column -> ratio,               each line has self.ratio number of samples
@@ -200,7 +200,7 @@ class c3dFile:
                 '''
             for j in range(0, analog_channel_num):
                 self.analogdata.insertData(analog_labels[j], analog_data[j])
-            self.frame_number = frame_no
+            frame_number = frame_no
 
         self.data = {
             "point_fs":         self.attr["point_rate"],            # point sample freq
@@ -209,9 +209,9 @@ class c3dFile:
             "channel_number" :  self.attr["analog_used"],           # number of channels
             "point_labels" :    point_labels,                       # label of points
             "channel_labels" :  analog_labels,                      # label of channels
-            "frame_number":     self.frame_number,                  # frame number in c3d file
-            "time":             self.points.size() / self.attr["point_rate"], # total time of sampling
-            "points":           self.points,                        # collection of points
+            "frame_number":     frame_number,                       # frame number in c3d file
+            "time":             points.size() / self.attr["point_rate"], # total time of sampling
+            "points":           points,                             # collection of points
             "analog":           self.analogdata,                    # collection of analogdata
         }
 

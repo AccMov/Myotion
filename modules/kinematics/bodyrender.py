@@ -1,19 +1,5 @@
 import os
 from math import pi
-import os
-
-import os
-
-from modules.kinematics.axesitem import AxesItem
-from modules.kinematics.base import Base
-from modules.kinematics.camera import Camera
-from modules.kinematics.griditem import GridItem
-from modules.kinematics.movmentrig import MovementRig
-from modules.kinematics.object3d import Object3D
-from modules.kinematics.pointitem import PointItem
-from modules.kinematics.renderer import Renderer
-
-import pyMotion as pm
 
 from PySide6.QtWidgets import QWidget
 from OpenGL.GL import *
@@ -26,7 +12,7 @@ from .object3d import Object3D
 from .orbitcamera import OrbitCamera
 from .renderer import Renderer
 
-from pyMotion import c3dFile
+from modules.pyMotion import c3dFile
 
 
 def isrealmarker(rawlabels, label):

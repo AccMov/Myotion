@@ -1,4 +1,6 @@
 from PySide6.QtCore import QEvent
+from PySide6.QtGui import QMouseEvent, QWheelEvent
+from PySide6.QtCore import Qt
 
 
 class KeyEvent:
@@ -20,14 +22,11 @@ class Input:
         self.mousePressed = False
         self.wheelMovement = 0
 
-        self.keyDownList = []
-        self.keyUpList = []
+        self.mouseEventList = []
         self.keyPressedList = []
         self.keyEvents = []
 
     def update(self):
-        self.keyDownList.clear()
-        self.keyUpList.clear()
         # iterate over all user input events (such as keyboard or
         #  mouse) that occurred since the last time events were checked
         for event in self.keyEvents:
@@ -35,20 +34,12 @@ class Input:
             # get name of key from event
             # and append to or remove from corresponding lists
             if event.type == QEvent.KeyPress:
-                self.keyDownList.append(event.key)
                 self.keyPressedList.append(event.key)
             elif event.type == QEvent.KeyRelease:
-                self.keyUpList.append(event.key)
                 self.keyPressedList.remove(event.key)
         self.keyEvents = []
 
     # functions to check key states
-    def isKeyDown(self, key):
-        return key in self.keyDownList
-
-    def isKeyUp(self, key):
-        return key in self.keyUpList
-
     def isKeyPressed(self, key):
         return key in self.keyPressedList
 
@@ -58,11 +49,11 @@ class Input:
     def isMouseDown(self, key):
         return self.mousePressed
 
-    def mousePressEvent(self, event):
-        print("Mouse pressed event")
-        self.mouseLocation = MouseEvent(event.x(), event.y())
-        self.mouseDrageLocation = MouseEvent(event.x(), event.y())
-        self.mousePressed = True
+    def mousePressEvent(self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.mouseLocation = MouseEvent(event.x(), event.y())
+            self.mouseDrageLocation = MouseEvent(event.x(), event.y())
+            self.mousePressed = True
 
     def mouseMoveEvent(self, event):
         print("Mouse move event")
@@ -80,6 +71,6 @@ class Input:
     def mouseReleaseEvent(self, event):
         print("Mouse released event")
         self.mousePressed = False
-    
+
     def wheelEvent(self, event):
-        self.wheelMovement= -event.angleDelta().y()
+        self.wheelMovement = -event.angleDelta().y()

@@ -1,14 +1,11 @@
-# import standard library
-
-# import third party library
 from OpenGL.GL import *
-from modules.kinematics.basicmaterial import BasicMaterial
+
+from .basicmaterial import BasicMaterial
 
 
 class SurfaceMaterial(BasicMaterial):
     def __init__(self, properties={}):
         super().__init__()
-
         # render vertices as surface
         self.settings["drawStyle"] = GL_TRIANGLES
         # render both sides? default: front side only

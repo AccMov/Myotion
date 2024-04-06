@@ -1,7 +1,7 @@
 from OpenGL.GL import *
 
-from modules.kinematics.uniform import Uniform
-from modules.kinematics.utils import Utils
+from ..uniform import Uniform
+from ..utils import Utils
 
 
 class Material(object):

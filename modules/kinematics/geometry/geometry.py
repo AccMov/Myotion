@@ -1,9 +1,5 @@
-# import standard library
-
-# import third party library
 import numpy
 
-# import local library
 from modules.kinematics.attribute import Attribute
 
 

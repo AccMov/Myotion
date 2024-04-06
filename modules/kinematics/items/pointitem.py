@@ -1,6 +1,6 @@
-from modules.kinematics.mesh import Mesh
-from modules.kinematics.geometry import Geometry
-from modules.kinematics.pointmaterial import PointMaterial
+from ..mesh import Mesh
+from ..geometry import Geometry
+from ..materials.pointmaterial import PointMaterial
 
 
 class PointItem(Mesh):

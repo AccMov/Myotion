@@ -23,11 +23,10 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
     QProgressBar, QPushButton, QRadioButton, QScrollArea,
     QScrollBar, QSizePolicy, QSlider, QSpacerItem,
     QStackedWidget, QTableWidget, QTableWidgetItem, QToolBox,
-
     QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget, QTreeView)
 
 from modules.kinematics.bodyrender import BodyRender
-from modules.kinematics.emgwidget import EMGWidget
+from modules.kinematics.sliderwidget import SliderWidget
 
 from . resources_rc import *
 from rserver import RServerBrowser
@@ -37,7 +36,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1340, 795)
+        MainWindow.resize(1366, 768)
         MainWindow.setMinimumSize(QSize(940, 560))
         self.styleSheet = QWidget(MainWindow)
         self.styleSheet.setObjectName(u"styleSheet")
@@ -3247,8 +3246,6 @@ class Ui_MainWindow(object):
 
         self.stackedWidget.addWidget(self.emg_page)
         
-        # self.emgWidget=EMGWidget(self.kinematic_page)
-        
         self.kinematics_page = QWidget()
         self.kinematics_page.setObjectName(u"kinematics_page")
         self.horizontalLayout_36 = QHBoxLayout(self.kinematics_page)
@@ -3323,6 +3320,24 @@ class Ui_MainWindow(object):
         self.graph_top_title.setFrameShadow(QFrame.Raised)
 
         self.verticalLayout_46.addWidget(self.graph_top_title)
+        
+        self.label_current_process = QLabel()
+        self.label_current_process.setAlignment(Qt.AlignCenter)
+        self.label_current_process.setText("Current Process")
+        self.label_current_process.setObjectName(u"label_11")
+        self.label_current_process.setStyleSheet(u"font-weight: bold;\n"
+"font-size:12px;\n"
+"color: rgba(0,0,0,0.8);\n"
+"margin-left: 4px;\n"
+"border: none;")
+        
+        self.horizontalLayout_kcp = QHBoxLayout()
+        self.horizontalLayout_kcp
+        self.horizontalLayout_kcp.setSpacing(0)
+        self.horizontalLayout_kcp.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_kcp.addWidget(self.label_current_process)
+        self.graph_top_title.setLayout(self.horizontalLayout_kcp)
+
 
         self.graph_top_body = QFrame(self.graph_top)
         self.graph_top_body.setObjectName(u"graph_top_body")
@@ -3330,8 +3345,19 @@ class Ui_MainWindow(object):
         self.graph_top_body.setSizePolicy(sizePolicy12)
         self.graph_top_body.setFrameShape(QFrame.StyledPanel)
         self.graph_top_body.setFrameShadow(QFrame.Raised)
+        # self.emgWidget=EMGWidget(self.graph_top_body)
+        
+        self.kinematic_analysis = QPlotView()
+        self.kinematic_analysis.setObjectName(u"QPlotView_input")
+        sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy12.setHorizontalStretch(0)
+        sizePolicy12.setVerticalStretch(9)
+        sizePolicy12.setHeightForWidth(self.kinematic_analysis.sizePolicy().hasHeightForWidth())
+        self.kinematic_analysis.setSizePolicy(sizePolicy12)
 
-        self.verticalLayout_46.addWidget(self.graph_top_body)
+        self.verticalLayout_46.addWidget(self.kinematic_analysis)
+
+        # self.verticalLayout_46.addWidget(self.graph_top_body)
 
 
         self.verticalLayout_45.addWidget(self.graph_top)
@@ -3382,7 +3408,7 @@ class Ui_MainWindow(object):
         self.kinematics_left_bottom.setFrameShadow(QFrame.Raised)
         self.verticalLayout_49 = QVBoxLayout(self.kinematics_left_bottom)
         self.verticalLayout_49.setObjectName(u"verticalLayout_49")
-        self.playSlider = QSlider(self.kinematics_left_bottom, orientation=Qt.Horizontal)
+        self.playSlider = SliderWidget(self.kinematics_left_bottom)
         self.playSlider.setObjectName(u"playSlider")
         self.playSlider.setStyleSheet(u"")
 
@@ -3402,6 +3428,20 @@ class Ui_MainWindow(object):
 "border:none;")
         self.kinematics_right.setFrameShape(QFrame.StyledPanel)
         self.kinematics_right.setFrameShadow(QFrame.Raised)
+        tmp_verticalLayout_50 = QVBoxLayout(self.kinematics_right)
+        
+        self.kinematics_label_tree = QTreeWidget(self.kinematics_right)
+        self.kinematics_label_tree.setObjectName(u"kinematics_labels")
+        self.kinematics_label_tree.setStyleSheet(u"font-size:11px;\n"
+"color:rgba(#f4f4f4);")
+        self.kinematics_label_tree.setFrameShape(QFrame.NoFrame)
+        self.kinematics_label_tree.setFrameShadow(QFrame.Sunken)
+        self.kinematics_label_tree.setLineWidth(1)
+        self.kinematics_label_tree.setMidLineWidth(0)
+        self.kinematics_label_tree.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        self.kinematics_label_tree.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.kinematics_label_tree.setSelectionMode(QAbstractItemView.SingleSelection)
+        tmp_verticalLayout_50.addWidget(self.kinematics_label_tree)
 
         self.horizontalLayout_36.addWidget(self.kinematics_right)
 
@@ -3410,6 +3450,7 @@ class Ui_MainWindow(object):
         self.stats_page.setObjectName(u"stats_page")
 
         self.stackedWidget.addWidget(self.stats_page)
+        
         self.home = QWidget()
         self.home.setObjectName(u"home")
         self.home.setStyleSheet(u"background-image: url(:/images/images/images/PyDracula_vertical.png);\n"

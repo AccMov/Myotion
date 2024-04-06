@@ -1,4 +1,4 @@
-from modules.kinematics.material import Material
+from .material import Material
 
 vertexShaderCode = """
 #version 330 core

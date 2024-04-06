@@ -1,6 +1,6 @@
-from modules.kinematics.geometry import Geometry
-from modules.kinematics.linematerial import LineMaterial
-from modules.kinematics.mesh import Mesh
+from ..mesh import Mesh
+from ..geometry import Geometry
+from ..materials.linematerial import LineMaterial
 
 
 class GridItem(Mesh):

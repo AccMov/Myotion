@@ -4,7 +4,7 @@
 from OpenGL.GL import *
 
 from modules.kinematics.camera import Camera
-from modules.kinematics.depthmaterial import DepthMaterial
+from modules.kinematics.materials.depthmaterial import DepthMaterial
 from modules.kinematics.rendertarget import RenderTarget
 
 

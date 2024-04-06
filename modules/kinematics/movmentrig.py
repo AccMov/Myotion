@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 
-from modules.kinematics.object3d import Object3D
+from .object3d import Object3D
 
 
 class MovementRig(Object3D):
@@ -45,7 +45,6 @@ class MovementRig(Object3D):
         rotateAmount = self.degreesPerSecond * 3.1415926 / 180.0 * deltaTime
 
         if inputObejct.isKeyPressed(self.KEY_MOVE_FORWARDS):
-            print("update with ", self.KEY_MOVE_FORWARDS)
             self.translate(0, 0, -moveAmount)
         if inputObejct.isKeyPressed(self.KEY_MOVE_BACKWARDS):
             self.translate(0, 0, moveAmount)
@@ -57,22 +56,19 @@ class MovementRig(Object3D):
             self.translate(0, moveAmount, 0)
         if inputObejct.isKeyPressed(self.KEY_MOVE_DOWN):
             self.translate(0, -moveAmount, 0)
-
         if inputObejct.isKeyPressed(self.KEY_TURN_RIGHT):
             self.rotateY(-rotateAmount)
         if inputObejct.isKeyPressed(self.KEY_TURN_LEFT):
             self.rotateY(rotateAmount)
-
         if inputObejct.isKeyPressed(self.KEY_LOOK_UP):
             self.lookAttachment.rotateX(rotateAmount)
         if inputObejct.isKeyPressed(self.KEY_LOOK_DOWN):
             self.lookAttachment.rotateX(-rotateAmount)
 
         if inputObejct.isMouseDown(Qt.MouseButton.LeftButton):
-            print("Left button pressed")
             x, y = inputObejct.mouseMovement()
-            self.rotateY(x / 10 * rotateAmount)
-            self.rotateX(y / 10 * rotateAmount)
+            self.lookAttachment.rotateY(x / 10 * rotateAmount)
+            self.lookAttachment.rotateX(y / 10 * rotateAmount)
 
         if inputObejct.wheelMovement != 0:
             self.translate(0, 0, inputObejct.wheelMovement)

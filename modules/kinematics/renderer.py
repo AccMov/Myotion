@@ -1,17 +1,12 @@
-# import standard library
-
-# import third party library
 from OpenGL.GL import *
 
-# import local library
-from modules.kinematics.camera import Camera
-from modules.kinematics.light import Light
-from modules.kinematics.object3d import Object3D
-from modules.kinematics.mesh import Mesh
-from modules.kinematics.shadow import Shadow
+from .camera import Camera
+from .light import Light
+from .mesh import Mesh
+from .shadow import Shadow
 
 
-class Renderer(object):
+class Renderer:
     def __init__(self, widget, clearColor=[0, 0, 0]):
         glEnable(GL_DEPTH_TEST)
         # required for antialiasing
@@ -32,20 +27,43 @@ class Renderer(object):
     def render(
         self,
         scene,
-        camera,
+        camera: Camera,
         clearColor=True,
         clearDepth=True,
         renderTarget=None,
         defaultColor=0.15,
     ):
+        # activate render target
+        # print(self.windowSize)
+        if renderTarget == None:
+            # set render target to window
+            glBindFramebuffer(GL_FRAMEBUFFER, self.widget.defaultFramebufferObject())
+            # print(self.widget.defaultFramebufferObject())
+            # glViewport(0, 0, self.windowSize[0], self.windowSize[1])
+        else:
+            # set render target properties
+            glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebufferRef)
+            glViewport(0, 0, renderTarget.width, renderTarget.height)
 
-        # filter descendents
+        # clear color and depth buffers
+        if clearColor:
+            glClear(GL_COLOR_BUFFER_BIT)
+        if clearDepth:
+            glClear(GL_DEPTH_BUFFER_BIT)
+
+        # Update camera view (calculate inverse)
+        camera.updateViewMatrix()
+
+        # extract list of all Mesh objects in scene
         descendantList = scene.getDescendantList()
 
-        def meshFilter(x):
-            return isinstance(x, Mesh)
+        meshList = list(filter(lambda x: isinstance(x, Mesh), descendantList))
 
-        meshList = list(filter(meshFilter, descendantList))
+        lightList = list(filter(lambda x: isinstance(x, Light), descendantList))
+
+        # scenes support 4 lights; precisely 4 must be present
+        while len(lightList) < 4:
+            lightList.append(Light())
 
         # shadow pass
         if self.shadowsEnabled:
@@ -90,43 +108,6 @@ class Renderer(object):
                 for varName, unifObj in self.shadowObject.material.uniforms.items():
                     unifObj.uploadData()
                 glDrawArrays(GL_TRIANGLES, 0, mesh.geometry.vertexCount)
-
-        # activate render target
-        # print(self.windowSize)
-        if renderTarget == None:
-            # set render target to window
-            glBindFramebuffer(GL_FRAMEBUFFER, self.widget.defaultFramebufferObject())
-            # print(self.widget.defaultFramebufferObject())
-            # glViewport(0, 0, self.windowSize[0], self.windowSize[1])
-        else:
-            # set render target properties
-            glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.framebufferRef)
-            glViewport(0, 0, renderTarget.width, renderTarget.height)
-
-        # clear color and depth buffers
-        if clearColor:
-            glClear(GL_COLOR_BUFFER_BIT)
-        if clearDepth:
-            glClear(GL_DEPTH_BUFFER_BIT)
-
-        # Update camera view (calculate inverse)
-        camera.updateViewMatrix()
-
-        # extract list of all Mesh objects in scene
-        descendantList = scene.getDescendantList()
-
-        def meshFilter(x):
-            return isinstance(x, Mesh)
-
-        meshList = list(filter(meshFilter, descendantList))
-
-        def lightFilter(x):
-            return isinstance(x, Light)
-
-        lightList = list(filter(lightFilter, descendantList))
-        # scenes support 4 lights; precisely 4 must be present
-        while len(lightList) < 4:
-            lightList.append(Light())
 
         for mesh in meshList:
             # if this object is not visible,

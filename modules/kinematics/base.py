@@ -1,17 +1,17 @@
 import time
+
 from PySide6.QtGui import QMouseEvent, QWheelEvent
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QTimer, Qt
 
-from modules.kinematics.input import Input
-from PySide6.QtCore import Qt
+from .input import Input
 
 
 class Base(QOpenGLWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setObjectName("Base")
-        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        # self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.input = Input()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
@@ -34,20 +34,20 @@ class Base(QOpenGLWidget):
 
     def keyPressEvent(self, event):
         self.input.receiveKeyEvent(event.key(), event.type())
-        self.update()
 
     def keyReleaseEvent(self, event):
         self.input.receiveKeyEvent(event.key(), event.type())
-        self.update()
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         self.input.mousePressEvent(event)
+        self.update()
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         self.input.mouseMoveEvent(event)
+        self.update()
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         self.input.mouseReleaseEvent(event)
-    
+
     def wheelEvent(self, event: QWheelEvent) -> None:
         self.input.wheelEvent(event)

@@ -1,10 +1,6 @@
-# import standard library
-
-# import third party library
-from OpenGL.GL import *
 import numpy
 
-# import local library
+from OpenGL.GL import *
 
 
 class Attribute(object):
@@ -64,8 +60,9 @@ class Attribute(object):
         elif self.dataType == "vec4":
             glVertexAttribPointer(variableRef, 4, GL_FLOAT, False, 0, None)
         else:
-            raise Exception("Attribute " + variableName +
-                            " has unknown type " + self.dataType)
+            raise Exception(
+                "Attribute " + variableName + " has unknown type " + self.dataType
+            )
 
         # indicate that data will be streamed to thhis variable
         glEnableVertexAttribArray(variableRef)

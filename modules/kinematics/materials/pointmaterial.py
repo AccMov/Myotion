@@ -1,5 +1,6 @@
-from modules.kinematics.basicmaterial import BasicMaterial
 from OpenGL.GL import *
+
+from ..materials.basicmaterial import BasicMaterial
 
 
 class PointMaterial(BasicMaterial):

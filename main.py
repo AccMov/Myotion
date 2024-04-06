@@ -29,7 +29,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
     QPushButton, QSizePolicy, QStatusBar, QToolBar, QMessageBox, QDialog,
     QWidget, QFileDialog, QTableWidgetItem, QComboBox, QLineEdit, QCompleter,
-    QCheckBox, QFileSystemModel )
+    QCheckBox, QFileSystemModel,QTreeWidget, QTreeWidgetItem )
 
 from rserver import RServer
 from miscWidgets import *
@@ -370,7 +370,7 @@ class MainWindow(QMainWindow):
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
 
-        self.showMaximized()
+        self.show()
 
         # SET CUSTOM THEME
         # ///////////////////////////////////////////////////////////////
@@ -446,6 +446,7 @@ class MainWindow(QMainWindow):
             widgets.stackedWidget.setCurrentWidget(widgets.kinematics_page)  # SET PAGE
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
+            self.preloadKinematicPage()
             return
 
         if btnName == "btn_save":
@@ -787,7 +788,11 @@ class MainWindow(QMainWindow):
             p = participants[i]
             name = p.name
             # name
-            widgets.listWidget_3.addItem(name)
+            
+            item = QListWidgetItem(name)
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setCheckState(Qt.Unchecked)
+            widgets.listWidget_3.addItem(item)
             widgets.listWidget_3.item(i).setForeground(Qt.black)
 
     # update waveform regarding to config step and user input metrics
@@ -946,6 +951,35 @@ class MainWindow(QMainWindow):
     def saveWorkSpace(self):
         return
     
+    def populateKinematicTree(self, tree:QTreeWidget, participants):
+        tree.clear()
+        tree.setColumnCount(1)
+        for p in participants:
+            treeItem = QTreeWidgetItem()
+            treeItem.setText(0, p.name)
+            tree.addTopLevelItem(treeItem)
+            emg=self.workspace[p].emg
+            for c in emg.getChannels():    
+                treeItem2 = QTreeWidgetItem(treeItem)
+                treeItem2.setText(0, c)
+                treeItem.addChild(treeItem2)
+        tree.setHeaderItem(QTreeWidgetItem(["Participant"]))
+        tree.addTopLevelItem(treeItem)
+
+    
+    def preloadKinematicPage(self):
+        self.populateKinematicTree(widgets.kinematics_label_tree, self.workspace.getParticipants())
+        p, step, chan = self.singleEMG
+
+        if p is None:
+            widgets.plot_input.hide()
+            widgets.plot_output.hide()
+            return
+
+        x = self.workspace[p].emg.getLinspace()
+        widgets.kinematic_analysis.line(x, self.inputBuffer, chan)
+        widgets.kinematic_analysis.show()
+        
     def startSingleEMGProcess(self, p):
         logger.info("started single EMG process for {}".format(p.name))
         if not self.workspace.hasParticipant(p):
@@ -1016,7 +1050,7 @@ class MainWindow(QMainWindow):
     
 if __name__ == "__main__":
     from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
-    #DO NOT REMOVE enorce pyside to use opengl for underlying graphics render.
+    #DO NOT REMOVE enforce pyside to use opengl for underlying graphics render.
     QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
     qApp = QApplication(sys.argv)
     qApp.setWindowIcon(QIcon("Myotion_logo.png"))

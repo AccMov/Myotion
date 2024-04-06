@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QSlider
 from PySide6.QtCore import Qt
 
 class SliderWidget(QSlider):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None,model=None):
         super().__init__(Qt.Orientation.Horizontal, parent)
         self.setRange(0, 1000)
         self.setValue(0)

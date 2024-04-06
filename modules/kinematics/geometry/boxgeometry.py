@@ -1,4 +1,4 @@
-from modules.kinematics.geometry import Geometry
+from .geometry import Geometry
 
 
 class BoxGeometry(Geometry):

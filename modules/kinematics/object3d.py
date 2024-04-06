@@ -4,11 +4,10 @@
 import numpy
 
 # import local library
-from modules.kinematics.matrix import Matrix
+from .matrix import Matrix
 
 
 class Object3D:
-
     def __init__(self):
         self.transform = Matrix.makeIdentity()
         self.parent = None
@@ -69,6 +68,10 @@ class Object3D:
 
     def rotateZ(self, angle, localCoord=True):
         m = Matrix.makeRotationZ(angle)
+        self.applyMatrix(m, localCoord)
+    
+    def rotateOrbit(self, x, y, localCoord=True):
+        m = Matrix.makeRotationOrbit(x,y,self.getPosition(),[0,0,0])
         self.applyMatrix(m, localCoord)
 
     def scale(self, s, localCoord=True):

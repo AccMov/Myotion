@@ -1,4 +1,7 @@
+import os
 from math import pi
+import os
+
 import os
 
 from modules.kinematics.axesitem import AxesItem
@@ -14,6 +17,16 @@ import pyMotion as pm
 
 from PySide6.QtWidgets import QWidget
 from OpenGL.GL import *
+
+from .items import AxesItem, GridItem, PointItem
+from .base import Base 
+from .camera import Camera
+from .movmentrig import MovementRig
+from .object3d import Object3D
+from .orbitcamera import OrbitCamera
+from .renderer import Renderer
+
+from pyMotion import c3dFile
 
 
 def isrealmarker(rawlabels, label):
@@ -58,7 +71,7 @@ def ismarker(label):
 class BodyRender(Base):
     def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
-        c3d = pm.c3dFile(os.getcwd() + "/ERRPT.c3d")
+        c3d = c3dFile(os.getcwd() + "/ERRPT.c3d")
         self.frame = c3d.data["frame_number"]
         self.start = 0
         labels = list(
@@ -78,11 +91,10 @@ class BodyRender(Base):
 
         self.renderer = Renderer(self)
         self.scene = Object3D()
-        self.camera = Camera(aspectRatio=9 / 16, far=50000)
+        self.camera = OrbitCamera(aspectRatio=1, far=50000)
         self.camera.setPosition([0, 1000, 3000])
         self.rig = MovementRig(unitsPerSecond=100)
         self.rig.add(self.camera)
-        self.rig.setPosition([0, 1, 2])
         self.scene.add(self.rig)
 
         axes = AxesItem(axisLength=100)

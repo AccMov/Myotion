@@ -1,21 +1,13 @@
-# import standard library
-
-# import third party library
 from OpenGL.GL import *
 
-
-# import local library
-from modules.kinematics.object3d import Object3D
+from .object3d import Object3D
 
 
 class Mesh(Object3D):
-
     def __init__(self, geometry, material):
         super().__init__()
-
         self.geometry = geometry
         self.material = material
-
         # should this object be rendered?
         self.visible = True
 

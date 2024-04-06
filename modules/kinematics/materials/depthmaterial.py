@@ -1,0 +1,31 @@
+from .material import Material
+
+# vertex shader code
+vertexShaderCode = """
+in vec3 vertexPosition; 
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 modelMatrix; 
+void main()
+{
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition, 1);
+}
+"""
+
+# fragment shader code
+fragmentShaderCode = """
+out vec4 fragColor;
+void main()
+{
+    float z = gl_FragCoord.z;
+    fragColor = vec4(z, z, z, 1);
+}
+"""
+
+
+class DepthMaterial(Material):
+
+    def __init__(self):
+        # initialize shaders
+        super().__init__(vertexShaderCode, fragmentShaderCode)
+        self.locateUniforms()

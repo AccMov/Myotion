@@ -1,13 +1,9 @@
-# import standard library
-from math import sin, cos, tan, pi
+from locale import normalize
+from math import acos, atan2, sin, cos, tan, pi
 
-# import third party library
 import numpy
 from numpy import subtract, divide, cross
 from numpy.linalg import norm
-
-# import local library
-
 
 class Matrix(object):
 
@@ -33,9 +29,6 @@ class Matrix(object):
                             [0, c, -s, 0],
                             [0, s,  c, 0],
                             [0, 0,  0, 1]]).astype(float)
-    @staticmethod
-    def makeRotationOrbit(x,y):
-        pass
 
     @staticmethod
     def makeRotationY(angle):
@@ -54,7 +47,33 @@ class Matrix(object):
                             [s,  c, 0, 0],
                             [0,  0, 1, 0],
                             [0,  0, 0, 1]]).astype(float)
-
+        
+    @staticmethod
+    def makeRotationOrbit(x,y,position,target):
+        from_target = subtract(position, target)
+        radius = norm(from_target)
+        p=atan2(from_target[0],from_target[2])
+        t=acos(from_target[1]/radius)
+        factor = 1.5*pi
+        p+=x*factor
+        t+=y*factor
+        if (t>pi):
+            t=pi-1
+        if (t<0):
+            t=1
+        
+        position[0]=target[0]+radius*sin(p)*sin(t)
+        position[1]=target[1]+radius*cos(t)
+        position[2]=target[2]+radius*sin(t)*cos(p)
+        up = [0,1,0]
+        front = norm(subtract(position,target))
+        right = norm(cross(front,up))
+        up = norm(cross(right,front))
+        return numpy.array([[right[0], up[0], -front[0], position[0]],
+                            [right[1], up[1], -front[1], position[1]],
+                            [right[2], up[2], -front[2], position[2]],
+                            [0, 0, 0, 1]]).astype(float)
+    
     @staticmethod
     def makeScale(s):
         return numpy.array([[s, 0, 0, 0],
@@ -107,5 +126,7 @@ class Matrix(object):
                 [2 / (right-left), 0, 0, -(right+left)/(right-left)],
                 [0, 2 / (top-bottom), 0, -(top+bottom)/(top-bottom)],
                 [0, 0, -2 / (far-near), -(far+near)/(far-near)],
-                [0, 0, 0, 1]])
+                [0, 0, 0, 1]
+            ]
+        )
     

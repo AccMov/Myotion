@@ -2173,6 +2173,22 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_59.addWidget(self.comboBox_7)
 
+        self.comboBox_8 = QComboBox(self.frame_40)
+        self.comboBox_8.addItem("")
+        self.comboBox_8.addItem("")
+        self.comboBox_8.addItem("")
+        self.comboBox_8.setObjectName(u"comboBox_8")
+        self.comboBox_8.setFont(font3)
+        self.comboBox_8.setAutoFillBackground(False)
+        self.comboBox_8.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"margin:0px 10px;\n"
+"font-weight: bold;\n"
+"font-size:12px;")
+        self.comboBox_8.setIconSize(QSize(16, 16))
+        self.comboBox_8.setFrame(True)
+
+        self.verticalLayout_59.addWidget(self.comboBox_8)
+
 
         self.verticalLayout_58.addWidget(self.frame_40)
 
@@ -4021,8 +4037,11 @@ class Ui_MainWindow(object):
         self.pushButton_27.setText(QCoreApplication.translate("MainWindow", u"Save Configuration", None))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_2_full_wave), QCoreApplication.translate("MainWindow", u"\u00b7 Full wave rectification", None))
         self.label_34.setText(QCoreApplication.translate("MainWindow", u"-Filter Type-", None))
-        self.comboBox_7.setItemText(0, QCoreApplication.translate("MainWindow", u"band pass", None))
-        self.comboBox_7.setItemText(1, QCoreApplication.translate("MainWindow", u"low pass", None))
+        self.comboBox_7.setItemText(0, QCoreApplication.translate("MainWindow", u"Band Pass", None))
+        self.comboBox_7.setItemText(1, QCoreApplication.translate("MainWindow", u"Low Pass", None))
+        self.comboBox_8.setItemText(0, QCoreApplication.translate("MainWindow", u"Order 2", None))
+        self.comboBox_8.setItemText(1, QCoreApplication.translate("MainWindow", u"Order 3", None))
+        self.comboBox_8.setItemText(2, QCoreApplication.translate("MainWindow", u"Order 4", None))
 
         self.label_35.setText(QCoreApplication.translate("MainWindow", u"-Cut-off frequency-", None))
         self.label_36.setText(QCoreApplication.translate("MainWindow", u"band pass:", None))
@@ -4031,7 +4050,7 @@ class Ui_MainWindow(object):
         self.lineEdit_10.setPlaceholderText(QCoreApplication.translate("MainWindow", u"cut-off frequency high", None))
         self.lineEdit_11.setText("")
         self.lineEdit_11.setPlaceholderText(QCoreApplication.translate("MainWindow", u"cut-off frequency low", None))
-        self.label_37.setText(QCoreApplication.translate("MainWindow", u"low pass:", None))
+        self.label_37.setText(QCoreApplication.translate("MainWindow", u"Low Pass:", None))
         self.lineEdit_12.setText("")
         self.lineEdit_12.setPlaceholderText(QCoreApplication.translate("MainWindow", u"cut-off frequency low", None))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_3_filter), QCoreApplication.translate("MainWindow", u"\u00b7 Filter", None))

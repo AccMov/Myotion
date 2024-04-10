@@ -4,6 +4,7 @@ from .freq_analysis import *
 from .person import *
 from .timeSeriesTable import *
 import threading
+from thefuzz import fuzz
 
 '''
 Workspace maintained a set of people with data
@@ -77,21 +78,22 @@ class workspace:
         
         self.participants.append(person) 
         self.profileList[person.key()] = self.profile(emg)
+
         return 0
 
     def profileStatusList(self):
         return [self.profileList[id].getDataStatus() for p, id in self.participants]
     
-    def saveConfigure(self, person, cfgname):
+    def saveEMGConfigure(self, person, cfgname):
         if not self.hasParticipant(person):
             return -1
-        self.saved_emgconfig[cfgname] = self.profileList[person.key()].emg.getProcessConfig()
+        self.saved_emgconfig[cfgname] = self.profileList[person.key()].emg.getProcessConfig().copy()
         return 0
 
-    def getConfigures(self):
+    def getEMGConfigures(self):
         return self.saved_emgconfig
     
-    def hasConfigFile(self, name):
+    def hasEMGConfigFile(self, name):
         return False
 
     def genReport(self, person):
@@ -113,4 +115,40 @@ class workspace:
 
         writer = xmlWriter(path + '/' + person.name + '.xml', profile.report)
         writer.write()
+    
+    def saveWorkSpace(self):
+        return
+    
+    def loadWorkSpace(self):
+        return
+    
+    def mvcFuzzAddDicts(self, dicts):
+        for key, val in dicts.items():
+            if key in self.fuzzforChanAndMVC:
+                self.fuzzforChanAndMVC[key].append(val)
+            else:
+                self.fuzzforChanAndMVC[key] = [val]
 
+    # returned max possibile file
+    # lower_bound: remove item which possiblity is lower than low_bound
+    # return:  (matched_file_list, possibility)
+    def mvcFuzzCheckFiles(self, chan, files, lower_bound=0):
+        if chan not in self.fuzzforChanAndMVC:
+            # if not in fuzz map, try to look for chan in file name
+            candidate_token = [chan]
+        else:
+            candidate_token = self.fuzzforChanAndMVC[chan]
+        
+        matched = None
+        max_p = 0
+        for f in files:
+            for c in candidate_token:
+                p = fuzz.partial_ratio(f, c)
+                if p >= lower_bound:
+                    if p > max_p:
+                        max_p = p
+                        matched = [f]
+                    elif p == max_p:
+                        matched.append(f)
+
+        return matched, max_p

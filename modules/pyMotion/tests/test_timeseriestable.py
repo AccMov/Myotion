@@ -19,24 +19,19 @@ b = a.analog.convertToTST()
 for label in b.labels:
     print("{} : {}".format(label, b[label]))
 
-print("search channel with regex: {}".format(b.searchChannel('F+')))
-
-b.filterChannel('F+')
-print("filtered channel with regex:")
-for label in b.labels:
-    print("{} : {}".format(label, b[label]))
+label_A = b.labels[12]
+label_B = b.labels[1]
 
 # print frequency
 print("frequency: {}".format(b.fs)) 
 
-label_A = b.labels[0]
-label_B = b.labels[1]
 display_len = 5000
+#display_len = -1
 
 # preprocess
 
 # plot original
-fig2, axs_2 = plt.subplots(3)
+fig2, axs_2 = plt.subplots(2)
 axs_2[0].plot(b[label_A][0:display_len])
 axs_2[0].set_title("original")
 
@@ -47,30 +42,56 @@ b[label_A] = removed
 axs_2[1].plot(removed[0:display_len])
 axs_2[1].set_title("removed DC")
 
+fig00, axs00 = plt.subplots(4)
+# plot original
+axs00[0].plot(b[label_A][0:display_len])
+axs00[0].set_title("original")
+
+# filter band pass
+band_result = b.bandpass(label_A, 10, 200)
+axs00[1].plot(band_result[0:display_len])
+axs00[1].set_title("band pass: 10-200Hz")
+
+# fft before
+fft_before_bp_freq, fft_before_bp = b.fft(label_A)
+axs00[2].plot(fft_before_bp_freq, fft_before_bp)
+axs00[2].set_title("fft: before band pass")
+
+# fft after
+b[label_A] = band_result
+fft_after_bp_freq, fft_after_bp = b.fft(label_A)
+axs00[3].plot(fft_after_bp_freq, fft_after_bp)
+axs00[3].set_title("fft: after band pass")
+
+fig01, axs01 = plt.subplots(2)
+axs01[0].plot(b[label_A][0:display_len])
+axs01[0].set_title("original")
 # rectification
 rect = b.rectification(label_A)
-#replaced
-b[label_A] = rect 
-axs_2[2].plot(rect[0:display_len])
-axs_2[2].set_title("rectified")
+b[label_A] = rect
+axs01[1].plot(rect[0:display_len])
+axs01[1].set_title("rectified")
 
-fig, axs = plt.subplots(3)
+fig, axs = plt.subplots(4)
 # plot original
 axs[0].plot(b[label_A][0:display_len])
 axs[0].set_title("original")
 
 # filter low pass
-low_result = b.lowpass(label_A, 10)
+low_result = b.lowpass(label_A, 10, 4)
 axs[1].plot(low_result[0:display_len])
 axs[1].set_title("low pass: 10Hz")
 
-# filter band pass
-band_result = b.bandpass(label_A, 10, 100)
-axs[2].plot(band_result[0:display_len])
-axs[2].set_title("band pass: 10-100Hz")
+# fft before
+fft_before_lp_freq, fft_before_lp = b.fft(label_A)
+axs[2].plot(fft_before_lp_freq, fft_before_lp)
+axs[2].set_title("fft: before low pass")
 
-# replace with low pass result
+# fft after
 b[label_A] = low_result
+fft_after_lp_freq, fft_after_lp = b.fft(label_A)
+axs[3].plot(fft_after_lp_freq, fft_after_lp)
+axs[3].set_title("fft: after low pass")
 
 fig3, axs_3 = plt.subplots(2)
 # threholdDetection
@@ -103,5 +124,13 @@ print("{} and {}'s co-contration: {}".format(label_A, label_B, b.cocontraction(l
 
 # change to xml
 xmlWriter('b_test.xml',b.toXML()).write()
+
+print("search channel with regex: {}".format(b.searchChannel('F+')))
+
+b.filterChannel('F+')
+print("filtered channel with regex:")
+for label in b.labels:
+    print("{} : {}".format(label, b[label]))
+
 
 plt.show()

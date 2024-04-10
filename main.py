@@ -45,7 +45,6 @@ os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100
 # ///////////////////////////////////////////////////////////////
 widgets = None
 
-
 # Global Constant
 # ///////////////////////////////////////////////////////////////
 joint_name = [
@@ -90,7 +89,7 @@ joint_name = [
 
 
 class EMGAddWindow(QDialog):
-    def __init__(self, root, width, height, parent=None):
+    def __init__(self, workspace, home, width, height, parent=None):
         QDialog.__init__(self, parent)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
@@ -99,7 +98,8 @@ class EMGAddWindow(QDialog):
         self.setWindowTitle('Add EMG File')
 
         self.widgets = self.ui
-        self.root = root
+        self.workspace = workspace
+        self.root = home
         self.emg = None
         self.person = None
         self.channels = []
@@ -243,7 +243,31 @@ class EMGAddWindow(QDialog):
         # clear old, set new val
         self.mvcfilesMap.clear()
         self.mvcfiles = files
+
+        # auto apply fuzz matching on MVC mapping
+        self.applyFuzzMatchOnMVC()
+
         self.updateChannelBox()
+
+    def applyFuzzMatchOnMVC(self):
+        filename = [os.path.basename(f) for f in self.mvcfiles]
+        for c in self.channels:
+            # set only when possiblity bigger than 50%
+            files, possibility = self.workspace.mvcFuzzCheckFiles(c, filename, lower_bound=50)
+            if files is None:
+                continue
+            else:
+                logger.info("EMG ADD MVC: selecting file {} for chan {}, possibility {}".format(files[0], c, possibility))
+                self.mvcfilesMap[c] = filename.index(files[0])
+        
+        # apply MVC
+        for c in self.channels:
+            if c in self.mvcfilesMap:
+                try:
+                    self.emg.setMVCFile(c, self.mvcfiles[self.mvcfilesMap[c]]) 
+                except Exception:
+                    logger.error(None, 'error', 'mvc file {} is invalid!'.format(self.mvcfiles[self.mvcfilesMap[c]]))
+                    del self.mvcfilesMap[c]
 
     def sanity(self):
         if self.emg is None:
@@ -275,6 +299,12 @@ class EMGAddWindow(QDialog):
                 self.emg.removeChannel(c)
         for old, new in self.formalizedName.items():
             self.emg.renameChannel(old, new)
+
+        # update MVC file name matching fuzz string
+        fuzzmap = {}
+        for chan, index in self.mvcfilesMap.items():
+            fuzzmap[chan] = os.path.basename(self.mvcfiles[index])
+        self.workspace.mvcFuzzAddDicts(fuzzmap)
         self.close()
     
     def cancelBtnClicked(self):
@@ -393,13 +423,13 @@ class MainWindow(QMainWindow):
         )
 
         # APPLICATION LOGICS
-        self.workspace = None                # workspace (participant list, emg list, reports, configure file list and etc.)
-        self.home = None                     # current project path
-        self.filesystemTree = QFileSystemModel()
+        self.workspace = None
+        self.home = None                          
+        self.filesystemTree = QFileSystemModel()  # file system tree for workspace directory
         self.selectedParticipants = []       # key of selected participants
-        self.singleEMG = (None, None, None)  # Participant, Steps, channel
-        self.inputBuffer = None
-        self.outputBuffer = None
+        self.singleEMG = (None, None, None)  # sm for single EMG Process, (Participant, Steps, channel)
+        self.inputBuffer = None              # buffer for single EMG process
+        self.outputBuffer = None             # buffer for single EMG process
         #self.test()
 
     def test(self):
@@ -475,7 +505,7 @@ class MainWindow(QMainWindow):
 
     def addEMGButtonClick(self):
         # create person
-        p, emgdata = EMGAddWindow(self.home, 1200, 800).run()
+        p, emgdata = EMGAddWindow(self.workspace, self.home, 1200, 800).run()
         logger.info('added participate {}'.format(p.name))
 
         # add to workspace
@@ -506,7 +536,7 @@ class MainWindow(QMainWindow):
 
     def singleEMGButtonClick(self):
         p, step, chan = self.singleEMG
-        
+
         if len(self.selectedParticipants) == 0:
             QMessageBox.critical(None, 'error', 'No participant selected!', QMessageBox.Ok)
             return
@@ -518,7 +548,7 @@ class MainWindow(QMainWindow):
         if p is not None:
             QMessageBox.critical(None, 'error', 'Current EMG process is not finished!', QMessageBox.Ok)
             return
-
+        
         p_key = self.selectedParticipants[0]
 
         p = self.workspace.findParticipant(int(p_key))
@@ -582,8 +612,8 @@ class MainWindow(QMainWindow):
         cutoff_b_h_text = widgets.lineEdit_10.text()
         cutoff_b_l_text = widgets.lineEdit_11.text()
         cutoff_l_l_text = widgets.lineEdit_12.text()
-        print(cutoff_b_h_text)
-        print(cutoff_b_l_text)
+        # order set from 2,3,4
+        order = widgets.comboBox_8.currentIndex() + 2
         cutoff_b_l = None
         cutoff_b_h = None
         cutoff_l_l = None
@@ -620,6 +650,15 @@ class MainWindow(QMainWindow):
             cfg[step].cutoff_h = cutoff_b_h
         elif filter_type == emgFilterEnum.LOW_PASS:
             cfg[step].cutoff_l = cutoff_l_l
+        cfg[step].order = order
+
+        logger.info('EMG process step {}, configuration filter,'
+                    ' type {}, high {}, low {}, order {}'.format(
+                        step,
+                        filter_type,
+                        cutoff_b_h,
+                        cutoff_b_l,
+                        order))
  
         self.__updateEMGRenderBuffer(prev=False)
         self.updateEMGSignalProcessPanel(prev=False)
@@ -694,7 +733,7 @@ class MainWindow(QMainWindow):
             return
         
         cfgname = p.name + "'s EMGConfig"
-        self.workspace.saveConfigure(p, cfgname)
+        self.workspace.saveEMGConfigure(p, cfgname)
         self.updateEMGSavedConfigureList()
 
     def EMGBatchProcessButtonClicked(self):
@@ -714,7 +753,7 @@ class MainWindow(QMainWindow):
         # if report has been generated, generate warning
 
         # check configure file
-        configureList = self.workspace.getConfigures()
+        configureList = self.workspace.getEMGConfigures()
         if len(configureList) == 0:
             QMessageBox.critical(None, 'error', 'No saved configuration file found, please use single EMG to generate configure file!', QMessageBox.Ok)
             return
@@ -907,11 +946,11 @@ class MainWindow(QMainWindow):
         if cfg is None:
             return
         # update configuration list
-        n = len(self.workspace.getConfigures())
+        n = len(self.workspace.getEMGConfigures())
         widgets.listWidget_2.clear()
         widgets.listWidget_2.setSortingEnabled(False)
         i = 0
-        for key, item in self.workspace.getConfigures().items():
+        for key, item in self.workspace.getEMGConfigures().items():
             widgets.listWidget_2.addItem(key)
             widgets.listWidget_2.item(i).setForeground(Qt.black)
             i += 1
@@ -933,6 +972,7 @@ class MainWindow(QMainWindow):
             self.reset()
 
         # create new project
+        #self.workspace = workspace(name)
         self.workspace = workspace(name)
         self.home = str(fpath)
 
@@ -1010,6 +1050,14 @@ class MainWindow(QMainWindow):
         self.__updateEMGRenderBuffer()
         self.updateEMGSignalProcessPanel()
 
+        # update summary toolbox
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        idx = widgets.listWidget.currentRow()
+        type, str = cfg.getTypeInfo(idx)
+        self.updateEMGToolBox(type)
+
     def selectSingleEMGStep(self, idx):
         p, step, chan = self.singleEMG
 
@@ -1037,6 +1085,7 @@ class MainWindow(QMainWindow):
         
     def startBatchEMGProcess(self, people, configure):
         for p in people:
+            logger.info("Batch Process: processing data for {}".format(p.name))
             # process data
             self.workspace[p].emg.setProcessConfig(configure)
             self.workspace[p].emg.processWithConfigure()

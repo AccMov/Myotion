@@ -3,7 +3,7 @@ import numpy as np
 from .logger import *
 from .timeSeriesTable import *
 
-class Point:
+class point:
     def __init__(self, data):
         '''
         format
@@ -25,7 +25,7 @@ class Point:
         str = "({},{},{})".format(self.data["xyz"],self.data["error"],self.data["camera"])
         return str
 
-class Points:
+class points:
     def __init__(self, labels, fs):
         assert(len(labels))
         self.labels = labels
@@ -41,7 +41,7 @@ class Points:
     def insertPoint(self, channel, data):
         if channel not in self.labels:
             return
-        self.data[channel].append(Point(data))
+        self.data[channel].append(point(data))
     
     def channels(self):
         return len(self.data)        
@@ -181,13 +181,13 @@ class c3dFile:
         analog_labels = [s.strip() for s in analog_labels]
 
         #create storage
-        points = Points(point_labels, self.point_fs)
+        all_points = points(point_labels, self.point_fs)
         self.analogdata = AnalogData(analog_labels, self.analog_fs)
 
         #load data
         for frame_no, p, analog_data in self.reader.read_frames():
             for i in range(0, point_number):
-                points.insertPoint(point_labels[i],p[i])
+                all_points.insertPoint(point_labels[i],p[i])
                 '''
                     analog data : a matrix of
                           column -> ratio,               each line has self.ratio number of samples
@@ -210,8 +210,8 @@ class c3dFile:
             "point_labels" :    point_labels,                       # label of points
             "channel_labels" :  analog_labels,                      # label of channels
             "frame_number":     frame_number,                       # frame number in c3d file
-            "time":             points.size() / self.attr["point_rate"], # total time of sampling
-            "points":           points,                             # collection of points
+            "time":             all_points.size() / self.attr["point_rate"], # total time of sampling
+            "points":           all_points,                             # collection of points
             "analog":           self.analogdata,                    # collection of analogdata
         }
 

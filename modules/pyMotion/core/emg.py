@@ -53,6 +53,7 @@ class emgFilter():
         self.type = emgFilterEnum.LOW_PASS
         self.cutoff_l = 0
         self.cutoff_h = 0
+        self.order = 2
 
         self.nameMap = {
             emgFilterEnum.LOW_PASS: 'low pass filter',
@@ -72,10 +73,14 @@ class emgFilter():
 
     def setCutOff_H(self, freq):
         self.cutoff_h = freq
+    
+    def setOrder(self, index):
+        self.order = index
 
     # add nodes to xml tree
     def toXML(self, e):
         e.addNode('type', self.nameMap[self.type])
+        e.addNode('order', str(self.order))
         e.addNode('cutoff_l', str(self.cutoff_l))
         e.addNode('cutoff_h', str(self.cutoff_h))
         return e
@@ -121,8 +126,8 @@ class emgConfigure():
         # pre-loaded steps
         self.classical_steps = [
             emgConfigureEnum.DC_OFFSET,
-            emgConfigureEnum.FULL_W_RECT,
             emgConfigureEnum.FILTER,
+            emgConfigureEnum.FULL_W_RECT,
             emgConfigureEnum.FILTER,
             emgConfigureEnum.NORMALIZATION,
             emgConfigureEnum.SUMMARY,
@@ -148,6 +153,11 @@ class emgConfigure():
     # use step id as key to access config file
     def __getitem__(self, id):
         return self.stepConfig[id]
+    
+    def copy(self):
+        t = emgConfigure()
+        t.stepConfig = self.stepConfig.copy()
+        return t
 
     # add new step
     def addStep(self, idx, pos):
@@ -216,7 +226,8 @@ class emg:
         self.emgTST = None                 #emg data
         self.emgMVCTST = None              #emg MVC data
         self.processCFG = None             #emg data process configure
-        self.Channels = []
+        self.Channels = []                 #channels of emg
+        self.syncChannel = None            #sync up channel
         # key:val pair
         # key = channels, val = mvc file path
         self.mvcFilesMap = {}
@@ -244,7 +255,7 @@ class emg:
     # check if MVC TST has all channels in place
     def isMVCComplete(self):
         for c in self.Channels:
-            if not self.emgMVCTST.hasChannel(c):
+            if self.syncChannel != c and not self.emgMVCTST.hasChannel(c):
                 return False
         return True
     
@@ -272,17 +283,27 @@ class emg:
         self.emgTST.filterChannel(self.channel_filter)
         self.emgMVCTST.filterChannel(self.channel_filter)
 
+    # remove a channel from emg
     def removeChannel(self, channel):
         del self.emgTST[channel]
         del self.emgMVCTST[channel]
 
+    # remove a list of channels
     def removeChannels(self, channels):
         for c in channels:
             self.removeChannel(c)
 
+    # rename channel from old to new, keep data the same
     def renameChannel(self, old, new):
         self.emgTST.renameChannel(old, new)
         self.emgMVCTST.renameChannel(old, new)
+
+    # set the name of the sync up channel of emg
+    def setSyncChannel(self, chan):
+        if chan not in self.Channels:
+            return -1
+        
+        self.syncChannel = chan
 
     # set EMG file path
     def setEMGFile(self, f):
@@ -397,9 +418,9 @@ class emg:
             if type == emgConfigureEnum.FILTER:
                 if cfg.enable:
                     if cfg.type == emgFilterEnum.LOW_PASS:
-                        output = tst.lowpass(chan, cfg.cutoff_l)
+                        output = tst.lowpass(chan, cfg.cutoff_l, cfg.order)
                     elif cfg.type == emgFilterEnum.BAND_PASS:
-                        output = tst.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h)
+                        output = tst.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h, cfg.order)
                     else:
                         output = None
             elif type == emgConfigureEnum.FULL_W_RECT:
@@ -425,7 +446,7 @@ class emg:
                 cfg.zeros = tst.countZeros(chan)
         except:
             output = [0] * tst.size()
-            logger.error("cannot apply configuration")
+            logger.error("cannot apply configuration on chan: {}, step: {}".format(chan, tname))
         return output
        
     def tryConfigStep(self, chan, step):
@@ -440,6 +461,9 @@ class emg:
     # process EMG and MVC using configure file
     def processWithConfigure(self):
         for chan in self.Channels:
+            if chan == self.syncChannel:
+                continue
+
             for step in range(0, self.processCFG.size()):
                 self.emgTST[chan] = self.__tryConfigStepImpl(self.emgTST, chan, step)
                 self.emgMVCTST[chan] = self.__tryConfigStepImpl(self.emgMVCTST, chan, step)

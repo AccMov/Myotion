@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.signal as sig
+import scipy.fft as sif
 import pandas as pd
 import re
 from .xml import *
@@ -19,7 +20,6 @@ from .xml import *
 
 all returned vector remain same dimension
 """
-
 
 class timeSeriesTable:
     '''
@@ -177,21 +177,21 @@ class timeSeriesTable:
         return sig.butter(N, Wn, btype, False, "sos", self.fs)
 
     # return ndarray with filterd data
-    def lowpass(self, key, Wn):
+    def lowpass(self, key, Wn, N=2):
         if Wn < 0 or Wn >= self.fs / 2:
             raise ValueError("frequency must be 0 < Wn < fs/2")
         # create low pass filter
-        sos = self.__butterWorth(2, Wn, "low")
+        sos = self.__butterWorth(N, Wn, "lp")
         return sig.sosfilt(sos, self.data[key])
 
     # return ndarray with filterd data
-    def bandpass(self, key, Wlow, Whigh):
+    def bandpass(self, key, Wlow, Whigh, N=2):
         if Wlow < 0 or Wlow >= self.fs / 2:
             raise ValueError("frequency must be 0 < Wn < fs/2")
         if Whigh < 0 or Whigh >= self.fs / 2:
             raise ValueError("frequency must be 0 < Wn < fs/2")
         # create band pass filter
-        sos = self.__butterWorth(2, [Wlow, Whigh], "band")
+        sos = self.__butterWorth(N, [Wlow, Whigh], "bp")
         return sig.sosfilt(sos, self.data[key])
 
     # return ndarray with dc removed
@@ -264,6 +264,10 @@ class timeSeriesTable:
 
     def entropy(self, key):
         return
+    
+    # frequency domain
+    def fft(self, key):
+        return sif.fftfreq(self.n, d=self.ts)[:self.n//2], np.abs(sif.fft(self.data[key])[0:self.n//2])
 
     # method of all channels
     def max_all(self):

@@ -397,6 +397,8 @@ class MainWindow(QMainWindow):
         widgets.pushButton_26.clicked.connect(self.EMGGenerateReportButtonClicked)
         widgets.pushButton_27.clicked.connect(self.EMGSaveConfigurationButtonClicked)
         widgets.pushButton_12.clicked.connect(self.EMGBatchProcessButtonClicked)
+        widgets.lineEdit_3.textChanged.connect(self.updateFilterText)
+        widgets.checkBox_3.stateChanged.connect(self.EMGParticipantSelectAllClicked)
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
 
@@ -424,7 +426,8 @@ class MainWindow(QMainWindow):
 
         # APPLICATION LOGICS
         self.workspace = None
-        self.home = None                          
+        self.home = None
+        self.participant_filter = ''                    
         self.filesystemTree = QFileSystemModel()  # file system tree for workspace directory
         self.selectedParticipants = []       # key of selected participants
         self.singleEMG = (None, None, None)  # sm for single EMG Process, (Participant, Steps, channel)
@@ -771,6 +774,16 @@ class MainWindow(QMainWindow):
         logger.info("batch process: select configure {}".format(config_name))
         self.startBatchEMGProcess(listofpeople, config)
 
+    def EMGParticipantSelectAllClicked(self, state):
+        participants = self.workspace.getFilteredParticipants(self.participant_filter)
+        for p in participants:
+            if state:
+                self.selectedParticipants.append(p)
+            else:
+                self.selectedParticipants.remove(p)
+
+        self.updateEMGParticipantBox()
+
     # WIDGET
     # //////////////////////////////////////////////////////////////
     def createParticipantCheckBox(self, name):
@@ -795,7 +808,7 @@ class MainWindow(QMainWindow):
     # UPDATE UI EVENTS
     # //////////////////////////////////////////////////////////////
     def updateEMGParticipantBox(self):
-        participants = self.workspace.getParticipants()
+        participants = self.workspace.getFilteredParticipants(self.participant_filter)
         n = len(participants)
         widgets.tableWidget_2.clearContents()
         widgets.tableWidget_2.setRowCount(n)
@@ -954,6 +967,18 @@ class MainWindow(QMainWindow):
             widgets.listWidget_2.addItem(key)
             widgets.listWidget_2.item(i).setForeground(Qt.black)
             i += 1
+    
+    def updateFilterText(self):
+        filter_str = widgets.lineEdit_3.text()
+        # check valid regex string
+        try:
+            re.compile(filter_str)
+        except re.error:
+            logger.error('regex not valid')
+            return
+            
+        self.participant_filter = filter_str
+        self.updateEMGParticipantBox()
 
     # Application Logic/Slots
     # ///////////////////////////////////////////////////////////////

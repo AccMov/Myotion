@@ -29,6 +29,7 @@ class workspace:
         self.name = name
         # list of participants in workspace
         self.participants = []
+        self.filtered_participants = []
         
         # data of participants, hash:profile
         self.profileList = {}
@@ -60,6 +61,17 @@ class workspace:
                 return s
         return None
     
+    def getFilteredParticipants(self, regex):
+        to_be_ret = []
+        if len(regex) == 0:
+            return self.participants
+        
+        for p in self.participants:
+            if re.search(regex, p.name) is not None:
+                to_be_ret.append(p)
+
+        return to_be_ret
+
     # use person as key to access profile
     def __getitem__(self, person):
         if not self.hasParticipant(person):

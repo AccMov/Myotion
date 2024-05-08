@@ -6,17 +6,17 @@ from PySide6.QtCore import QTimer, Qt
 
 from .input import Input
 
+fps=60
 
 class Base(QOpenGLWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setObjectName("Base")
-        # self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.input = Input()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
-        self.fps = 60
-        self.timer.start(int(1000 / self.fps))
+        self.timer.start(int(1000 / fps))
         self.time = 0
 
     def initializeGL(self) -> None:

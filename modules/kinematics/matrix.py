@@ -65,14 +65,7 @@ class Matrix(object):
         position[0]=target[0]+radius*sin(p)*sin(t)
         position[1]=target[1]+radius*cos(t)
         position[2]=target[2]+radius*sin(t)*cos(p)
-        up = [0,1,0]
-        front = norm(subtract(position,target))
-        right = norm(cross(front,up))
-        up = norm(cross(right,front))
-        return numpy.array([[right[0], up[0], -front[0], position[0]],
-                            [right[1], up[1], -front[1], position[1]],
-                            [right[2], up[2], -front[2], position[2]],
-                            [0, 0, 0, 1]]).astype(float)
+        return Matrix.makeTranslation(position[0],position[1],position[2])
     
     @staticmethod
     def makeScale(s):

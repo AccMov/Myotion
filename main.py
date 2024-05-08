@@ -17,8 +17,9 @@
 import sys
 import os
 import platform
-from  pathlib import Path
 import re
+from pathlib import Path
+
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect, QDir,
     QSize, QTimer, QUrl, Qt, QEvent)
@@ -115,7 +116,7 @@ class EMGAddWindow(QDialog):
 
     def run(self):
         self.exec()
-        return self.person, self.emg
+        return self.person, self.emg, self.kinematic
     
     # update emg and mvc qtablewidget
     def updateChannelBox(self):
@@ -216,7 +217,7 @@ class EMGAddWindow(QDialog):
     def importEMGBtnClicked(self):
         # load EMG file
         file, extension = QFileDialog.getOpenFileName(None, caption = 'open EMG file', dir = self.root, filter = "EMG Files (*.c3d *.mat)")
-        
+        self.file=file
         # open up emg MVC file
         try:
             self.emg = emg(file)
@@ -291,6 +292,7 @@ class EMGAddWindow(QDialog):
         # creat person
         name = self.widgets.lineEdit_3.text()
         self.person = person(name, 'N/A', 'N/A')
+        self.kinematic = kinematic(self.file)
 
         # filter and rename channels
         old = self.emg.getChannels()
@@ -400,7 +402,7 @@ class MainWindow(QMainWindow):
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
 
-        self.showMaximized()
+        self.show()
 
         # SET CUSTOM THEME
         # ///////////////////////////////////////////////////////////////
@@ -430,18 +432,20 @@ class MainWindow(QMainWindow):
         self.singleEMG = (None, None, None)  # sm for single EMG Process, (Participant, Steps, channel)
         self.inputBuffer = None              # buffer for single EMG process
         self.outputBuffer = None             # buffer for single EMG process
-        #self.test()
+        self.test()
 
     def test(self):
-        self.newWorkSpace("D:\\test\\myotion", 'test')
-        f = "D:\\test\\myotion\\lifting+bending\\Normal\\caoshaoying\\2021-11-04-19-11_lift.mat"
+        self.newWorkSpace(os.getcwd(), 'test')
+        f = os.getcwd()+"/ERRPT.c3d"
+        #"\\test\\Data\\lifting+bending\\LDH\\duchunguang\\2021-12-06-17-57_lift.mat"
         memg = emg(f)
+        kin = kinematic(f)
 
         # add people
         p1 = person("Guo Chen", "1995/08/05", 'male')
 
         # add data
-        self.workspace.addParticipant(p1, memg)
+        self.workspace.addParticipant(p1, memg, kin)
 
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
@@ -505,11 +509,11 @@ class MainWindow(QMainWindow):
 
     def addEMGButtonClick(self):
         # create person
-        p, emgdata = EMGAddWindow(self.workspace, self.home, 1200, 800).run()
+        p, emgdata, kinematic = EMGAddWindow(self.workspace, self.home, 1200, 800).run()
         logger.info('added participate {}'.format(p.name))
 
         # add to workspace
-        self.workspace.addParticipant(p, emgdata)
+        self.workspace.addParticipant(p, emgdata,kinematic)
 
         # update UI
         self.updateEMGParticipantBox()
@@ -998,7 +1002,7 @@ class MainWindow(QMainWindow):
             treeItem = QTreeWidgetItem()
             treeItem.setText(0, p.name)
             tree.addTopLevelItem(treeItem)
-            emg=self.workspace[p].emg
+            emg = self.workspace[p].emg
             for c in emg.getChannels():    
                 treeItem2 = QTreeWidgetItem(treeItem)
                 treeItem2.setText(0, c)
@@ -1016,6 +1020,12 @@ class MainWindow(QMainWindow):
             widgets.plot_output.hide()
             return
 
+        widgets.renderWidget.setModel(self.workspace[p].kinematic)
+        widgets.playSlider.slider.setMaximum(self.workspace[p].kinematic.length)
+        widgets.playSlider.slider.valueChanged.connect(widgets.renderWidget.bodyrender.setFrame)
+        if self.workspace[p].kinematic is not None:
+            widgets.playSlider.playbutton.clicked.connect(widgets.playSlider.on_play_button_clicked)
+            widgets.playSlider.playbutton.clicked.connect(widgets.renderWidget.bodyrender.play)
         x = self.workspace[p].emg.getLinspace()
         widgets.kinematic_analysis.line(x, self.inputBuffer, chan)
         widgets.kinematic_analysis.show()

@@ -1,10 +1,10 @@
+import threading
+
 from .emg import *
 from .report import *
 from .freq_analysis import *
 from .person import *
 from .timeSeriesTable import *
-import threading
-from thefuzz import fuzz
 
 '''
 Workspace maintained a set of people with data
@@ -12,9 +12,10 @@ Workspace maintained a set of people with data
 class workspace:
     # data profile of each participant
     class profile:
-        def __init__(self, emg):
+        def __init__(self, emg, kin):
             self.emg = emg
             self.report = None
+            self.kinematic = kin
 
         def isEMGReady(self):
             return self.emg.isProcessDone()
@@ -32,6 +33,8 @@ class workspace:
         
         # data of participants, hash:profile
         self.profileList = {}
+        
+        
 
         # list of saved emg config
         self.saved_emgconfig = {}
@@ -42,6 +45,7 @@ class workspace:
     def clear(self):
         self.participants.clear()
         self.profileList.clear()
+        self.kinematicList.clear()
         self.saved_emgconfig.clear()
 
     # check if person exist
@@ -72,13 +76,12 @@ class workspace:
     def __missing__(self, key):
         return
 
-    def addParticipant(self, person, emg):
+    def addParticipant(self, person, emg, kin):
         if self.hasParticipant(person):
             return -1
         
         self.participants.append(person) 
-        self.profileList[person.key()] = self.profile(emg)
-
+        self.profileList[person.key()] = self.profile(emg, kin)
         return 0
 
     def profileStatusList(self):

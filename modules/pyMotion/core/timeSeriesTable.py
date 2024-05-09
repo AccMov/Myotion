@@ -118,7 +118,7 @@ class timeSeriesTable:
         
     # convert to pandas
     def toPandasFrame(self):
-        return pd.DataFrame(self.data)
+        return pd.DataFrame({ key:pd.Series(value) for key, value in self.data.items() })
 
     # get time step in linspace format
     def getLinspace(self):

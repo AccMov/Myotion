@@ -377,14 +377,12 @@ class emg:
 
     def toXML(self):
         self.emgTST.setname('EMG')
-        self.emgMVCTST.setname('MVC')
         # top tree
         root = xmlElement('emg')
         root.addSubTree(self.emgTST.toXML())
-        root.addSubTree(self.emgMVCTST.toXML())
         root.addSubTree(self.processCFG.toXML())
         return root
-    
+        
     def isProcessDone(self):
         return self.isprocessdone
     

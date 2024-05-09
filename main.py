@@ -216,6 +216,9 @@ class EMGAddWindow(QDialog):
     def importEMGBtnClicked(self):
         # load EMG file
         file, extension = QFileDialog.getOpenFileName(None, caption = 'open EMG file', dir = self.root, filter = "EMG Files (*.c3d *.mat)")
+
+        if file == "":
+            return
         
         # open up emg MVC file
         try:

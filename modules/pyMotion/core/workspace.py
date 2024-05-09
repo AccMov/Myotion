@@ -24,6 +24,21 @@ class workspace:
 
         def getDataStatus(self):
             return self.emg.isEMGReady(), self.isReportReady()
+    
+    class reportEMGConfig:
+        def __init__(self):
+            self.csv = True
+            self.c3d = False
+            self.mat = False
+
+        def outputMVC(self, st):
+            self.mvc = st
+        def outputCSV(self, st):
+            self.csv = st
+        def outputC3D(self, st):
+            self.c3d = st
+        def outputMAT(self, st):
+            self.mat = st
 
     def __init__(self, name = ''):
         self.name = name
@@ -39,6 +54,9 @@ class workspace:
 
         # fuzzy match for channels and mvc file name
         self.fuzzforChanAndMVC = {}
+
+        # report - EMG config
+        self.reportemgconfig = self.reportEMGConfig()
 
     def clear(self):
         self.participants.clear()
@@ -108,6 +126,7 @@ class workspace:
     def hasEMGConfigFile(self, name):
         return False
 
+    # EMG and MVC are saved in splited file
     def genReport(self, person):
         if not self.hasParticipant(person):
             return
@@ -124,9 +143,22 @@ class workspace:
         profile = self.profileList[person.key()]
         if profile.report is None:
             return
-
-        writer = xmlWriter(path + '/' + person.name + '.xml', profile.report)
+        
+        # save "rpt" report
+        report_name = path + '/' + person.name + '.rpt'
+        writer = xmlWriter(report_name, profile.report)
         writer.write()
+
+        # save csv
+        if self.reportemgconfig.csv:
+            # utf-16 for excel compactability issue
+            csv_name = path + '/' + person.name + '.csv'
+            emgdf = profile.emg.emgTST.toPandasFrame()
+            emgdf.to_csv(csv_name, sep=',', encoding='utf-8')
+
+            mvccsv_name = path + '/' + person.name + '(MVC)' + '.csv'
+            emgmvcdf = profile.emg.emgMVCTST.toPandasFrame()
+            emgmvcdf.to_csv(mvccsv_name, sep=',', encoding='utf-8')
     
     def saveWorkSpace(self):
         return

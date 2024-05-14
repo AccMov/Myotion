@@ -2,15 +2,17 @@ from .timeSeriesTable import *
 from .c3d import *
 from .mat import *
 from .xml import *
-from enum import Enum
 from .logger import *
 
+
 class kinematic:
-    def __init__(self, file=''):
+    def __init__(self, file=""):
         self.kmtFile = file
 
         # label : array
-        self.data = None    
+        self.data = None
+        self.realpoints = {}
+        self.length = 0
 
         if len(file):
             self.setFile(file)
@@ -41,14 +43,30 @@ class kinematic:
             )
         return True
 
+    def ismarker(self, label):
+        """check if label is a marker
+
+        Args:
+            points (dict of listof str): dictionary of all points in the c3d file
+            label (str): current label name
+
+        Returns:
+            bool : if label is a marker
+        """
+        return len(label) < 6
+
     def clear(self):
         return
+
+    def isC3D(self, f):
+        return f.endswith(".c3d")
 
     def setFile(self, f):
         self.kmtFile = f
 
         if not self.isC3D(f):
             logger.error("unsupported file format")
+            return
 
         # remove old data
         self.clear()
@@ -56,16 +74,27 @@ class kinematic:
         # load file
         try:
             c3d = c3dFile(f)
-            self.data = c3d.Points
+            self.data = c3d.points
+            self.length = c3d.frame_number
+            self.labels = c3d.point_labels
+
+            reallabels = list(
+                filter(lambda x: self.ismarker(x) and self.isrealmarker(x), self.labels)
+            )
+            for joint in reallabels:
+                self.realpoints[joint] = self.data[joint]
+
         except:
             raise Exception(logger.errstr)
-        
+
     def __getitem__(self, key):
         return self.data[key]
+
     def __setitem__(self, key, value):
         self.data[key] = value
+
     def __delitem__(self, key):
         return
+
     def __missing__(self, key):
         return
-    

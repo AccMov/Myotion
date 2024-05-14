@@ -8,25 +8,20 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-    QMetaObject, QObject, QPoint, QRect,
-    QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-    QFont, QFontDatabase, QGradient, QIcon,
-    QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtOpenGLWidgets import QOpenGLWidget
-from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QCheckBox,
+from PySide6.QtCore import (QCoreApplication,QMetaObject, QRect,QSize,  Qt) 
+from PySide6.QtGui import (QBrush, QColor, QCursor,QFont,QIcon,QPalette)
+from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox,
     QComboBox, QCommandLinkButton, QFrame, QGridLayout,
     QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-    QListWidget, QListWidgetItem, QMainWindow, QPlainTextEdit,
-    QProgressBar, QPushButton, QRadioButton, QScrollArea,
+    QListWidget, QListWidgetItem, QPlainTextEdit,
+    QPushButton, QRadioButton, QScrollArea,
     QScrollBar, QSizePolicy, QSlider, QSpacerItem,
     QStackedWidget, QTableWidget, QTableWidgetItem, QToolBox,
-    QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget, QTreeView)
-
+    QTreeWidget, QVBoxLayout, QWidget, QTreeView)
+ 
 from modules.kinematics.bodyrender import BodyRender
-from modules.kinematics.sliderwidget import SliderWidget
+from modules.kinematics.renderwidget import RenderWidget
+from modules.kinematics.playbarwidget import PlayBarWidget, SliderWidget
 
 from . resources_rc import *
 from rserver import RServerBrowser
@@ -3302,10 +3297,11 @@ class Ui_MainWindow(object):
         self.verticalLayout_48.setSpacing(0)
         self.verticalLayout_48.setObjectName(u"verticalLayout_48")
         self.verticalLayout_48.setContentsMargins(0, 0, 0, 0)
-        self.openGLWidget = BodyRender(self.kinematics_render)
-        self.openGLWidget.setObjectName(u"openGLWidget")
+        self.renderWidget = RenderWidget(self.kinematics_render)
+        # self.openGLWidget = BodyRender(self.kinematics_render)
+        # self.openGLWidget.setObjectName(u"openGLWidget")
 
-        self.verticalLayout_48.addWidget(self.openGLWidget)
+        self.verticalLayout_48.addWidget(self.renderWidget)
 
 
         self.horizontalLayout_37.addWidget(self.kinematics_render)
@@ -3353,16 +3349,12 @@ class Ui_MainWindow(object):
         self.horizontalLayout_kcp.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_kcp.addWidget(self.label_current_process)
         self.graph_top_title.setLayout(self.horizontalLayout_kcp)
-
-
         self.graph_top_body = QFrame(self.graph_top)
         self.graph_top_body.setObjectName(u"graph_top_body")
         sizePolicy12.setHeightForWidth(self.graph_top_body.sizePolicy().hasHeightForWidth())
         self.graph_top_body.setSizePolicy(sizePolicy12)
         self.graph_top_body.setFrameShape(QFrame.StyledPanel)
         self.graph_top_body.setFrameShadow(QFrame.Raised)
-        # self.emgWidget=EMGWidget(self.graph_top_body)
-        
         self.kinematic_analysis = QPlotView()
         self.kinematic_analysis.setObjectName(u"QPlotView_input")
         sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -3370,14 +3362,8 @@ class Ui_MainWindow(object):
         sizePolicy12.setVerticalStretch(9)
         sizePolicy12.setHeightForWidth(self.kinematic_analysis.sizePolicy().hasHeightForWidth())
         self.kinematic_analysis.setSizePolicy(sizePolicy12)
-
         self.verticalLayout_46.addWidget(self.kinematic_analysis)
-
-        # self.verticalLayout_46.addWidget(self.graph_top_body)
-
-
         self.verticalLayout_45.addWidget(self.graph_top)
-
         self.graph_bottom = QFrame(self.kinematics_graphs)
         self.graph_bottom.setObjectName(u"graph_bottom")
         sizePolicy1.setHeightForWidth(self.graph_bottom.sizePolicy().hasHeightForWidth())
@@ -3424,7 +3410,8 @@ class Ui_MainWindow(object):
         self.kinematics_left_bottom.setFrameShadow(QFrame.Raised)
         self.verticalLayout_49 = QVBoxLayout(self.kinematics_left_bottom)
         self.verticalLayout_49.setObjectName(u"verticalLayout_49")
-        self.playSlider = SliderWidget(self.kinematics_left_bottom)
+        # Control bar
+        self.playSlider = PlayBarWidget(self.kinematics_left_bottom)
         self.playSlider.setObjectName(u"playSlider")
         self.playSlider.setStyleSheet(u"")
 
@@ -3458,10 +3445,10 @@ class Ui_MainWindow(object):
         self.kinematics_label_tree.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.kinematics_label_tree.setSelectionMode(QAbstractItemView.SingleSelection)
         tmp_verticalLayout_50.addWidget(self.kinematics_label_tree)
-
         self.horizontalLayout_36.addWidget(self.kinematics_right)
-
         self.stackedWidget.addWidget(self.kinematics_page)
+        
+        
         self.stats_page = RServerBrowser()
         self.stats_page.setObjectName(u"stats_page")
 

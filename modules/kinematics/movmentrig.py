@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt
 from .object3d import Object3D
 
 
-class MovementRig(Object3D):
+class MovementRig:
     def __init__(self, unitsPerSecond=1, degreesPerSecond=60):
 
         # initilize base Object3d; controls movement
@@ -11,9 +11,7 @@ class MovementRig(Object3D):
         super().__init__()
 
         # initialize attached Object3d; controls look up/down
-        self.lookAttachment = Object3D()
-        self.children = [self.lookAttachment]
-        self.lookAttachment.parent = self
+        self.camera = Object3D()
 
         # control rate of movement
         self.unitsPerSecond = unitsPerSecond
@@ -34,42 +32,39 @@ class MovementRig(Object3D):
 
     # adding and removing objects applies to look attachment;
     # override funtions from Object3d class
-    def add(self, child):
-        self.lookAttachment.add(child)
-
-    def remove(self, child):
-        self.lookAttachment.remove(child)
+    def add(self, camera):
+        self.camera = camera
 
     def update(self, inputObejct, deltaTime):
         moveAmount = self.unitsPerSecond * deltaTime * 10
         rotateAmount = self.degreesPerSecond * 3.1415926 / 180.0 * deltaTime
 
         if inputObejct.isKeyPressed(self.KEY_MOVE_FORWARDS):
-            self.translate(0, 0, -moveAmount)
+            self.camera.translate(0, 0, -moveAmount)
         if inputObejct.isKeyPressed(self.KEY_MOVE_BACKWARDS):
-            self.translate(0, 0, moveAmount)
+            self.camera.translate(0, 0, moveAmount)
         if inputObejct.isKeyPressed(self.KEY_MOVE_LEFT):
-            self.translate(-moveAmount, 0, 0)
+            self.camera.translate(-moveAmount, 0, 0)
         if inputObejct.isKeyPressed(self.KEY_MOVE_RIGHT):
-            self.translate(moveAmount, 0, 0)
+            self.camera.translate(moveAmount, 0, 0)
         if inputObejct.isKeyPressed(self.KEY_MOVE_UP):
-            self.translate(0, moveAmount, 0)
+            self.camera.translate(0, moveAmount, 0)
         if inputObejct.isKeyPressed(self.KEY_MOVE_DOWN):
-            self.translate(0, -moveAmount, 0)
+            self.camera.translate(0, -moveAmount, 0)
         if inputObejct.isKeyPressed(self.KEY_TURN_RIGHT):
-            self.rotateY(-rotateAmount)
+            self.camera.rotateY(-rotateAmount)
         if inputObejct.isKeyPressed(self.KEY_TURN_LEFT):
-            self.rotateY(rotateAmount)
+            self.camera.rotateY(rotateAmount)
         if inputObejct.isKeyPressed(self.KEY_LOOK_UP):
-            self.lookAttachment.rotateX(rotateAmount)
+            self.camera.rotateX(rotateAmount)
         if inputObejct.isKeyPressed(self.KEY_LOOK_DOWN):
-            self.lookAttachment.rotateX(-rotateAmount)
+            self.camera.rotateX(-rotateAmount)
 
         if inputObejct.isMouseDown(Qt.MouseButton.LeftButton):
             x, y = inputObejct.mouseMovement()
-            self.lookAttachment.rotateY(x / 10 * rotateAmount)
-            self.lookAttachment.rotateX(y / 10 * rotateAmount)
+            self.camera.rotateY(x * rotateAmount)
+            self.camera.rotateX(y * rotateAmount)
 
         if inputObejct.wheelMovement != 0:
-            self.translate(0, 0, inputObejct.wheelMovement)
+            self.camera.translate(0, 0, inputObejct.wheelMovement)
             inputObejct.wheelMovement = 0

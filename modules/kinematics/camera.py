@@ -9,8 +9,9 @@ from modules.kinematics.object3d import Object3D
 
 
 class Camera(Object3D):
-    def __init__(self, angleOfView=60, aspectRatio=1, near=0.1, far=1000):
+    def __init__(self, angleOfView=60, aspectRatio=1, near=0.1, far=1000, center=[0, 0, 0]):
         super().__init__()
+        self.focus = center
         self.projectionMatrix = Matrix.makePerspective(
             angleOfView, aspectRatio, near, far
         )
@@ -28,3 +29,11 @@ class Camera(Object3D):
         self.projectionMatrix = Matrix.makeOrthographic(
             left, right, bottom, top, near, far
         )
+
+    def rotateY(self, angle):
+        self.translate(angle*500,0,0)
+        self.lookAt(self.focus)
+    
+    def rotateX(self, angle):
+        self.translate(0,-angle*500,0)
+        self.lookAt(self.focus)

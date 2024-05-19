@@ -220,7 +220,6 @@ class EMGAddWindow(QDialog):
         file, extension = QFileDialog.getOpenFileName(None, caption = 'open EMG file', dir = self.root, filter = "EMG Files (*.c3d *.mat)")
         if file == "":
             return
-        
         self.file=file
         # open up emg MVC file
         try:

@@ -5,6 +5,7 @@ from .report import *
 from .freq_analysis import *
 from .person import *
 from .timeSeriesTable import *
+from thefuzz import fuzz
 
 '''
 Workspace maintained a set of people with data

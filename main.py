@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
     QPushButton, QSizePolicy, QStatusBar, QToolBar, QMessageBox, QDialog,
     QWidget, QFileDialog, QTableWidgetItem, QComboBox, QLineEdit, QCompleter,
     QCheckBox, QFileSystemModel,QTreeWidget, QTreeWidgetItem )
+from PySide6.QtWebEngineCore import QWebEngineUrlScheme, QWebEngineUrlSchemeHandler, QWebEngineUrlRequestJob
 
 from rserver import RServer
 from miscWidgets import *
@@ -407,7 +408,8 @@ class MainWindow(QMainWindow):
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
 
-        self.show()
+        # self.show()
+        self.showMaximized()
 
         # SET CUSTOM THEME
         # ///////////////////////////////////////////////////////////////
@@ -438,7 +440,7 @@ class MainWindow(QMainWindow):
         self.singleEMG = (None, None, None)  # sm for single EMG Process, (Participant, Steps, channel)
         self.inputBuffer = None              # buffer for single EMG process
         self.outputBuffer = None             # buffer for single EMG process
-        self.test()
+        #self.test()
 
     def test(self):
         self.newWorkSpace(os.getcwd(), 'test')
@@ -1134,11 +1136,24 @@ class MainWindow(QMainWindow):
         # clear selectedparitipant
         self.selectedParticipants.clear()
         self.updateEMGParticipantBox()
-    
+
+# setting up Url Scheme string before app starts
+# this is for qplotview setup
+def QPlotViewSetup():
+    scheme = QWebEngineUrlScheme(bytes('local', 'ascii'))
+    scheme.setFlags(QWebEngineUrlScheme.Flag.SecureScheme |
+                    QWebEngineUrlScheme.Flag.LocalScheme |
+                    QWebEngineUrlScheme.Flag.LocalAccessAllowed)
+    QWebEngineUrlScheme.registerScheme(scheme)
+
 if __name__ == "__main__":
     from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
     #DO NOT REMOVE enforce pyside to use opengl for underlying graphics render.
     QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
+
+    # Setup Url scheme handler for WebEngineView
+    QPlotViewSetup()
+
     qApp = QApplication(sys.argv)
     qApp.setWindowIcon(QIcon("Myotion_logo.png"))
     window = MainWindow()

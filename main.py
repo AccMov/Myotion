@@ -20,19 +20,70 @@ import platform
 import re
 from pathlib import Path
 
-from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-    QMetaObject, QObject, QPoint, QRect, QDir,
-    QSize, QTimer, QUrl, Qt, QEvent)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-    QFont, QFontDatabase, QGradient, QIcon,
-    QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QMainWindow, QMenu, QMenuBar,
-    QPushButton, QSizePolicy, QStatusBar, QToolBar, QMessageBox, QDialog,
-    QWidget, QFileDialog, QTableWidgetItem, QComboBox, QLineEdit, QCompleter,
-    QCheckBox, QFileSystemModel,QTreeWidget, QTreeWidgetItem )
-from PySide6.QtWebEngineCore import QWebEngineUrlScheme, QWebEngineUrlSchemeHandler, QWebEngineUrlRequestJob
+from PySide6.QtCore import (
+    QCoreApplication,
+    QDate,
+    QDateTime,
+    QLocale,
+    QMetaObject,
+    QObject,
+    QPoint,
+    QRect,
+    QDir,
+    QSize,
+    QTimer,
+    QUrl,
+    Qt,
+    QEvent,
+)
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QConicalGradient,
+    QCursor,
+    QFont,
+    QFontDatabase,
+    QGradient,
+    QIcon,
+    QImage,
+    QKeySequence,
+    QLinearGradient,
+    QPainter,
+    QPalette,
+    QPixmap,
+    QRadialGradient,
+    QTransform,
+)
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QMenu,
+    QMenuBar,
+    QPushButton,
+    QSizePolicy,
+    QStatusBar,
+    QToolBar,
+    QMessageBox,
+    QDialog,
+    QWidget,
+    QFileDialog,
+    QTableWidgetItem,
+    QComboBox,
+    QLineEdit,
+    QCompleter,
+    QCheckBox,
+    QFileSystemModel,
+    QTreeWidget,
+    QTreeWidgetItem,
+)
+from PySide6.QtWebEngineCore import (
+    QWebEngineUrlScheme,
+    QWebEngineUrlSchemeHandler,
+    QWebEngineUrlRequestJob,
+)
 
+from modules.kinematics.controller import Controller
+from modules.kinematics.model import Model
 from rserver import RServer
 from miscWidgets import *
 from path import *
@@ -50,44 +101,191 @@ widgets = None
 # Global Constant
 # ///////////////////////////////////////////////////////////////
 joint_name = [
-["UT-L", "UT-R", "MT-L", "MT-R", "LT-L", "LT-R", "AD-L", "AD-R", "MD-L", 
-"MD-R", "PD-L", "PD-R", "PM-L", "PM-R", "LD-L", "LD-R", "BB-L", "BB-R", 
-"TB-L", "TB-R", "BRD-L", "BRD-R", "ECRL-L", "ECRL-R", "ECRB-L", "ECRB-R", 
-"ECU-L", "ECU-R", "ED-L", "ED-R", "EDM-L", "EDM-R", "EI-L", "EI-R", "FCR-L", 
-"FCR-R", "PL-L", "PL-R", "FCU-L", "FCU-R", "FDS-L", "FDS-R", "FDP-L", "FDP-R", 
-"FPL-L", "FPL-R", "SSP-L", "SSP-R", "ISP-L", "ISP-R", "SSC-L", "SSC-R", "TM-L",
-"TM-R", "RA-L", "RA-R", "EO-L", "EO-R", "IO-L", "IO-R", "TA-L", "TA-R", "ES-L", 
-"ES-R", "GM-L", "GM-R", "Gme-L", "Gme-R", "BF-L", "BF-R", "ST-L", "ST-R", 
-"SM-L", "SM-R", "VL-L", "VL-R", "VM-L", "VM-R", "VI-L", "VI-R", "RF-L", 
-"RF-R", "TA-L", "TA-R", "GM-L", "GM-R", "GL-L", "GL-R", "SOL-L", "SOL-R"],
-
-["Trapezius (upper)-L", "Trapezius (upper)-R", "Trapezius (middle)-L", 
-    "Trapezius (middle)-R", "Trapezius (lower)-L", "Trapezius (lower)-R",
-    "Deltoid (anterior)-L", "Deltoid (anterior)-R", "Deltoid (middle)-L",
-    "Deltoid (middle)-R", "Deltoid (posterior)-L", "Deltoid (posterior)-R", 
-    "Pectoralis Major-L", "Pectoralis Major-R", "Latissimus Dorsi-L",
-    "Latissimus Dorsi-R", "Biceps Brachii-L", "Biceps Brachii-R", "Triceps Brachii-L",
-    "Triceps Brachii-R", "Brachioradialis-L", "Brachioradialis-R", 
-    "Extensor Carpi Radialis Longus-L", "Extensor Carpi Radialis Longus-R",
-    "Extensor Carpi Radialis Brevis-L", "Extensor Carpi Radialis Brevis-R", 
-    "Extensor Carpi Ulnaris-L", "Extensor Carpi Ulnaris-R", "Extensor Digitorum-L",
-    "Extensor Digitorum-R", "Extensor Digiti Minimi-L", "Extensor Digiti Minimi-R",
-    "Extensor Indicis-L", "Extensor Indicis-R", "Flexor Carpi Radialis-L",
-    "Flexor Carpi Radialis-R", "Palmaris Longus-L", "Palmaris Longus-R",
-    "Flexor Carpi Ulnaris-L", "Flexor Carpi Ulnaris-R", "Flexor Digitorum Superficialis-L",
-    "Flexor Digitorum Superficialis-R", "Flexor Digitorum Profundus-L",
-    "Flexor Digitorum Profundus-R", "Flexor Pollicis Longus-L", "Flexor Pollicis Longus-R",
-    "Supraspinatus-L", "Supraspinatus-R", "Infraspinatus-L", "Infraspinatus-R", 
-    "Subscapularis-L", "Subscapularis-R", "Teres Major-L", "Teres Major-R",
-    "Rectus Abdominis-L", "Rectus Abdominis-R", "External Oblique-L", "External Oblique-R",
-    "Internal Oblique-L", "Internal Oblique-R", "Transversus Abdominis-L", 
-    "Transversus Abdominis-R", "Erector Spinae-L", "Erector Spinae-R", "Gluteus Maximus-L",
-    "Gluteus Maximus-R", "Gluteus Medius-L", "Gluteus Medius-R", "Biceps Femoris-L", 
-    "Biceps Femoris-R", "Semitendinosus-L", "Semitendinosus-R", "Semimembranosus-L", 
-    "Semimembranosus-R", "Vastus Lateralis-L", "Vastus Lateralis-R", "Vastus Medialis-L",
-    "Vastus Medialis-R", "Vastus Intermedius-L", "Vastus Intermedius-R", "Rectus Femoris-L",
-    "Rectus Femoris-R", "Tibialis Anterior-L", "Tibialis Anterior-R", "Gastrocnemius (medial head)-L",
-    "Gastrocnemius (medial head)-R", "Gastrocnemius (lateral head)-L", "Gastrocnemius (lateral head)-R", "Soleus-L", "Soleus-R"]]
+    [
+        "UT-L",
+        "UT-R",
+        "MT-L",
+        "MT-R",
+        "LT-L",
+        "LT-R",
+        "AD-L",
+        "AD-R",
+        "MD-L",
+        "MD-R",
+        "PD-L",
+        "PD-R",
+        "PM-L",
+        "PM-R",
+        "LD-L",
+        "LD-R",
+        "BB-L",
+        "BB-R",
+        "TB-L",
+        "TB-R",
+        "BRD-L",
+        "BRD-R",
+        "ECRL-L",
+        "ECRL-R",
+        "ECRB-L",
+        "ECRB-R",
+        "ECU-L",
+        "ECU-R",
+        "ED-L",
+        "ED-R",
+        "EDM-L",
+        "EDM-R",
+        "EI-L",
+        "EI-R",
+        "FCR-L",
+        "FCR-R",
+        "PL-L",
+        "PL-R",
+        "FCU-L",
+        "FCU-R",
+        "FDS-L",
+        "FDS-R",
+        "FDP-L",
+        "FDP-R",
+        "FPL-L",
+        "FPL-R",
+        "SSP-L",
+        "SSP-R",
+        "ISP-L",
+        "ISP-R",
+        "SSC-L",
+        "SSC-R",
+        "TM-L",
+        "TM-R",
+        "RA-L",
+        "RA-R",
+        "EO-L",
+        "EO-R",
+        "IO-L",
+        "IO-R",
+        "TA-L",
+        "TA-R",
+        "ES-L",
+        "ES-R",
+        "GM-L",
+        "GM-R",
+        "Gme-L",
+        "Gme-R",
+        "BF-L",
+        "BF-R",
+        "ST-L",
+        "ST-R",
+        "SM-L",
+        "SM-R",
+        "VL-L",
+        "VL-R",
+        "VM-L",
+        "VM-R",
+        "VI-L",
+        "VI-R",
+        "RF-L",
+        "RF-R",
+        "TA-L",
+        "TA-R",
+        "GM-L",
+        "GM-R",
+        "GL-L",
+        "GL-R",
+        "SOL-L",
+        "SOL-R",
+    ],
+    [
+        "Trapezius (upper)-L",
+        "Trapezius (upper)-R",
+        "Trapezius (middle)-L",
+        "Trapezius (middle)-R",
+        "Trapezius (lower)-L",
+        "Trapezius (lower)-R",
+        "Deltoid (anterior)-L",
+        "Deltoid (anterior)-R",
+        "Deltoid (middle)-L",
+        "Deltoid (middle)-R",
+        "Deltoid (posterior)-L",
+        "Deltoid (posterior)-R",
+        "Pectoralis Major-L",
+        "Pectoralis Major-R",
+        "Latissimus Dorsi-L",
+        "Latissimus Dorsi-R",
+        "Biceps Brachii-L",
+        "Biceps Brachii-R",
+        "Triceps Brachii-L",
+        "Triceps Brachii-R",
+        "Brachioradialis-L",
+        "Brachioradialis-R",
+        "Extensor Carpi Radialis Longus-L",
+        "Extensor Carpi Radialis Longus-R",
+        "Extensor Carpi Radialis Brevis-L",
+        "Extensor Carpi Radialis Brevis-R",
+        "Extensor Carpi Ulnaris-L",
+        "Extensor Carpi Ulnaris-R",
+        "Extensor Digitorum-L",
+        "Extensor Digitorum-R",
+        "Extensor Digiti Minimi-L",
+        "Extensor Digiti Minimi-R",
+        "Extensor Indicis-L",
+        "Extensor Indicis-R",
+        "Flexor Carpi Radialis-L",
+        "Flexor Carpi Radialis-R",
+        "Palmaris Longus-L",
+        "Palmaris Longus-R",
+        "Flexor Carpi Ulnaris-L",
+        "Flexor Carpi Ulnaris-R",
+        "Flexor Digitorum Superficialis-L",
+        "Flexor Digitorum Superficialis-R",
+        "Flexor Digitorum Profundus-L",
+        "Flexor Digitorum Profundus-R",
+        "Flexor Pollicis Longus-L",
+        "Flexor Pollicis Longus-R",
+        "Supraspinatus-L",
+        "Supraspinatus-R",
+        "Infraspinatus-L",
+        "Infraspinatus-R",
+        "Subscapularis-L",
+        "Subscapularis-R",
+        "Teres Major-L",
+        "Teres Major-R",
+        "Rectus Abdominis-L",
+        "Rectus Abdominis-R",
+        "External Oblique-L",
+        "External Oblique-R",
+        "Internal Oblique-L",
+        "Internal Oblique-R",
+        "Transversus Abdominis-L",
+        "Transversus Abdominis-R",
+        "Erector Spinae-L",
+        "Erector Spinae-R",
+        "Gluteus Maximus-L",
+        "Gluteus Maximus-R",
+        "Gluteus Medius-L",
+        "Gluteus Medius-R",
+        "Biceps Femoris-L",
+        "Biceps Femoris-R",
+        "Semitendinosus-L",
+        "Semitendinosus-R",
+        "Semimembranosus-L",
+        "Semimembranosus-R",
+        "Vastus Lateralis-L",
+        "Vastus Lateralis-R",
+        "Vastus Medialis-L",
+        "Vastus Medialis-R",
+        "Vastus Intermedius-L",
+        "Vastus Intermedius-R",
+        "Rectus Femoris-L",
+        "Rectus Femoris-R",
+        "Tibialis Anterior-L",
+        "Tibialis Anterior-R",
+        "Gastrocnemius (medial head)-L",
+        "Gastrocnemius (medial head)-R",
+        "Gastrocnemius (lateral head)-L",
+        "Gastrocnemius (lateral head)-R",
+        "Soleus-L",
+        "Soleus-R",
+    ],
+]
 
 
 class EMGAddWindow(QDialog):
@@ -97,7 +295,7 @@ class EMGAddWindow(QDialog):
         self.ui.setupUi(self)
 
         self.resize(width, height)
-        self.setWindowTitle('Add EMG File')
+        self.setWindowTitle("Add EMG File")
 
         self.widgets = self.ui
         self.workspace = workspace
@@ -118,7 +316,7 @@ class EMGAddWindow(QDialog):
     def run(self):
         self.exec()
         return self.person, self.emg, self.kinematic
-    
+
     # update emg and mvc qtablewidget
     def updateChannelBox(self):
         self.widgets.tableWidget.clearContents()
@@ -134,7 +332,7 @@ class EMGAddWindow(QDialog):
         for i in range(0, n):
             chan = self.channels[i]
             q = QTableWidgetItem(chan)
-            q.setTextAlignment(Qt.AlignLeading|Qt.AlignVCenter)
+            q.setTextAlignment(Qt.AlignLeading | Qt.AlignVCenter)
             q.setFlags(q.flags() ^ Qt.ItemIsEditable)
             self.widgets.tableWidget.setItem(i, 0, q)
             # drop down selection
@@ -143,7 +341,7 @@ class EMGAddWindow(QDialog):
             self.widgets.tableWidget.setCellWidget(i, 2, self.mvcFileDisplay(chan))
 
         self.widgets.tableWidget.resizeColumnToContents(0)
-    
+
     def jointComboBox(self, chan):
         comboBox = QComboBox()
         comboBox.setObjectName(chan)
@@ -154,8 +352,8 @@ class EMGAddWindow(QDialog):
             comboBox.setCurrentIndex(0)
         comboBox.currentIndexChanged.connect(self.jointBoxChanged)
         return comboBox
-    
-    '''
+
+    """
     def mvcFileButton(self, chan):
         btn = QPushButton()
         btn.setText('select file')
@@ -166,7 +364,7 @@ class EMGAddWindow(QDialog):
         "border-radius:8px;")
         btn.clicked.connect(self.importMVCBtnClicked)
         return btn
-    '''
+    """
 
     def mvcFileDisplay(self, chan):
         comboBox = QComboBox()
@@ -195,39 +393,48 @@ class EMGAddWindow(QDialog):
         self.mvcfilesMap[chan] = index
         # apply MVC
         try:
-            self.emg.setMVCFile(chan, self.mvcfiles[index]) 
+            self.emg.setMVCFile(chan, self.mvcfiles[index])
         except Exception:
-            QMessageBox.critical(None, 'error', 'Selected mvc file is invalid!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "Selected mvc file is invalid!", QMessageBox.Ok
+            )
             return
 
     def updateFilterText(self):
         filter_str = self.widgets.lineEdit.text()
         if filter_str == "":
-            filter_str = '.*'
-        
+            filter_str = ".*"
+
         # check valid regex string
         try:
             re.compile(filter_str)
         except re.error:
-            logger.error('regex not valid')
+            logger.error("regex not valid")
             return
-            
+
         self.channels = self.emg.searchChannels(filter_str)
         self.updateChannelBox()
 
     def importEMGBtnClicked(self):
         # load EMG file
-        file, extension = QFileDialog.getOpenFileName(None, caption = 'open EMG file', dir = self.root, filter = "EMG Files (*.c3d *.mat)")
+        file, extension = QFileDialog.getOpenFileName(
+            None,
+            caption="open EMG file",
+            dir=self.root,
+            filter="EMG Files (*.c3d *.mat)",
+        )
         if file == "":
             return
-        self.file=file
+        self.file = file
         # open up emg MVC file
         try:
             self.emg = emg(file)
         except Exception:
-            QMessageBox.critical(None, 'error', 'Selected emg file is invalid!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "Selected emg file is invalid!", QMessageBox.Ok
+            )
             return
-        
+
         # get channels and update list
         self.channels = self.emg.getChannels()
 
@@ -236,13 +443,20 @@ class EMGAddWindow(QDialog):
 
     def importMVCBtnClicked(self):
         if len(self.channels) == 0:
-            QMessageBox.critical(None, 'error', 'Please select emg file before MVC file!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "Please select emg file before MVC file!", QMessageBox.Ok
+            )
             return
 
         btn = self.sender()
         chan = btn.objectName()
 
-        files, extension = QFileDialog.getOpenFileNames(None, caption = 'open MVC file', dir = self.root, filter = "EMG Files (*.c3d *.mat)")
+        files, extension = QFileDialog.getOpenFileNames(
+            None,
+            caption="open MVC file",
+            dir=self.root,
+            filter="EMG Files (*.c3d *.mat)",
+        )
 
         # clear old, set new val
         self.mvcfilesMap.clear()
@@ -257,44 +471,63 @@ class EMGAddWindow(QDialog):
         filename = [os.path.basename(f) for f in self.mvcfiles]
         for c in self.channels:
             # set only when possiblity bigger than 50%
-            files, possibility = self.workspace.mvcFuzzCheckFiles(c, filename, lower_bound=50)
+            files, possibility = self.workspace.mvcFuzzCheckFiles(
+                c, filename, lower_bound=50
+            )
             if files is None:
                 continue
             else:
-                logger.info("EMG ADD MVC: selecting file {} for chan {}, possibility {}".format(files[0], c, possibility))
+                logger.info(
+                    "EMG ADD MVC: selecting file {} for chan {}, possibility {}".format(
+                        files[0], c, possibility
+                    )
+                )
                 self.mvcfilesMap[c] = filename.index(files[0])
-        
+
         # apply MVC
         for c in self.channels:
             if c in self.mvcfilesMap:
                 try:
-                    self.emg.setMVCFile(c, self.mvcfiles[self.mvcfilesMap[c]]) 
+                    self.emg.setMVCFile(c, self.mvcfiles[self.mvcfilesMap[c]])
                 except Exception:
-                    logger.error(None, 'error', 'mvc file {} is invalid!'.format(self.mvcfiles[self.mvcfilesMap[c]]))
+                    logger.error(
+                        None,
+                        "error",
+                        "mvc file {} is invalid!".format(
+                            self.mvcfiles[self.mvcfilesMap[c]]
+                        ),
+                    )
                     del self.mvcfilesMap[c]
 
     def sanity(self):
         if self.emg is None:
-            QMessageBox.critical(None, 'error', 'No EMG file selected!', QMessageBox.Ok)
+            QMessageBox.critical(None, "error", "No EMG file selected!", QMessageBox.Ok)
             return False
         if not self.emg.isMVCComplete():
-            QMessageBox.critical(None, 'error', 'MVC file not complete!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "MVC file not complete!", QMessageBox.Ok
+            )
             return False
         names = set()
         for old, new in self.formalizedName:
             if new in names:
-                QMessageBox.critical(None, 'error', 'Duplicated joint name found, please assign each channel to joints properly!', QMessageBox.Ok)
+                QMessageBox.critical(
+                    None,
+                    "error",
+                    "Duplicated joint name found, please assign each channel to joints properly!",
+                    QMessageBox.Ok,
+                )
                 return False
             names.add(new)
         return True
-        
+
     def confirmBtnClicked(self):
-        #if not self.sanity():
+        # if not self.sanity():
         #    return
-        
+
         # creat person
         name = self.widgets.lineEdit_3.text()
-        self.person = person(name, 'N/A', 'N/A')
+        self.person = person(name, "N/A", "N/A")
         self.kinematic = kinematic(self.file)
 
         # filter and rename channels
@@ -311,11 +544,12 @@ class EMGAddWindow(QDialog):
             fuzzmap[chan] = os.path.basename(self.mvcfiles[index])
         self.workspace.mvcFuzzAddDicts(fuzzmap)
         self.close()
-    
+
     def cancelBtnClicked(self):
         self.person = None
         self.emg = None
         self.close()
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -386,12 +620,16 @@ class MainWindow(QMainWindow):
         # EMG Page
         widgets.pushButton_10.clicked.connect(self.addEMGButtonClick)
         widgets.pushButton_11.clicked.connect(self.singleEMGButtonClick)
-        widgets.listWidget.itemDoubleClicked.connect(self.EMGConfigurationListDoubleClicked)
+        widgets.listWidget.itemDoubleClicked.connect(
+            self.EMGConfigurationListDoubleClicked
+        )
         widgets.checkBox_4.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.checkBox_11.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.checkBox_12.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.checkBox_13.stateChanged.connect(self.EMGConfigureToggleConfiguration)
-        widgets.comboBox_2.currentIndexChanged.connect(self.EMGChannelSelectorIndexChanged)
+        widgets.comboBox_2.currentIndexChanged.connect(
+            self.EMGChannelSelectorIndexChanged
+        )
         widgets.toolBox.currentChanged.connect(self.EMGChannelToolBoxIndexChanged)
         widgets.pushButton_19.clicked.connect(self.EMGStepNextButtonClicked)
         widgets.pushButton_20.clicked.connect(self.EMGStepNextButtonClicked)
@@ -433,23 +671,29 @@ class MainWindow(QMainWindow):
         # APPLICATION LOGICS
         self.workspace = None
         self.home = None
-        self.participant_filter = ''                    
-        self.filesystemTree = QFileSystemModel()  # file system tree for workspace directory
-        self.selectedParticipants = []       # key of selected participants
-        self.singleEMG = (None, None, None)  # sm for single EMG Process, (Participant, Steps, channel)
-        self.inputBuffer = None              # buffer for single EMG process
-        self.outputBuffer = None             # buffer for single EMG process
-        #self.test()
+        self.participant_filter = ""
+        self.filesystemTree = (
+            QFileSystemModel()
+        )  # file system tree for workspace directory
+        self.selectedParticipants = []  # key of selected participants
+        self.singleEMG = (
+            None,
+            None,
+            None,
+        )  # sm for single EMG Process, (Participant, Steps, channel)
+        self.inputBuffer = None  # buffer for single EMG process
+        self.outputBuffer = None  # buffer for single EMG process
+        self.test()
 
     def test(self):
-        self.newWorkSpace(os.getcwd(), 'test')
-        f = os.getcwd()+"/ERRPT.c3d"
-        #"\\test\\Data\\lifting+bending\\LDH\\duchunguang\\2021-12-06-17-57_lift.mat"
+        self.newWorkSpace(os.getcwd(), "test")
+        f = os.getcwd() + "/ERRPT.c3d"
+        # "\\test\\Data\\lifting+bending\\LDH\\duchunguang\\2021-12-06-17-57_lift.mat"
         memg = emg(f)
         kin = kinematic(f)
 
         # add people
-        p1 = person("Guo Chen", "1995/08/05", 'male')
+        p1 = person("Guo Chen", "1995/08/05", "male")
 
         # add data
         self.workspace.addParticipant(p1, memg, kin)
@@ -517,30 +761,38 @@ class MainWindow(QMainWindow):
     def addEMGButtonClick(self):
         # create person
         p, emgdata, kinematic = EMGAddWindow(self.workspace, self.home, 1200, 800).run()
-        logger.info('added participate {}'.format(p.name))
+        logger.info("added participate {}".format(p.name))
 
         # add to workspace
-        self.workspace.addParticipant(p, emgdata,kinematic)
+        self.workspace.addParticipant(p, emgdata, kinematic)
 
         # update UI
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
 
     def newProjectButtonClick(self):
-        dir = QFileDialog.getExistingDirectory(None, 'New Project', self.home, 
-                    QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-        if dir == '':
+        dir = QFileDialog.getExistingDirectory(
+            None,
+            "New Project",
+            self.home,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks,
+        )
+        if dir == "":
             return
-        
+
         if not checkValidPath(dir):
-            QMessageBox.critical(None, 'error', 'Selected path does not exist!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "Selected path does not exist!", QMessageBox.Ok
+            )
 
         p = Path(dir)
         if self.newWorkSpace(p, p.name):
-            QMessageBox.critical(None, 'error', 'Failed to create new Workspace!', QMessageBox.Ok)
-        
-        logger.info('workspace path: {}'.format(self.home))
-        logger.info('workspace name: {}'.format(self.workspace.name))
+            QMessageBox.critical(
+                None, "error", "Failed to create new Workspace!", QMessageBox.Ok
+            )
+
+        logger.info("workspace path: {}".format(self.home))
+        logger.info("workspace name: {}".format(self.workspace.name))
 
         # Jump to EMG page
         widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
@@ -549,17 +801,23 @@ class MainWindow(QMainWindow):
         p, step, chan = self.singleEMG
 
         if len(self.selectedParticipants) == 0:
-            QMessageBox.critical(None, 'error', 'No participant selected!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "No participant selected!", QMessageBox.Ok
+            )
             return
-        
+
         if len(self.selectedParticipants) > 1:
-            QMessageBox.critical(None, 'error', 'Only one participant can be selected!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "Only one participant can be selected!", QMessageBox.Ok
+            )
             return
-        
+
         if p is not None:
-            QMessageBox.critical(None, 'error', 'Current EMG process is not finished!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "Current EMG process is not finished!", QMessageBox.Ok
+            )
             return
-        
+
         p_key = self.selectedParticipants[0]
 
         p = self.workspace.findParticipant(int(p_key))
@@ -584,7 +842,7 @@ class MainWindow(QMainWindow):
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
             return
-        
+
         idx = widgets.listWidget.currentRow()
         type, str = cfg.getTypeInfo(idx)
         self.selectSingleEMGStep(widgets.listWidget.currentRow())
@@ -597,13 +855,17 @@ class MainWindow(QMainWindow):
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
             return
-        
+
         state = not not state
         if cfg[step].enable == state:
             return
-        
+
         cfg[step].enable = state
-        logger.info('EMG process step {}, configuration {} set to {}'.format(step, cfg.getStepStringList()[step], state))
+        logger.info(
+            "EMG process step {}, configuration {} set to {}".format(
+                step, cfg.getStepStringList()[step], state
+            )
+        )
         self.__updateEMGRenderBuffer(prev=False)
         self.updateEMGSignalProcessPanel(prev=False)
 
@@ -616,8 +878,8 @@ class MainWindow(QMainWindow):
             return
         # according to UI layout
         filtertypename = {
-            0 : emgFilterEnum.BAND_PASS,
-            1 : emgFilterEnum.LOW_PASS,
+            0: emgFilterEnum.BAND_PASS,
+            1: emgFilterEnum.LOW_PASS,
         }
         filter_type = filtertypename[widgets.comboBox_7.currentIndex()]
         cutoff_b_h_text = widgets.lineEdit_10.text()
@@ -628,31 +890,55 @@ class MainWindow(QMainWindow):
         cutoff_b_l = None
         cutoff_b_h = None
         cutoff_l_l = None
-        if cutoff_b_l_text != '':
+        if cutoff_b_l_text != "":
             cutoff_b_l = int(cutoff_b_l_text)
-        if cutoff_b_h_text != '':
+        if cutoff_b_h_text != "":
             cutoff_b_h = int(cutoff_b_h_text)
-        if cutoff_l_l_text != '':
+        if cutoff_l_l_text != "":
             cutoff_l_l = int(cutoff_l_l_text)
 
         fs = self.workspace[p].emg.getfs()
-        #sanity
+        # sanity
         if filter_type == emgFilterEnum.BAND_PASS:
             if cutoff_b_h is None or cutoff_b_l is None:
-                QMessageBox.critical(None, 'error', 'cut off frequency is not complete!', QMessageBox.Ok)
+                QMessageBox.critical(
+                    None, "error", "cut off frequency is not complete!", QMessageBox.Ok
+                )
                 return
-            if cutoff_b_h >= fs/2 or cutoff_b_h < 0 or cutoff_b_l >= fs/2 or cutoff_b_l < 0:
-                QMessageBox.critical(None, 'error', 'cut off frequency has to be between 0 and {}!'.format(fs/2), QMessageBox.Ok)
+            if (
+                cutoff_b_h >= fs / 2
+                or cutoff_b_h < 0
+                or cutoff_b_l >= fs / 2
+                or cutoff_b_l < 0
+            ):
+                QMessageBox.critical(
+                    None,
+                    "error",
+                    "cut off frequency has to be between 0 and {}!".format(fs / 2),
+                    QMessageBox.Ok,
+                )
                 return
             if cutoff_b_l >= cutoff_b_h:
-                QMessageBox.critical(None, 'error', 'cut off low has to be smaller than cut off high!', QMessageBox.Ok)
+                QMessageBox.critical(
+                    None,
+                    "error",
+                    "cut off low has to be smaller than cut off high!",
+                    QMessageBox.Ok,
+                )
                 return
         elif filter_type == emgFilterEnum.LOW_PASS:
             if cutoff_l_l is None:
-                QMessageBox.critical(None, 'error', 'cut off frequency is not complete!', QMessageBox.Ok)
+                QMessageBox.critical(
+                    None, "error", "cut off frequency is not complete!", QMessageBox.Ok
+                )
                 return
-            if cutoff_l_l >= fs/2 or cutoff_l_l < 0:
-                QMessageBox.critical(None, 'error', 'cut off frequency has to be between 0 and {}!'.format(fs/2), QMessageBox.Ok)
+            if cutoff_l_l >= fs / 2 or cutoff_l_l < 0:
+                QMessageBox.critical(
+                    None,
+                    "error",
+                    "cut off frequency has to be between 0 and {}!".format(fs / 2),
+                    QMessageBox.Ok,
+                )
                 return
 
         cfg[step].type = filter_type
@@ -663,14 +949,13 @@ class MainWindow(QMainWindow):
             cfg[step].cutoff_l = cutoff_l_l
         cfg[step].order = order
 
-        logger.info('EMG process step {}, configuration filter,'
-                    ' type {}, high {}, low {}, order {}'.format(
-                        step,
-                        filter_type,
-                        cutoff_b_h,
-                        cutoff_b_l,
-                        order))
- 
+        logger.info(
+            "EMG process step {}, configuration filter,"
+            " type {}, high {}, low {}, order {}".format(
+                step, filter_type, cutoff_b_h, cutoff_b_l, order
+            )
+        )
+
         self.__updateEMGRenderBuffer(prev=False)
         self.updateEMGSignalProcessPanel(prev=False)
 
@@ -681,7 +966,7 @@ class MainWindow(QMainWindow):
         newchan = widgets.comboBox_2.currentText()
         if chan == newchan:
             return
-        logger.info('EMG channel selector index changed to {}'.format(newchan))
+        logger.info("EMG channel selector index changed to {}".format(newchan))
         self.selectSingleEMGChannel(newchan)
 
     def EMGChannelToolBoxIndexChanged(self, idx):
@@ -702,21 +987,21 @@ class MainWindow(QMainWindow):
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
             return
-        
+
         if step + 1 >= cfg.size():
-            QMessageBox.critical(None, 'error', 'end of emg process!', QMessageBox.Ok)
+            QMessageBox.critical(None, "error", "end of emg process!", QMessageBox.Ok)
             return
-        
+
         widgets.listWidget.setCurrentRow(step + 1)
         # equivent to double click on EMG configuration list
         self.EMGConfigurationListDoubleClicked(None)
-    
+
     def EMGGenerateReportButtonClicked(self):
         # sanity
         p, step, chan = self.singleEMG
         if p is None:
             return
-        
+
         # apply configuration on all chans in EMG and MVC
         # this might takes a while
         self.workspace[p].emg.processWithConfigure()
@@ -732,17 +1017,21 @@ class MainWindow(QMainWindow):
 
         self.selectedParticipants.clear()
         self.updateEMGParticipantBox()
-    
+
     def EMGSaveConfigurationButtonClicked(self):
         p, step, chan = self.singleEMG
         if p is None:
-            QMessageBox.critical(None, 'error', 'Single EMG not started!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "Single EMG not started!", QMessageBox.Ok
+            )
             return
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
-            QMessageBox.critical(None, 'error', 'EMG process file not available!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "EMG process file not available!", QMessageBox.Ok
+            )
             return
-        
+
         cfgname = p.name + "'s EMGConfig"
         self.workspace.saveEMGConfigure(p, cfgname)
         self.updateEMGSavedConfigureList()
@@ -750,25 +1039,36 @@ class MainWindow(QMainWindow):
     def EMGBatchProcessButtonClicked(self):
         # sanity for pariticpants
         if len(self.selectedParticipants) == 0:
-            QMessageBox.critical(None, 'error', 'Please select participants first!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None, "error", "Please select participants first!", QMessageBox.Ok
+            )
             return
-        
+
         listofpeople = []
         for p_key in self.selectedParticipants:
             p = self.workspace.findParticipant(int(p_key))
             if p is not None:
                 listofpeople.append(p)
 
-        logger.info("batch process: selected participants {}".format([','.join(p.name) for p in listofpeople]))
-        
+        logger.info(
+            "batch process: selected participants {}".format(
+                [",".join(p.name) for p in listofpeople]
+            )
+        )
+
         # if report has been generated, generate warning
 
         # check configure file
         configureList = self.workspace.getEMGConfigures()
         if len(configureList) == 0:
-            QMessageBox.critical(None, 'error', 'No saved configuration file found, please use single EMG to generate configure file!', QMessageBox.Ok)
+            QMessageBox.critical(
+                None,
+                "error",
+                "No saved configuration file found, please use single EMG to generate configure file!",
+                QMessageBox.Ok,
+            )
             return
-        
+
         # get current selected one
         selectedConfigs = widgets.listWidget_2.selectedItems()
         if len(selectedConfigs) >= 1:
@@ -778,7 +1078,7 @@ class MainWindow(QMainWindow):
             # pick any one
             config_name = configureList.keys()[0]
             config = configureList[config_name]
-            
+
         logger.info("batch process: select configure {}".format(config_name))
         self.startBatchEMGProcess(listofpeople, config)
 
@@ -840,7 +1140,7 @@ class MainWindow(QMainWindow):
             widgets.tableWidget_2.setCellWidget(i, 3, report)
 
     def updateWorkSpaceParticipantBox(self):
-        #listwidget_3
+        # listwidget_3
         participants = self.workspace.getParticipants()
         n = len(participants)
         widgets.listWidget_3.clear()
@@ -848,7 +1148,7 @@ class MainWindow(QMainWindow):
             p = participants[i]
             name = p.name
             # name
-            
+
             item = QListWidgetItem(name)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Unchecked)
@@ -856,7 +1156,7 @@ class MainWindow(QMainWindow):
             widgets.listWidget_3.item(i).setForeground(Qt.black)
 
     # update waveform regarding to config step and user input metrics
-    def updateEMGSignalProcessPanel(self, prev = True, post = True):       
+    def updateEMGSignalProcessPanel(self, prev=True, post=True):
         p, step, chan = self.singleEMG
 
         if p is None:
@@ -866,14 +1166,14 @@ class MainWindow(QMainWindow):
 
         x = self.workspace[p].emg.getLinspace()
         # push data to plot
-             
+
         if prev:
             widgets.plot_input.line(x, self.inputBuffer, chan)
             widgets.plot_input.show()
         if post:
             widgets.plot_output.line(x, self.outputBuffer, chan)
             widgets.plot_output.show()
-    
+
     def updateEMGConfigureList(self):
         widgets.listWidget.clear()
 
@@ -896,14 +1196,14 @@ class MainWindow(QMainWindow):
 
     def updateEMGToolBox(self, type):
         type2toolbox = {
-            emgConfigureEnum.DC_OFFSET : 0,
-            emgConfigureEnum.FULL_W_RECT : 1,
-            emgConfigureEnum.FILTER : 2,
-            emgConfigureEnum.NORMALIZATION : 3,
-            emgConfigureEnum.ACTIVATION : 4,
-            emgConfigureEnum.SUMMARY : 5,
+            emgConfigureEnum.DC_OFFSET: 0,
+            emgConfigureEnum.FULL_W_RECT: 1,
+            emgConfigureEnum.FILTER: 2,
+            emgConfigureEnum.NORMALIZATION: 3,
+            emgConfigureEnum.ACTIVATION: 4,
+            emgConfigureEnum.SUMMARY: 5,
         }
-        idx = type2toolbox[type] 
+        idx = type2toolbox[type]
         widgets.toolBox.setCurrentIndex(idx)
         # update toolbox with current config
         p, step, chan = self.singleEMG
@@ -913,12 +1213,18 @@ class MainWindow(QMainWindow):
         if cfg is None:
             return
         if type == emgConfigureEnum.DC_OFFSET:
-            widgets.checkBox_4.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
+            widgets.checkBox_4.setCheckState(
+                Qt.Checked if cfg[step].enable else Qt.Unchecked
+            )
         elif type == emgConfigureEnum.FULL_W_RECT:
-            widgets.checkBox_11.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
+            widgets.checkBox_11.setCheckState(
+                Qt.Checked if cfg[step].enable else Qt.Unchecked
+            )
         elif type == emgConfigureEnum.FILTER:
-            widgets.checkBox_13.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
-            if cfg[step].type ==  emgFilterEnum.BAND_PASS:
+            widgets.checkBox_13.setCheckState(
+                Qt.Checked if cfg[step].enable else Qt.Unchecked
+            )
+            if cfg[step].type == emgFilterEnum.BAND_PASS:
                 widgets.comboBox_7.setCurrentIndex(0)
                 widgets.lineEdit_10.setText(str(cfg[step].cutoff_h))
                 widgets.lineEdit_11.setText(str(cfg[step].cutoff_l))
@@ -926,10 +1232,12 @@ class MainWindow(QMainWindow):
             else:
                 widgets.comboBox_7.setCurrentIndex(1)
                 widgets.lineEdit_12.setText(str(cfg[step].cutoff_l))
-                widgets.lineEdit_10.setText('')
-                widgets.lineEdit_11.setText('')
+                widgets.lineEdit_10.setText("")
+                widgets.lineEdit_11.setText("")
         elif type == emgConfigureEnum.NORMALIZATION:
-            widgets.checkBox_12.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
+            widgets.checkBox_12.setCheckState(
+                Qt.Checked if cfg[step].enable else Qt.Unchecked
+            )
         elif type == emgConfigureEnum.SUMMARY:
             widgets.label_23.setText("{:.4f}".format(cfg[step].max))
             widgets.label_25.setText("{:.4f}".format(cfg[step].min))
@@ -945,7 +1253,7 @@ class MainWindow(QMainWindow):
             return
         chan = self.workspace[p].emg.getChannels()
         widgets.comboBox_2.addItems(chan)
-    
+
     def updateEMGChannelSelectorText(self, chan):
         widgets.comboBox_2.setCurrentText(chan)
 
@@ -975,16 +1283,16 @@ class MainWindow(QMainWindow):
             widgets.listWidget_2.addItem(key)
             widgets.listWidget_2.item(i).setForeground(Qt.black)
             i += 1
-    
+
     def updateFilterText(self):
         filter_str = widgets.lineEdit_3.text()
         # check valid regex string
         try:
             re.compile(filter_str)
         except re.error:
-            logger.error('regex not valid')
+            logger.error("regex not valid")
             return
-            
+
         self.participant_filter = filter_str
         self.updateEMGParticipantBox()
 
@@ -999,13 +1307,13 @@ class MainWindow(QMainWindow):
         self.filesystemTree = QFileSystemModel()
         self.selectedParticipants = []
 
-    def newWorkSpace(self, fpath, name=''):
+    def newWorkSpace(self, fpath, name=""):
         if self.workspace is not None:
             self.saveWorkSpace()
             self.reset()
 
         # create new project
-        #self.workspace = workspace(name)
+        # self.workspace = workspace(name)
         self.workspace = workspace(name)
         self.home = str(fpath)
 
@@ -1020,50 +1328,104 @@ class MainWindow(QMainWindow):
         self.updateWorkProjectTreeWidget()
         self.updateEMGChannelSelectorContent()
         return 0
-    
+
     def saveWorkSpace(self):
         return
-    
-    def populateKinematicTree(self, tree:QTreeWidget, participants):
+
+    def populateKinematicTree(self, tree: QTreeWidget, participants):
         tree.clear()
         tree.setColumnCount(1)
+        tree.setDragEnabled(True)
+        tree.setDropIndicatorShown(True)
+        tree.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
         for p in participants:
             treeItem = QTreeWidgetItem()
             treeItem.setText(0, p.name)
             tree.addTopLevelItem(treeItem)
-            emg = self.workspace[p].emg
-            for c in emg.getChannels():    
+            person = self.workspace[p]
+            emg = person.emg
+            k = person.kinematic
+            for point in k.reallabels:
+                tr = QTreeWidgetItem(treeItem)
+                tr.setFlags(tr.flags() | Qt.ItemIsDragEnabled | Qt.ItemIsSelectable)
+                tr.setText(0, point)
+                treeItem.addChild(tr)
+            for c in emg.getChannels():
                 treeItem2 = QTreeWidgetItem(treeItem)
                 treeItem2.setText(0, c)
                 treeItem.addChild(treeItem2)
         tree.setHeaderItem(QTreeWidgetItem(["Participant"]))
         tree.addTopLevelItem(treeItem)
 
-    
+    def tree_item_select(self, i):
+        widgets.kinematic_analysis.hide()
+        widgets.kinematic_analysis1.hide()
+        widgets.kinematic_analysis2.hide()
+        name = i.text(0)
+        if name in self.model.kinematic.data.data:
+            d = self.model.kinematic.data[name]
+            xs, ys, zs = [], [], []
+            for p in d:
+                xs.append(p.xyz[0])
+                ys.append(p.xyz[2])
+                zs.append(p.xyz[1])
+            widgets.kinematic_analysis.line(
+                np.arange(0, self.model.kinematic_frames()), xs, name + ".x"
+            )
+            widgets.kinematic_analysis1.line(
+                np.arange(0, self.model.kinematic_frames()), ys, name + ".y"
+            )
+            widgets.kinematic_analysis2.line(
+                np.arange(0, self.model.kinematic_frames()), zs, name + ".z"
+            )
+            widgets.kinematic_analysis.show()
+            widgets.kinematic_analysis1.show()
+            widgets.kinematic_analysis2.show()
+        if name in self.model.emg.Channels:
+            x = self.model.emg.getLinspace()
+            y = self.model.emg[name]
+            widgets.kinematic_analysis.line(x, y, name)
+            widgets.kinematic_analysis.show()
+
     def preloadKinematicPage(self):
-        self.populateKinematicTree(widgets.kinematics_label_tree, self.workspace.getParticipants())
-        p, step, chan = self.singleEMG
+        ps = self.workspace.getParticipants()
+        self.populateKinematicTree(widgets.kinematics_label_tree, ps)
+        p = ps[0]
 
         if p is None:
-            widgets.plot_input.hide()
-            widgets.plot_output.hide()
+            widgets.kinematic_analysis.hide()
+            widgets.kinematic_analysis1.hide()
+            widgets.kinematic_analysis2.hide()
             return
 
-        widgets.renderWidget.setModel(self.workspace[p].kinematic)
-        widgets.playSlider.slider.setMaximum(self.workspace[p].kinematic.length)
-        widgets.playSlider.slider.valueChanged.connect(widgets.renderWidget.bodyrender.setFrame)
+        self.model = Model(self.workspace[p])
+        render = widgets.renderWidget
+        playbar = widgets.playSlider
+        top = widgets.graph_top
+        top.setModel(self.model, widgets.kinematics_label_tree)
+        # bottom = widgets.graph_bottom
+        # bottom.setModel(self.model, widgets.kinematics_label_tree)
+        Controller(
+            self.model, render, playbar, top, None, widgets.kinematics_label_tree
+        )
+
+        widgets.kinematics_label_tree.itemDoubleClicked.connect(self.tree_item_select)
+
         if self.workspace[p].kinematic is not None:
-            widgets.playSlider.playbutton.clicked.connect(widgets.playSlider.on_play_button_clicked)
-            widgets.playSlider.playbutton.clicked.connect(widgets.renderWidget.bodyrender.play)
+            widgets.playSlider.playbutton.clicked.connect(
+                widgets.renderWidget.bodyrender.play
+            )
         x = self.workspace[p].emg.getLinspace()
-        widgets.kinematic_analysis.line(x, self.inputBuffer, chan)
+        widgets.kinematic_analysis.line(
+            x, self.inputBuffer, self.workspace[p].emg.getChannels()
+        )
         widgets.kinematic_analysis.show()
-        
+
     def startSingleEMGProcess(self, p):
         logger.info("started single EMG process for {}".format(p.name))
         if not self.workspace.hasParticipant(p):
             return -1
-        
+
         # set fsm
         chan = self.workspace[p].emg.getChannels()[0]
         self.singleEMG = (p, 0, chan)
@@ -1106,7 +1468,7 @@ class MainWindow(QMainWindow):
         if cfg is None:
             return
         cfgstrings = cfg.getStepStringList()
-        
+
         if idx > len(cfgstrings) or idx < 0:
             logger.info("single EMG process idx {} out of range".format(idx))
 
@@ -1121,7 +1483,7 @@ class MainWindow(QMainWindow):
         self.updateEMGSignalProcessPanel()
         type, str = cfg.getTypeInfo(idx)
         self.updateEMGToolBox(type)
-        
+
     def startBatchEMGProcess(self, people, configure):
         for p in people:
             logger.info("Batch Process: processing data for {}".format(p.name))
@@ -1136,18 +1498,23 @@ class MainWindow(QMainWindow):
         self.selectedParticipants.clear()
         self.updateEMGParticipantBox()
 
+
 # setting up Url Scheme string before app starts
 # this is for qplotview setup
 def QPlotViewSetup():
-    scheme = QWebEngineUrlScheme(bytes('local', 'ascii'))
-    scheme.setFlags(QWebEngineUrlScheme.Flag.SecureScheme |
-                    QWebEngineUrlScheme.Flag.LocalScheme |
-                    QWebEngineUrlScheme.Flag.LocalAccessAllowed)
+    scheme = QWebEngineUrlScheme(bytes("local", "ascii"))
+    scheme.setFlags(
+        QWebEngineUrlScheme.Flag.SecureScheme
+        | QWebEngineUrlScheme.Flag.LocalScheme
+        | QWebEngineUrlScheme.Flag.LocalAccessAllowed
+    )
     QWebEngineUrlScheme.registerScheme(scheme)
+
 
 if __name__ == "__main__":
     from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
-    #DO NOT REMOVE enforce pyside to use opengl for underlying graphics render.
+
+    # DO NOT REMOVE enforce pyside to use opengl for underlying graphics render.
     QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
 
     # Setup Url scheme handler for WebEngineView

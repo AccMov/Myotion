@@ -38,10 +38,6 @@ class BodyRender(Base):
 
     def paintGL(self) -> None:
         super().paintGL()
-        if self.currentFrame >= self.model.length:
-            self.currentFrame = 0
-        if self.playing:
-            self.currentFrame += 1
         if self.point in self.scene.children:
             self.scene.remove(self.point)
         self.point = self.getFrame()

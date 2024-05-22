@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QBoxLayout
-from PySide6 import QtCore
+from PySide6.QtCore import Qt
 
 from .bodyrender import BodyRender
 
@@ -15,7 +15,9 @@ class RenderWidget(QWidget):
         self.bodyrender = BodyRender()
         self.placeholder = QLabel("No model to render")
         self.vblayout = QVBoxLayout()
-        self.vblayout.addWidget(self.placeholder)
+        self.vblayout.addWidget(
+            self.placeholder, alignment=Qt.AlignmentFlag.AlignCenter
+        )
         self.setLayout(self.vblayout)
 
     def update(self):
@@ -29,3 +31,9 @@ class RenderWidget(QWidget):
     def setModel(self, model):
         self.bodyrender.setModel(model)
         self.update()
+
+    def setController(self, controller):
+        self.controller = controller
+
+    def notify(self, frame):
+        self.bodyrender.setFrame(frame)

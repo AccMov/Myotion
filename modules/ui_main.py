@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QCheckBox
 from modules.kinematics.bodyrender import BodyRender
 from modules.kinematics.renderwidget import RenderWidget
 from modules.kinematics.playbarwidget import PlayBarWidget, SliderWidget
+from widgets.customframe import CustomFrame
 
 from . resources_rc import *
 from rserver import RServerBrowser
@@ -3298,12 +3299,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_48.setObjectName(u"verticalLayout_48")
         self.verticalLayout_48.setContentsMargins(0, 0, 0, 0)
         self.renderWidget = RenderWidget(self.kinematics_render)
-        # self.openGLWidget = BodyRender(self.kinematics_render)
-        # self.openGLWidget.setObjectName(u"openGLWidget")
 
         self.verticalLayout_48.addWidget(self.renderWidget)
-
-
         self.horizontalLayout_37.addWidget(self.kinematics_render)
 
         self.kinematics_graphs = QFrame(self.kinematics_left_top)
@@ -3314,7 +3311,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_45.setSpacing(0)
         self.verticalLayout_45.setObjectName(u"verticalLayout_45")
         self.verticalLayout_45.setContentsMargins(0, 0, 0, 0)
-        self.graph_top = QFrame(self.kinematics_graphs)
+        self.graph_top = CustomFrame(self.kinematics_graphs)
         self.graph_top.setObjectName(u"graph_top")
         sizePolicy1.setHeightForWidth(self.graph_top.sizePolicy().hasHeightForWidth())
         self.graph_top.setSizePolicy(sizePolicy1)
@@ -3356,44 +3353,50 @@ class Ui_MainWindow(object):
         self.graph_top_body.setFrameShape(QFrame.StyledPanel)
         self.graph_top_body.setFrameShadow(QFrame.Raised)
         self.kinematic_analysis = QPlotView()
+        self.kinematic_analysis1 = QPlotView()
+        self.kinematic_analysis2 = QPlotView()
         self.kinematic_analysis.setObjectName(u"QPlotView_input")
         sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         sizePolicy12.setHorizontalStretch(0)
         sizePolicy12.setVerticalStretch(9)
         sizePolicy12.setHeightForWidth(self.kinematic_analysis.sizePolicy().hasHeightForWidth())
         self.kinematic_analysis.setSizePolicy(sizePolicy12)
+        self.kinematic_analysis1.setSizePolicy(sizePolicy12)
+        self.kinematic_analysis2.setSizePolicy(sizePolicy12)
         self.verticalLayout_46.addWidget(self.kinematic_analysis)
+        self.verticalLayout_46.addWidget(self.kinematic_analysis1)
+        self.verticalLayout_46.addWidget(self.kinematic_analysis2)
         self.verticalLayout_45.addWidget(self.graph_top)
-        self.graph_bottom = QFrame(self.kinematics_graphs)
-        self.graph_bottom.setObjectName(u"graph_bottom")
-        sizePolicy1.setHeightForWidth(self.graph_bottom.sizePolicy().hasHeightForWidth())
-        self.graph_bottom.setSizePolicy(sizePolicy1)
-        self.graph_bottom.setFrameShape(QFrame.StyledPanel)
-        self.graph_bottom.setFrameShadow(QFrame.Raised)
-        self.verticalLayout_47 = QVBoxLayout(self.graph_bottom)
-        self.verticalLayout_47.setSpacing(0)
-        self.verticalLayout_47.setObjectName(u"verticalLayout_47")
-        self.verticalLayout_47.setContentsMargins(0, 0, 0, 0)
-        self.graph_bottom_title = QFrame(self.graph_bottom)
-        self.graph_bottom_title.setObjectName(u"graph_bottom_title")
-        sizePolicy1.setHeightForWidth(self.graph_bottom_title.sizePolicy().hasHeightForWidth())
-        self.graph_bottom_title.setSizePolicy(sizePolicy1)
-        self.graph_bottom_title.setFrameShape(QFrame.StyledPanel)
-        self.graph_bottom_title.setFrameShadow(QFrame.Raised)
+        # self.graph_bottom = CustomFrame(self.kinematics_graphs)
+        # self.graph_bottom.setObjectName(u"graph_bottom")
+        # sizePolicy1.setHeightForWidth(self.graph_bottom.sizePolicy().hasHeightForWidth())
+        # self.graph_bottom.setSizePolicy(sizePolicy1)
+        # self.graph_bottom.setFrameShape(QFrame.StyledPanel)
+        # self.graph_bottom.setFrameShadow(QFrame.Raised)
+        # self.verticalLayout_47 = QVBoxLayout(self.graph_bottom)
+        # self.verticalLayout_47.setSpacing(0)
+        # self.verticalLayout_47.setObjectName(u"verticalLayout_47")
+        # self.verticalLayout_47.setContentsMargins(0, 0, 0, 0)
+        # self.graph_bottom_title = QFrame(self.graph_bottom)
+        # self.graph_bottom_title.setObjectName(u"graph_bottom_title")
+        # sizePolicy1.setHeightForWidth(self.graph_bottom_title.sizePolicy().hasHeightForWidth())
+        # self.graph_bottom_title.setSizePolicy(sizePolicy1)
+        # self.graph_bottom_title.setFrameShape(QFrame.StyledPanel)
+        # self.graph_bottom_title.setFrameShadow(QFrame.Raised)
 
-        self.verticalLayout_47.addWidget(self.graph_bottom_title)
+        # self.verticalLayout_47.addWidget(self.graph_bottom_title)
 
-        self.graph_bottom_body = QFrame(self.graph_bottom)
-        self.graph_bottom_body.setObjectName(u"graph_bottom_body")
-        sizePolicy12.setHeightForWidth(self.graph_bottom_body.sizePolicy().hasHeightForWidth())
-        self.graph_bottom_body.setSizePolicy(sizePolicy12)
-        self.graph_bottom_body.setFrameShape(QFrame.StyledPanel)
-        self.graph_bottom_body.setFrameShadow(QFrame.Raised)
+        # self.graph_bottom_body = QFrame(self.graph_bottom)
+        # self.graph_bottom_body.setObjectName(u"graph_bottom_body")
+        # sizePolicy12.setHeightForWidth(self.graph_bottom_body.sizePolicy().hasHeightForWidth())
+        # self.graph_bottom_body.setSizePolicy(sizePolicy12)
+        # self.graph_bottom_body.setFrameShape(QFrame.StyledPanel)
+        # self.graph_bottom_body.setFrameShadow(QFrame.Raised)
 
-        self.verticalLayout_47.addWidget(self.graph_bottom_body)
+        # self.verticalLayout_47.addWidget(self.graph_bottom_body)
 
 
-        self.verticalLayout_45.addWidget(self.graph_bottom)
+        # self.verticalLayout_45.addWidget(self.graph_bottom)
 
 
         self.horizontalLayout_37.addWidget(self.kinematics_graphs)

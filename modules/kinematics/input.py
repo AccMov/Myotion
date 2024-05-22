@@ -56,11 +56,9 @@ class Input:
             self.mousePressed = True
 
     def mouseMoveEvent(self, event):
-        print("Mouse move event")
         self.mouseDrageLocation = MouseEvent(event.x(), event.y())
 
     def mouseMovement(self):
-        print("Mouse movement")
         x, y = (
             self.mouseLocation.x - self.mouseDrageLocation.x,
             self.mouseLocation.y - self.mouseDrageLocation.y,
@@ -69,7 +67,6 @@ class Input:
         return x, y
 
     def mouseReleaseEvent(self, event):
-        print("Mouse released event")
         self.mousePressed = False
 
     def wheelEvent(self, event):

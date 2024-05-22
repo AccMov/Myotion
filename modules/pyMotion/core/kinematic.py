@@ -78,10 +78,10 @@ class kinematic:
             self.length = c3d.frame_number
             self.labels = c3d.point_labels
 
-            reallabels = list(
+            self.reallabels = list(
                 filter(lambda x: self.ismarker(x) and self.isrealmarker(x), self.labels)
             )
-            for joint in reallabels:
+            for joint in self.reallabels:
                 self.realpoints[joint] = self.data[joint]
 
         except:

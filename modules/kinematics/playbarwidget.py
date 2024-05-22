@@ -12,18 +12,14 @@ class State(Enum):
 
 
 class SliderWidget(QSlider):
-    def __init__(self, parent=None, model=None):
+    def __init__(self, parent=None):
         super().__init__(Qt.Orientation.Horizontal, parent)
-        self.setRange(0, 1000)
+        self.setMinimum(0)
         self.setValue(0)
         self.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.setTickInterval(10)
         self.setSingleStep(1)
-
-        self.valueChanged.connect(self.on_slider_value_changed)
-
-    def on_slider_value_changed(self, value):
-        print(f"Slider value changed to {value}")
+        self.setPalette
 
     def mousePressEvent(self, event):
         self.setValue(
@@ -39,12 +35,11 @@ class SliderWidget(QSlider):
                 + (self.maximum() - self.minimum()) * ev.x() / self.width()
             )
 
-    def set_value(self, value):
-        self.setValue(value)
-
     def get_value(self):
         return self.value()
-
+    
+    def setController(self,controller):
+        self.valueChanged.connect(controller.slider_valuechange)
 
 class PlayBarWidget(QWidget):
     def __init__(self, parent=None):
@@ -54,7 +49,8 @@ class PlayBarWidget(QWidget):
     def initui(self, parent=None):
         self.slider = SliderWidget(parent)
         self.playbutton = QPushButton("Play", parent)
-        self.State = State.STOP
+        self.playbutton.clicked.connect(self.on_play_button_clicked)
+        self.state = State.STOP
         self.playbutton.setIcon(
             self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
         )
@@ -69,13 +65,25 @@ class PlayBarWidget(QWidget):
         self.setLayout(hboxlayout)
 
     def on_play_button_clicked(self):
-        if self.State == State.STOP or self.State == State.PAUSE:
-            self.State = State.PLAY
+        if self.state == State.STOP or self.state == State.PAUSE:
+            self.state = State.PLAY
             self.playbutton.setIcon(
                 self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPause)
             )
-        elif self.State == State.PLAY:
-            self.State = State.PAUSE
+            self.playbutton.setText("Pause")
+        elif self.state == State.PLAY:
+            self.state = State.PAUSE
             self.playbutton.setIcon(
                 self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
             )
+            self.playbutton.setText("Play")
+
+    def is_playing(self):
+        return self.state == State.PLAY
+
+    def notify(self, frame):
+        self.slider.setValue(frame)
+
+    def setController(self, controller):
+        self.slider.setController(controller)
+        # self.playbutton.clicked.connect(controller.on_play_button_clicked)

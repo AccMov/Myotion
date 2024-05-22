@@ -10,29 +10,20 @@ lapply(pacs, require, character.only = TRUE)
 options(shiny.port = 7775)
 
 
-# read data
-
-
 
 # read data
-muscle <- rep(c("ES", "MF", "GMed", "BF", "LGM", "RA", "EO", "TFL", "RF", "TA"), times = 17)
-muscle_name = c("ES", "MF", "GMed", "BF", "LGM", "RA", "EO", "TFL", "RF", "TA")
-# Groups
-groupA_names <- list.files("data/Group_A", pattern="*.mat", full.names=TRUE)
-groupA <- lapply(groupA_names, readMat)
-groupA = unlist(groupA,recursive=FALSE)
+groupA_names <- list.files("data/Group_A", pattern="*.xml", full.names=TRUE)
+groupA <- lapply(groupA_names, xmlToList)
 
-groupB_names <- list.files("data/Group_B", pattern="*.mat", full.names=TRUE)
-groupB <- lapply(groupB_names, readMat)
-groupB = unlist(groupB,recursive=FALSE)
-
-groupAll = lapply(c(groupA_names, groupB_names), readMat)
-groupAll = unlist(groupAll,recursive=FALSE)
+for(i in 1:length(groupA)){
+  names(groupA)[i] = groupA[[i]]$Person$name
+}
+muscle_name = c(names(groupA$ABC1$emg$timeSeriesTable$channels))
 
 # Time domain parameters names
-time_domain_para = c("MIN","MAX","MEAN","MED","SD","VAR","PP","ZC","AUC","RMS","MP","MAV","EN","WL","SK","KUR")
-freq_domain_para = c("MNF","MDF","SPC","BPd","BPt","BPa","BPb","BPg")
-advanced = c("FS1","FS2","FS3")
+time_domain_para = names(groupA$ABC1$emg$statistic)[1:13]
+freq_domain_para = names(groupA$ABC1$emg$statistic)[14:20]
+advanced = names(groupA$ABC1$emg$timeSeriesTable$channels)
 domain_list = list(time_domain_para,freq_domain_para)
 
 domain = c("time_domain_para","freq_domain_para","advanced")
@@ -45,10 +36,8 @@ domain = c("time_domain_para","freq_domain_para","advanced")
 domain_select = "time_domain_para"
 para_bar = time_domain_para[3]
 para_bar2 = "Non"
-group_A_select = c("Results.GA.PP001","Results.GA.PP002","Results.GA.PP003","Results.GA.PP004",
-                   "Results.GA.PP005","Results.GA.PP006","Results.GA.PP007","Results.GA.PP008")
-group_B_select = c("Results.GB.PP001","Results.GB.PP002","Results.GB.PP003","Results.GB.PP004",
-                   "Results.GB.PP005","Results.GB.PP006","Results.GB.PP007","Results.GB.PP008","Results.GB.PP009")
+group_A_select = c("ABC1","ABC2","ABC3","ABC4")
+group_B_select = c("ABC1","ABC2","ABC3","ABC4")
 
 
 ## Draw data
@@ -56,32 +45,34 @@ group_B_select = c("Results.GB.PP001","Results.GB.PP002","Results.GB.PP003","Res
 df_draw = data.frame(id = c(), muscle = c(), para = c(), value = c(), group = c())
 for (i in 1:length(group_A_select)){
   ppi = groupA[which(names(groupA) == group_A_select[i])]
-  domain_ppi = ppi[[1]][[which(domain==domain_select)]]
-  sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar))
-  
-  df_bar_ppi = data.frame(id = rep(group_A_select[i], length(attr(domain_ppi,"dimnames")[[1]])), # fix the number of muscle to 10 for now
-                          muscle = attr(domain_ppi,"dimnames")[[1]],
-                          para = rep(para_bar, length(attr(domain_ppi,"dimnames")[[1]])),
-                          value = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar)),
-                          group = rep("GroupA", length(attr(domain_ppi,"dimnames")[[1]])))
+  domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+  domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+  df_bar_ppi = data.frame(id = rep(group_A_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                          muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                          para = rep(para_bar, length(domain_ppi)),
+                          value = domain_ppi,
+                          group = rep("GroupA", length(domain_ppi)))
   if(para_bar2!="Non"){
-    df_bar_ppi$value2 = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar2))
+    domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
+    domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
+    df_bar_ppi$value2 = domain_ppi2
   }
   df_draw = rbind(df_draw, df_bar_ppi)
 }
 
 for (i in 1:length(group_B_select)){
-  ppi = groupB[which(names(groupB) == group_B_select[i])]
-  domain_ppi = ppi[[1]][[which(domain==domain_select)]]
-  sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar))
-  
-  df_bar_ppi = data.frame(id = rep(group_B_select[i], length(attr(domain_ppi,"dimnames")[[1]])), # fix the number of muscle to 10 for now
-                          muscle = attr(domain_ppi,"dimnames")[[1]],
-                          para = rep(para_bar, length(attr(domain_ppi,"dimnames")[[1]])),
-                          value = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar)),
-                          group = rep("GroupB", length(attr(domain_ppi,"dimnames")[[1]])))
+  ppi = groupA[which(names(groupA) == group_B_select[i])]
+  domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+  domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+  df_bar_ppi = data.frame(id = rep(group_B_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                          muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                          para = rep(para_bar, length(domain_ppi)),
+                          value = domain_ppi,
+                          group = rep("GroupB", length(domain_ppi)))
   if(para_bar2!="Non"){
-    df_bar_ppi$value2 = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar2))
+    domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
+    domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
+    df_bar_ppi$value2 = domain_ppi2
   }
   df_draw = rbind(df_draw, df_bar_ppi)
 }
@@ -232,34 +223,38 @@ server <- function(input, output) {
     df_draw = data.frame(id = c(), muscle = c(), para = c(), value = c(), group = c())
     for (i in 1:length(group_A_select)){
       ppi = groupA[which(names(groupA) == group_A_select[i])]
-      domain_ppi = ppi[[1]][[which(domain==domain_select)]]
-      sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar))
-      
-      df_bar_ppi = data.frame(id = rep(group_A_select[i], length(attr(domain_ppi,"dimnames")[[1]])), # fix the number of muscle to 10 for now
-                              muscle = attr(domain_ppi,"dimnames")[[1]],
-                              para = rep(para_bar, length(attr(domain_ppi,"dimnames")[[1]])),
-                              value = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar)),
-                              group = rep("GroupA", length(attr(domain_ppi,"dimnames")[[1]])))
+      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+      df_bar_ppi = data.frame(id = rep(group_A_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                              para = rep(para_bar, length(domain_ppi)),
+                              value = domain_ppi,
+                              group = rep("GroupA", length(domain_ppi)))
       if(para_bar2!="Non"){
-        df_bar_ppi$value2 = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar2))
+        domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
+        domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
+        df_bar_ppi$value2 = domain_ppi2
       }
       df_draw = rbind(df_draw, df_bar_ppi)
+      
     }
     
     for (i in 1:length(group_B_select)){
-      ppi = groupB[which(names(groupB) == group_B_select[i])]
-      domain_ppi = ppi[[1]][[which(domain==domain_select)]]
-      sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar))
-      
-      df_bar_ppi = data.frame(id = rep(group_B_select[i], length(attr(domain_ppi,"dimnames")[[1]])), # fix the number of muscle to 10 for now
-                              muscle = attr(domain_ppi,"dimnames")[[1]],
-                              para = rep(para_bar, length(attr(domain_ppi,"dimnames")[[1]])),
-                              value = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar)),
-                              group = rep("GroupB", length(attr(domain_ppi,"dimnames")[[1]])))
+      ppi = groupA[which(names(groupA) == group_B_select[i])]
+      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+      df_bar_ppi = data.frame(id = rep(group_B_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                              para = rep(para_bar, length(domain_ppi)),
+                              value = domain_ppi,
+                              group = rep("GroupB", length(domain_ppi)))
       if(para_bar2!="Non"){
-        df_bar_ppi$value2 = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar2))
+        domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
+        domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
+        df_bar_ppi$value2 = domain_ppi2
       }
       df_draw = rbind(df_draw, df_bar_ppi)
+      
     }
     df_draw
     
@@ -282,86 +277,87 @@ server <- function(input, output) {
       para_bar = para_bar_seq[j]
     df_draw_test = data.frame(id = c(), muscle = c(), para = c(), value = c(), group = c())
     if(length(group_1_select)>0){for (i in 1:length(group_1_select)){
-      ppi = groupA[which(names(groupA) == group_1_select[i])]
-      domain_ppi = ppi[[1]][[which(domain==domain_select)]]
-      sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar))
       
-      df_bar_ppi = data.frame(id = rep(group_1_select[i], length(attr(domain_ppi,"dimnames")[[1]])), # fix the number of muscle to 10 for now
-                              muscle = attr(domain_ppi,"dimnames")[[1]],
-                              para = rep(para_bar, length(attr(domain_ppi,"dimnames")[[1]])),
-                              value = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar)),
-                              group = rep("Group 1", length(attr(domain_ppi,"dimnames")[[1]])))
+      ppi = groupA[which(names(groupA) == group_1_select[i])]
+      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+      df_bar_ppi = data.frame(id = rep(group_1_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                              para = rep(para_bar, length(domain_ppi)),
+                              value = domain_ppi,
+                              group = rep("Group 1", length(domain_ppi)))
       df_draw_test = rbind(df_draw_test, df_bar_ppi)
+      
     }}
     
     if(length(group_2_select)>0){for (i in 1:length(group_2_select)){
-      ppi = groupB[which(names(groupB) == group_2_select[i])]
-      domain_ppi = ppi[[1]][[which(domain==domain_select)]]
-      sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar))
       
-      df_bar_ppi = data.frame(id = rep(group_2_select[i], length(attr(domain_ppi,"dimnames")[[1]])), # fix the number of muscle to 10 for now
-                              muscle = attr(domain_ppi,"dimnames")[[1]],
-                              para = rep(para_bar, length(attr(domain_ppi,"dimnames")[[1]])),
-                              value = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar)),
-                              group = rep("Group 2", length(attr(domain_ppi,"dimnames")[[1]])))
-
+      ppi = groupA[which(names(groupA) == group_2_select[i])]
+      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+      df_bar_ppi = data.frame(id = rep(group_2_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                              para = rep(para_bar, length(domain_ppi)),
+                              value = domain_ppi,
+                              group = rep("Group 2", length(domain_ppi)))
       df_draw_test = rbind(df_draw_test, df_bar_ppi)
+      
     }}
     
     if(length(group_3_select)>0){for (i in 1:length(group_3_select)){
-      ppi = groupAll[which(names(groupAll) == group_3_select[i])]
-      domain_ppi = ppi[[1]][[which(domain==domain_select)]]
-      sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar))
       
-      df_bar_ppi = data.frame(id = rep(group_3_select[i], length(attr(domain_ppi,"dimnames")[[1]])), # fix the number of muscle to 10 for now
-                              muscle = attr(domain_ppi,"dimnames")[[1]],
-                              para = rep(para_bar, length(attr(domain_ppi,"dimnames")[[1]])),
-                              value = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar)),
-                              group = rep("Group 3", length(attr(domain_ppi,"dimnames")[[1]])))
-
+      ppi = groupA[which(names(groupA) == group_3_select[i])]
+      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+      df_bar_ppi = data.frame(id = rep(group_3_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                              para = rep(para_bar, length(domain_ppi)),
+                              value = domain_ppi,
+                              group = rep("Group 3", length(domain_ppi)))
       df_draw_test = rbind(df_draw_test, df_bar_ppi)
+      
     }}
     
     if(length(group_4_select)>0){for (i in 1:length(group_4_select)){
-      ppi = groupAll[which(names(groupAll) == group_4_select[i])]
-      domain_ppi = ppi[[1]][[which(domain==domain_select)]]
-      sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar))
       
-      df_bar_ppi = data.frame(id = rep(group_4_select[i], length(attr(domain_ppi,"dimnames")[[1]])), # fix the number of muscle to 10 for now
-                              muscle = attr(domain_ppi,"dimnames")[[1]],
-                              para = rep(para_bar, length(attr(domain_ppi,"dimnames")[[1]])),
-                              value = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar)),
-                              group = rep("Group 4", length(attr(domain_ppi,"dimnames")[[1]])))
-      
+      ppi = groupA[which(names(groupA) == group_4_select[i])]
+      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+      df_bar_ppi = data.frame(id = rep(group_4_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                              para = rep(para_bar, length(domain_ppi)),
+                              value = domain_ppi,
+                              group = rep("Group 4", length(domain_ppi)))
       df_draw_test = rbind(df_draw_test, df_bar_ppi)
+      
     }}
     
     if(length(group_5_select)>0){for (i in 1:length(group_5_select)){
-      ppi = groupAll[which(names(groupAll) == group_5_select[i])]
-      domain_ppi = ppi[[1]][[which(domain==domain_select)]]
-      sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar))
       
-      df_bar_ppi = data.frame(id = rep(group_5_select[i], length(attr(domain_ppi,"dimnames")[[1]])), # fix the number of muscle to 10 for now
-                              muscle = attr(domain_ppi,"dimnames")[[1]],
-                              para = rep(para_bar, length(attr(domain_ppi,"dimnames")[[1]])),
-                              value = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar)),
-                              group = rep("Group 5", length(attr(domain_ppi,"dimnames")[[1]])))
-      
+      ppi = groupA[which(names(groupA) == group_5_select[i])]
+      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+      df_bar_ppi = data.frame(id = rep(group_5_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                              para = rep(para_bar, length(domain_ppi)),
+                              value = domain_ppi,
+                              group = rep("Group 5", length(domain_ppi)))
       df_draw_test = rbind(df_draw_test, df_bar_ppi)
+      
     }}
     
     if(length(group_6_select)>0){for (i in 1:length(group_6_select)){
-      ppi = groupAll[which(names(groupAll) == group_6_select[i])]
-      domain_ppi = ppi[[1]][[which(domain==domain_select)]]
-      sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar))
       
-      df_bar_ppi = data.frame(id = rep(group_6_select[i], length(attr(domain_ppi,"dimnames")[[1]])), # fix the number of muscle to 10 for now
-                              muscle = attr(domain_ppi,"dimnames")[[1]],
-                              para = rep(para_bar, length(attr(domain_ppi,"dimnames")[[1]])),
-                              value = sapply(domain_ppi,"[[",which(domain_list[[which(domain==domain_select)]] == para_bar)),
-                              group = rep("Group 6", length(attr(domain_ppi,"dimnames")[[1]])))
-      
+      ppi = groupA[which(names(groupA) == group_6_select[i])]
+      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+      df_bar_ppi = data.frame(id = rep(group_6_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                              para = rep(para_bar, length(domain_ppi)),
+                              value = domain_ppi,
+                              group = rep("Group 6", length(domain_ppi)))
       df_draw_test = rbind(df_draw_test, df_bar_ppi)
+      
     }}
     df_draw_test_all = rbind(df_draw_test_all, df_draw_test)
     }
@@ -388,9 +384,13 @@ server <- function(input, output) {
     df_draw_f = data.frame(id = c(), FS = c(), Time_index = c(), value = c(), group = c())
     for (i in 1:length(group_A_select)){
       ppi = groupA[which(names(groupA) == group_A_select[i])]
-      domain_ppi = ppi[[1]][[which(domain==domain_select)]]
+      domain_ppi = ppi[[1]]$emg$timeSeriesTable$channels
+      domain_ppi = as.data.frame(domain_ppi)
+      as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+      domain_ppi[,1] = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+
       
-      ts_ppi = domain_ppi[[2]]
+      
       down_sample = seq(from = 1, to = length(ts_ppi[1,]),length.out = 3000)
       ts_ppi = ts_ppi[,down_sample]
       rownames(ts_ppi) = c("FS1","FS2","FS3")
@@ -406,7 +406,7 @@ server <- function(input, output) {
     }
     
     for (i in 1:length(group_B_select)){
-      ppi = groupB[which(names(groupB) == group_B_select[i])]
+      ppi = groupA[which(names(groupA) == group_B_select[i])]
       domain_ppi = ppi[[1]][[which(domain==domain_select)]]
       
       ts_ppi = domain_ppi[[2]]
@@ -728,5 +728,3 @@ server <- function(input, output) {
   
   
 }
-  
-

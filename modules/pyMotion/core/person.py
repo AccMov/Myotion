@@ -35,9 +35,11 @@ class person:
         return
     def __missing__(self, key):
         return
-    
+    '''
+    # deprecated
     def key(self):
         return hash(self.name + self.timestamp)
+    '''
 
     def toXML(self):
         e = xmlElement('Person')

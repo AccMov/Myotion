@@ -219,6 +219,61 @@ class emgConfigure():
 
     def fromXML(self, xml_element):
         return
+    
+class emgStatistic:
+    def __init__(self, tst):
+        #time_domain
+        self.min = tst.min()
+        self.max = tst.max()
+        self.mean = tst.mean()
+        self.med = tst.median()
+        self.std = tst.std()
+        self.var = tst.var()
+        self.ptp = tst.ptp()
+        self.zc = tst.countZeros()
+        self.auc = tst.trapz()
+        self.rms = tst.rms()
+        self.mp = tst.trapz()
+        self.mav = tst.meanAbsoluate()
+        self.en = None
+        self.sk = tst.skew()
+        self.kur = tst.kurtosis()
+
+        #freq domain
+        self.mnf = tst.meanFreq()
+        self.mdf = tst.medFreq()
+
+        bandpower = tst.BandPower()
+        self.bpd = [bandpower[idx]["delta"] for idx in range(0, tst.chanSize())]
+        self.bdt = [bandpower[idx]["theta"] for idx in range(0, tst.chanSize())]
+        self.bpa = [bandpower[idx]["alpha"] for idx in range(0, tst.chanSize())]
+        self.bpb = [bandpower[idx]["beta"] for idx in range(0, tst.chanSize())]
+        self.bpg = [bandpower[idx]["gamma"] for idx in range(0, tst.chanSize())]
+
+    def toXML(self):
+        e = xmlElement('statistic')
+        e.addNode('min', xmlString(self.min))
+        e.addNode('max', xmlString(self.max))
+        e.addNode('mean', xmlString(self.mean))
+        e.addNode('med', xmlString(self.med))
+        e.addNode('std', xmlString(self.std))
+        e.addNode('var', xmlString(self.var))
+        e.addNode('ptp', xmlString(self.ptp))
+        e.addNode('zc', xmlString(self.zc))
+        e.addNode('auc', xmlString(self.auc))
+        e.addNode('rms', xmlString(self.rms))
+        e.addNode('mp', xmlString(self.mp))
+        e.addNode('sk', xmlString(self.sk))
+        e.addNode('kur', xmlString(self.kur))
+
+        e.addNode('mnf', xmlString(self.mnf))
+        e.addNode('mdf', xmlString(self.mdf))
+        e.addNode('bpd', xmlString(self.bpd))
+        e.addNode('bdt', xmlString(self.bdt))
+        e.addNode('bpa', xmlString(self.bpa))
+        e.addNode('bpb', xmlString(self.bpb))
+        e.addNode('bpg', xmlString(self.bpg))
+        return e
 
 class emg:
     def __init__(self, file=''):
@@ -272,6 +327,9 @@ class emg:
     
     def getfs(self):
         return self.emgTST.fs
+    
+    def getTST(self):
+        return self.emgTST
 
     # search channels
     def searchChannels(self, filter):
@@ -379,7 +437,12 @@ class emg:
         self.emgTST.setname('EMG')
         # top tree
         root = xmlElement('emg')
+        # emg Time Series Data
         root.addSubTree(self.emgTST.toXML())
+        # emg Statistical data
+        stats = emgStatistic(self.emgTST)
+        root.addSubTree(stats.toXML())
+        # emg process configuration
         root.addSubTree(self.processCFG.toXML())
         return root
         

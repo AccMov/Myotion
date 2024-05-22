@@ -1,9 +1,11 @@
 import numpy as np
 import scipy.signal as sig
 import scipy.fft as sif
+import scipy.stats as sst
 import pandas as pd
 import re
 from .xml import *
+from multimethod import multimethod
 
 """
 1. max/min/med/std/var/rms/peak-to-peak-distance
@@ -94,8 +96,13 @@ class timeSeriesTable:
     def copy(self):
         return timeSeriesTable(self.fs, self.labels.copy(), self.data.copy())
 
+    # number of points
     def size(self):
         return self.n
+    
+    # number of channels
+    def chanSize(self):
+        return len(self.labels)
     
     def clear(self):
         for i in range(0, len(self.labels)):
@@ -103,9 +110,11 @@ class timeSeriesTable:
         self.n = 0
         self.time = 0
 
+    # name of time series
     def setname(self, name):
         self.name = name
 
+    # rename channel
     def renameChannel(self, old, new):
         self.data[new] = self.data.pop(old)
 
@@ -116,7 +125,7 @@ class timeSeriesTable:
         else:
             return False
         
-    # convert to pandas
+    # convert to pandas using panda series
     def toPandasFrame(self):
         return pd.DataFrame({ key:pd.Series(value) for key, value in self.data.items() })
 
@@ -148,65 +157,134 @@ class timeSeriesTable:
                 new_labels.append(c)
         self.labels = new_labels
 
-    # method of one channel
-    def max(self, key):
+    # =================================== #
+    #              time domain            #
+    # =================================== #
+    @multimethod
+    def max(self, key : str):
         return self.data[key].max()
+    @multimethod
+    def max(self):
+        return [self.max(key) for key in self.labels]
 
-    def min(self, key):
+    @multimethod
+    def min(self, key : str):
         return self.data[key].min()
+    @multimethod
+    def min(self):
+        return [self.min(key) for key in self.labels]
 
-    def mean(self, key):
+    @multimethod
+    def mean(self, key : str):
         return self.data[key].mean()
+    @multimethod
+    def mean(self):
+        return [self.mean(key) for key in self.labels]
 
-    def median(self, key):
+    @multimethod
+    def median(self, key : str):
         return np.median(self.data[key])
+    @multimethod
+    def median(self):
+        return [self.median(key) for key in self.labels]
 
-    def std(self, key):
+    @multimethod
+    def std(self, key : str):
         return np.std(self.data[key])
+    @multimethod
+    def std(self):
+        return [self.std(key) for key in self.labels]
 
-    def var(self, key):
+    # variance
+    @multimethod
+    def var(self, key : str):
         return np.var(self.data[key])
+    @multimethod
+    def var(self):
+        return [self.var(key) for key in self.labels]
 
-    def rms(self, key):
+    @multimethod
+    def rms(self, key : str):
         return np.sqrt(np.mean(self.data[key]**2))
-    def ptp(self, key):
+    @multimethod
+    def rms(self):
+        return [self.rms(key) for key in self.labels]
+    
+    # peak to peak
+    @multimethod
+    def ptp(self, key : str):
         return np.ptp(self.data[key])
+    @multimethod
+    def ptp(self):
+        return [self.ptp(key) for key in self.labels]
 
-    # digital butterWorth filter
-    def __butterWorth(self, N, Wn, btype):
-        return sig.butter(N, Wn, btype, False, "sos", self.fs)
-
-    # return ndarray with filterd data
-    def lowpass(self, key, Wn, N=2):
-        if Wn < 0 or Wn >= self.fs / 2:
-            raise ValueError("frequency must be 0 < Wn < fs/2")
-        # create low pass filter
-        sos = self.__butterWorth(N, Wn, "lp")
-        return sig.sosfilt(sos, self.data[key])
-
-    # return ndarray with filterd data
-    def bandpass(self, key, Wlow, Whigh, N=2):
-        if Wlow < 0 or Wlow >= self.fs / 2:
-            raise ValueError("frequency must be 0 < Wn < fs/2")
-        if Whigh < 0 or Whigh >= self.fs / 2:
-            raise ValueError("frequency must be 0 < Wn < fs/2")
-        # create band pass filter
-        sos = self.__butterWorth(N, [Wlow, Whigh], "bp")
-        return sig.sosfilt(sos, self.data[key])
-
-    # return ndarray with dc removed
-    def removeDC(self, key):
+    # remove dc offset
+    @multimethod
+    def removeDC(self, key : str):
         return self.data[key] - self.mean(key)
+    @multimethod
+    def removeDC(self):
+        return [self.removeDC(key) for key in self.labels]
 
-    # rectification
-    def rectification(self, key):
+    @multimethod
+    def rectification(self, key : str):
         return np.absolute(self.data[key])
+    @multimethod
+    def rectification(self):
+        return [self.rectification(key) for key in self.labels]
 
-    # normalization
-    def normalization(self, key, val):
+    @multimethod
+    def normalization(self, key : str, val):
         if val <= 0:
             raise ValueError("normalization val has be bigger than zero")
         return np.divide(self.data[key], float(val))
+    @multimethod
+    def normalization(self, val):
+        return [self.normalization(key, val) for key in self.labels]
+
+    # intergation along time
+    @multimethod
+    def trapz(self, key : str):
+        return np.trapz(self.data[key])
+    @multimethod
+    def trapz(self):
+        return [self.trapz(key) for key in self.labels]
+
+    @multimethod
+    def countZeros(self, key : str):
+        return len(self.data[key]) - np.count_nonzero(self.data[key])
+    @multimethod
+    def countZeros(self):
+        return [self.countZeros(key) for key in self.labels]
+    
+    @multimethod
+    def meanAbsoluate(self, key : str):
+        return np.absolute(self.data[key]).mean()
+    @multimethod
+    def meanAbsoluate(self):
+        return [self.meanAbsoluate(key) for key in self.labels]
+    
+    @multimethod
+    def skew(self, key : str):
+        return sst.skew(self.data[key])
+    @multimethod
+    def skew(self):
+        return [self.skew(key) for key in self.labels]
+    
+    @multimethod
+    def kurtosis(self, key : str):
+        return sst.kurtosis(self.data[key])
+    @multimethod
+    def kurtosis(self):
+        return [self.kurtosis(key) for key in self.labels]
+
+    # co-contraction
+    def cocontraction(self, key1, key2):
+        return np.trapz(self.data[key1]) / np.trapz(self.data[key2])
+    
+    def entropy(self, key):
+        return
+    
     # threhold detection
     # https://github.com/BMClab/BMC/blob/master/notebooks/DetectOnset.ipynb
     # slow impl
@@ -254,28 +332,90 @@ class timeSeriesTable:
             activated.append([seg[0], len(self.data[key])])
 
         return activated
-
-    # co-contraction
-    def cocontraction(self, key1, key2):
-        return np.trapz(self.data[key1]) / np.trapz(self.data[key2])
-
-    def countZeros(self, key):
-        return len(self.data[key]) - np.count_nonzero(self.data[key])
-
-    def entropy(self, key):
-        return
     
-    # frequency domain
+    # digital butterWorth filter
+    def __butterWorth(self, N, Wn, btype):
+        return sig.butter(N, Wn, btype, False, "sos", self.fs)
+
+    # return ndarray with filterd data
+    def lowpass(self, key, Wn, N=2):
+        if Wn < 0 or Wn >= self.fs / 2:
+            raise ValueError("frequency must be 0 < Wn < fs/2")
+        # create low pass filter
+        sos = self.__butterWorth(N, Wn, "lp")
+        return sig.sosfilt(sos, self.data[key])
+
+    # return ndarray with filterd data
+    def bandpass(self, key, Wlow, Whigh, N=2):
+        if Wlow < 0 or Wlow >= self.fs / 2:
+            raise ValueError("frequency must be 0 < Wn < fs/2")
+        if Whigh < 0 or Whigh >= self.fs / 2:
+            raise ValueError("frequency must be 0 < Wn < fs/2")
+        # create band pass filter
+        sos = self.__butterWorth(N, [Wlow, Whigh], "bp")
+        return sig.sosfilt(sos, self.data[key])
+    
+    # =================================== #
+    #          frequency domain           #
+    # =================================== #
+    # return (frequency, abs(Intensity))
     def fft(self, key):
         return sif.fftfreq(self.n, d=self.ts)[:self.n//2], np.abs(sif.fft(self.data[key])[0:self.n//2])
+    
+    def fft(self, key, l_t, r_t):
+        left = int(l_t / self.time * self.n)
+        right = int(left + (r_t - l_t) / self.time * self.n)
+        totaln = right - left + 1
+        return sif.fftfreq(right - left, d=self.ts)[:totaln//2], np.abs(sif.fft(self.data[key][left:right])[0:totaln//2])
+    
+    @multimethod
+    def meanFreq(self, key : str):
+        #https://luscinia.sourceforge.net/page26/page35/page35.html
+        freq, val = self.fft(key)
+        return np.dot(freq, val) / np.sum(val)
+    @multimethod
+    def meanFreq(self):
+        return [self.meanFreq(key) for key in self.labels]
+    
+    @multimethod
+    def medFreq(self, key : str):
+        #https://luscinia.sourceforge.net/page26/page36/page36.html
+        freq, val = self.fft(key)
+        return freq[np.searchsorted(np.cumsum(val), np.sum(val)/2, side='right')]
+    @multimethod
+    def medFreq(self):
+        return [self.medFreq(key) for key in self.labels]
+    '''
+    @multimethod
+    def spectralCentriod(self, key : str):
+        freq, val = self.fft(key)
+        return np.dot(freq, val) / np.sum(val)
+    '''
 
-    # method of all channels
-    def max_all(self):
-        return [self.data[p].max() for p in self.labels]
-
-    def min_all(self):
-        return [self.data[p].min() for p in self.labels]
-
+    # band power in format 
+    # return: { delta : val0 , theta : val1, alpha : val2 , beta : val3 , gamma : val4 }
+    @multimethod
+    def BandPower(self, key : str):
+        powerrange = {
+            'delta' : (0.5, 4),
+            'theta' : (4, 8),
+            'alpha' : (8, 13),
+            'beta' :  (13, 30),
+            'gamma' : (30, float('inf')),
+        }
+        ans = {}
+        for name, range in powerrange.items():
+            freq, val = self.fft(key)
+            l = np.searchsorted(freq, range[0])
+            r = np.searchsorted(freq, range[1])
+            ans[name] = np.trapz(freq[l : r], val[l : r])
+        return ans
+    # band power for all channels
+    # format [ {result of chan0}, {result of chan1}, ... ]
+    @multimethod
+    def BandPower(self):
+        return [self.BandPower(key) for key in self.labels]
+    
     def loadFile(self, file):
         # load from file
         return 0

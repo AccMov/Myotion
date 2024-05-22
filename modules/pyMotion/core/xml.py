@@ -1,5 +1,13 @@
 import xml.etree.ElementTree as ET
 
+def xmlString(e):
+    if isinstance(e, list):
+        return ' '.join(xmlString(p) for p in e)
+    elif isinstance(e, float):
+        return format(e, '.6f')
+    else:
+        return str(e)
+
 class xmlElement():
     def __init__(self, name, attrib={}):
         self.element = ET.Element(name, attrib)

@@ -114,6 +114,7 @@ axs_4[1].plot(b[label_B])
 
 # statistic after filtering
 print("{}'s max: {}".format(label_A, b.max(label_A)))
+print("{}'s maxs: {}".format(label_A, b.max()))
 print("{}'s min: {}".format(label_A, b.min(label_A)))
 print("{}'s mean: {}".format(label_A, b.mean(label_A)))
 print("{}'s median: {}".format(label_A, b.median(label_A)))

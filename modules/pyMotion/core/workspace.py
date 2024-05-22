@@ -78,9 +78,9 @@ class workspace:
     def getparticipantStringList(self):
         return [p.name for p in self.participants]
     
-    def findParticipant(self, key):
+    def findParticipant(self, name):
         for s in self.participants:
-            if key == s.key():
+            if name == s.name:
                 return s
         return None
     
@@ -100,7 +100,7 @@ class workspace:
         if not self.hasParticipant(person):
             return self.__missing__(person)
         # return profile
-        return self.profileList[person.key()]
+        return self.profileList[person.name]
     
     def __delitem__(self, key):
         return
@@ -112,7 +112,7 @@ class workspace:
             return -1
         
         self.participants.append(person) 
-        self.profileList[person.key()] = self.profile(emg, kin)
+        self.profileList[person.name] = self.profile(emg, kin)
         return 0
 
     def profileStatusList(self):
@@ -121,7 +121,7 @@ class workspace:
     def saveEMGConfigure(self, person, cfgname):
         if not self.hasParticipant(person):
             return -1
-        self.saved_emgconfig[cfgname] = self.profileList[person.key()].emg.getProcessConfig().copy()
+        self.saved_emgconfig[cfgname] = self.profileList[person.name].emg.getProcessConfig().copy()
         return 0
 
     def getEMGConfigures(self):
@@ -130,21 +130,25 @@ class workspace:
     def hasEMGConfigFile(self, name):
         return False
 
-    # EMG and MVC are saved in splited file
     def genReport(self, person):
         if not self.hasParticipant(person):
             return
-        profile = self.profileList[person.key()]
+        profile = self.profileList[person.name]
 
         root = xmlElement('report')
+        # person data
         root.addSubTree(person.toXML())
+        # emg data
+        # MVC is saved in splited file
         root.addSubTree(profile.emg.toXML())
         profile.report = root
+
+        profile.emg.setProcessDone()
 
     def saveReport(self, person, path):
         if not self.hasParticipant(person):
             return
-        profile = self.profileList[person.key()]
+        profile = self.profileList[person.name]
         if profile.report is None:
             return
         
@@ -179,7 +183,7 @@ class workspace:
 
     # returned max possibile file
     # lower_bound: remove item which possiblity is lower than low_bound
-    # return:  (matched_file_list, possibility)
+    # return:  (matched_files_with_same_possibility, possibility)
     def mvcFuzzCheckFiles(self, chan, files, lower_bound=0):
         if chan not in self.fuzzforChanAndMVC:
             # if not in fuzz map, try to look for chan in file name

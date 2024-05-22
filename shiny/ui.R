@@ -5,20 +5,18 @@ pacs = c("R.matlab","stringr","ggplot2","plotly","shinycssloaders",
 lapply(pacs, require, character.only = TRUE)
 
 
-groupA_names <- list.files("data/Group_A", pattern="*.mat", full.names=TRUE)
-groupA <- lapply(groupA_names, readMat)
-groupA = unlist(groupA,recursive=FALSE)
+groupA_names <- list.files("data/Group_A", pattern="*.xml", full.names=TRUE)
+groupA <- lapply(groupA_names, xmlToList)
 
-groupB_names <- list.files("data/Group_B", pattern="*.mat", full.names=TRUE)
-groupB <- lapply(groupB_names, readMat)
-groupB = unlist(groupB,recursive=FALSE)
+for(i in 1:length(groupA)){
+  names(groupA)[i] = groupA[[i]]$Person$name
+}
 
 
 # Time domain parameters names
-time_domain_para = c("MIN","MAX","MEAN","MED","SD","VAR","PP","ZC","AUC","RMS","MP","MAV","EN","WL","SK","KUR")
-freq_domain_para = c("MNF","MDF","SPC","BPd","BPt","BPa","BPb","BPg")
-advanced = c("FS1","FS2","FS3")
-domain_list = list(time_domain_para,freq_domain_para)
+time_domain_para = names(groupA$ABC1$emg$statistic)[1:13]
+freq_domain_para = names(groupA$ABC1$emg$statistic)[14:20]
+advanced = names(groupA$ABC1$emg$timeSeriesTable$channels)
 
 domain = c("time_domain_para","freq_domain_para","advanced")
 
@@ -84,8 +82,7 @@ ui <- dashboardPage(  skin = "black",
                                      pickerInput("filterA1", "Filter 1 (demo only)", choices = c("Male","Female"),
                                                  selected = "Male"),
                                      pickerInput("filterA2", "Add by ID", choices = c(names(groupA)),
-                                                 selected = c("Results.GA.PP001","Results.GA.PP002","Results.GA.PP003","Results.GA.PP004",
-                                                              "Results.GA.PP005","Results.GA.PP006","Results.GA.PP007","Results.GA.PP008"),
+                                                 selected = c("ABC1","ABC2","ABC3","ABC4"),
                                                  multiple = TRUE),
                                      collapsible = TRUE),
                                  
@@ -93,9 +90,8 @@ ui <- dashboardPage(  skin = "black",
                                    title = "Group B",
                                    pickerInput("filterB1", "Filter 1 (demo only)", choices = c("Male","Female"),
                                                selected = "Female"),
-                                   pickerInput("filterB2", "Add by ID", choices = c(names(groupB)),
-                                               selected = c("Results.GB.PP001","Results.GB.PP002","Results.GB.PP003","Results.GB.PP004",
-                                                            "Results.GB.PP005","Results.GB.PP006","Results.GB.PP007","Results.GB.PP008","Results.GB.PP009"),
+                                   pickerInput("filterB2", "Add by ID", choices = c(names(groupA)),
+                                               selected = c("ABC1","ABC2","ABC3","ABC4"),
                                                multiple = TRUE),
                                    collapsible = TRUE
                                  ),
@@ -124,7 +120,7 @@ ui <- dashboardPage(  skin = "black",
                                    title = "Group 2",
                                    pickerInput("filter21", "Filter 1 (demo only)", choices = c("Male","Female"),
                                                selected = "Female"),
-                                   pickerInput("filter22", "Add by ID", choices = c(names(groupB)),
+                                   pickerInput("filter22", "Add by ID", choices = c(names(groupA)),
                                                selected = NULL,
                                                multiple = TRUE),
                                    collapsible = TRUE,
@@ -134,7 +130,7 @@ ui <- dashboardPage(  skin = "black",
                                    title = "Group 3",
                                    pickerInput("filter31", "Filter 1 (demo only)", choices = c("Male","Female"),
                                                selected = "Female"),
-                                   pickerInput("filter32", "Add by ID", choices = c(names(groupA),names(groupB)),
+                                   pickerInput("filter32", "Add by ID", choices = c(names(groupA)),
                                                selected = NULL,
                                                multiple = TRUE),
                                    collapsible = TRUE,
@@ -144,7 +140,7 @@ ui <- dashboardPage(  skin = "black",
                                    title = "Group 4",
                                    pickerInput("filter41", "Filter 1 (demo only)", choices = c("Male","Female"),
                                                selected = "Female"),
-                                   pickerInput("filter42", "Add by ID", choices = c(names(groupA),names(groupB)),
+                                   pickerInput("filter42", "Add by ID", choices = c(names(groupA)),
                                                selected = NULL,
                                                multiple = TRUE),
                                    collapsible = TRUE,
@@ -154,7 +150,7 @@ ui <- dashboardPage(  skin = "black",
                                    title = "Group 5",
                                    pickerInput("filter51", "Filter 1 (demo only)", choices = c("Male","Female"),
                                                selected = "Female"),
-                                   pickerInput("filter52", "Add by ID", choices = c(names(groupA),names(groupB)),
+                                   pickerInput("filter52", "Add by ID", choices = c(names(groupA)),
                                                selected = NULL,
                                                multiple = TRUE),
                                    collapsible = TRUE,
@@ -164,7 +160,7 @@ ui <- dashboardPage(  skin = "black",
                                    title = "Group 6",
                                    pickerInput("filter61", "Filter 1 (demo only)", choices = c("Male","Female"),
                                                selected = "Female"),
-                                   pickerInput("filter62", "Add by ID", choices = c(names(groupA),names(groupB)),
+                                   pickerInput("filter62", "Add by ID", choices = c(names(groupA)),
                                                selected = NULL,
                                                multiple = TRUE),
                                    collapsible = TRUE,
@@ -181,6 +177,10 @@ ui <- dashboardPage(  skin = "black",
                        )
                      )
                      )           )
+
+
+
+
 
 
 

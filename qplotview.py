@@ -21,14 +21,15 @@ from PySide6.QtWebEngineCore import (QWebEngineUrlScheme,
                                      QWebEngineUrlSchemeHandler, QWebEngineUrlRequestJob,
                                      QWebEngineProfile, QWebEnginePage)
 import pandas as pd
-from modules.pyMotion import logger as logger
+#from modules.pyMotion import logger as logger
 
 # set max points
 PLOTY_MAX_POINTS = -1
 # url scheme name
 URL_SCHEME = 'local'
-# X axis label
+# axis label
 X_LABEL = 'Time(s)'
+Y_LABEL = 'Magnitude'
 
 # html load handler with custom scheme
 class UrlSchemeHandler(QWebEngineUrlSchemeHandler):
@@ -75,17 +76,69 @@ class QPlotView(QWebEngineView):
     def update_layout(self):
         # set label to be on the bottom of the fig
         self.fig.update_layout(legend=dict(yanchor='bottom', xanchor='center', y=-0.5, x=0.5, orientation='h'))
-        self.fig.update_layout(yaxis_title="magnitude")
+        self.fig.update_layout(yaxis_title=Y_LABEL)
 
     # bar, plot by timeSeriesTable
-    def bar(self, tst, x='', y='', title='', color=''):
+    def bar(self, tst, channel, title='', color=''):
+        chans = []
+        if type(channel) is not list:
+            chans = [channel]
+
+        for c in chans:    
+            if not tst.hasChannel(c):
+                logger.error("channel {} not exist".format(c))
+                return -1
+            
         df = tst.toPandasFrame()
+        df[X_LABEL] = tst.getLinspace()
+        df = df[:PLOTY_MAX_POINTS]
         self.fig = px.bar(df,
-                     x = x,
-                     y = y,
+                     x = X_LABEL,
+                     y = chans,
                      barmode="relative",
                      title = title,
                      markers = True)
+        
+    # bar, plot by list
+    def bar(self, x_, y_, channel, title='', color=[]):
+        chans = []
+        data = []
+        # type and sanity check
+        if type(channel) is not list:
+            chans = [channel]
+        else:
+            chans = channel
+        if len(y_) == 0:
+            logger.error('data y is empty')
+            return -1
+        if type(y_[0]) is list:
+            n = len(y_[0])
+            m = len(y_)
+            data = y_
+        else:
+            n = len(y_)
+            m = 1
+            data = [ y_ ]
+        if n != len(x_):
+            logger.error('x and y need to have same dimension')
+            return -1
+        if m != len(chans):
+            logger.error('row of data and channel labels should have same dimension')
+            return -1
+        table = {}
+        for i in range(0, m):
+            table[chans[i]] = data[i]
+        df = pd.DataFrame(table)
+        df[X_LABEL] = x_
+        df = df[:PLOTY_MAX_POINTS]
+        self.fig = px.bar(df,
+                     x = X_LABEL,
+                     y = chans,
+                     title = title,
+                     barmode="relative")
+        self.update_layout()
+        return 0
+        
         
     # line, plot by timeSeriesTable
     def line(self, tst, channel, title='', color=[]):

@@ -87,6 +87,7 @@ from modules.kinematics.model import Model
 from rserver import RServer
 from miscWidgets import *
 from path import *
+from qplotview import QPlotView
 
 # IMPORT / GUI AND MODULES AND WIDGETS
 # ///////////////////////////////////////////////////////////////
@@ -642,6 +643,10 @@ class MainWindow(QMainWindow):
         widgets.pushButton_12.clicked.connect(self.EMGBatchProcessButtonClicked)
         widgets.lineEdit_3.textChanged.connect(self.updateFilterText)
         widgets.checkBox_3.stateChanged.connect(self.EMGParticipantSelectAllClicked)
+
+        # Freqency Page
+        widgets.freq_add.clicked.connect(self.addNewFFTtoFreqAnalysisFFTPanel)
+
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
 
@@ -671,6 +676,7 @@ class MainWindow(QMainWindow):
         # APPLICATION LOGICS
         self.workspace = None
         self.home = None
+
         self.participant_filter = ""
         self.filesystemTree = (
             QFileSystemModel()
@@ -683,7 +689,12 @@ class MainWindow(QMainWindow):
         )  # sm for single EMG Process, (Participant, Steps, channel)
         self.inputBuffer = None  # buffer for single EMG process
         self.outputBuffer = None  # buffer for single EMG process
-        self.test()
+
+        # FrequencyAnalysis State Machine
+        self.freqAnalysis = (None, None)     # (Participant, channel) 
+        self.freqAnalysisPlots = []          # plot diagram for frequency analysis
+
+        #self.test()
 
     def test(self):
         self.newWorkSpace(os.getcwd(), "test")
@@ -733,6 +744,12 @@ class MainWindow(QMainWindow):
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
             self.preloadKinematicPage()
             return
+        
+        if btnName == "btn_frequency":
+            widgets.stackedWidget.setCurrentWidget(widgets.frequency_page)  # SET PAGE
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
+            self.preloadFreqAnalysisPage()
 
         if btnName == "btn_save":
             print("Save BTN clicked!")
@@ -817,10 +834,8 @@ class MainWindow(QMainWindow):
                 None, "error", "Current EMG process is not finished!", QMessageBox.Ok
             )
             return
-
-        p_key = self.selectedParticipants[0]
-
-        p = self.workspace.findParticipant(int(p_key))
+        p = self.selectedParticipants[0]
+        p = self.workspace.findParticipant(p.name)
         self.startSingleEMGProcess(p)
 
     def participantCheckBoxChanged(self, state):
@@ -1045,8 +1060,8 @@ class MainWindow(QMainWindow):
             return
 
         listofpeople = []
-        for p_key in self.selectedParticipants:
-            p = self.workspace.findParticipant(int(p_key))
+        for p_name in self.selectedParticipants:
+            p = self.workspace.findParticipant(p_name)
             if p is not None:
                 listofpeople.append(p)
 
@@ -1094,7 +1109,7 @@ class MainWindow(QMainWindow):
 
     # WIDGET
     # //////////////////////////////////////////////////////////////
-    def createParticipantCheckBox(self, name):
+    def EMGCreateParticipantCheckBox(self, name):
         checkbox = QCheckBox(widgets.tableWidget_2)
         checkbox.setObjectName(name)
 
@@ -1106,12 +1121,23 @@ class MainWindow(QMainWindow):
         checkbox.stateChanged.connect(self.participantCheckBoxChanged)
         return checkbox
 
-    def createHBox(self, w, parent=None):
+    def EMGCreateHBox(self, w, parent=None):
         container = QWidget()
         layout = QHBoxLayout(container)
         layout.addWidget(w, alignment=Qt.AlignHCenter)
         w.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
         return container
+    
+    def FreqAnalysisCreateQPlotView(self, p, channel, l, r):
+        pv = QPlotView()
+        # calcuate FFT
+        tst = self.workspace[p].emg.getTST()
+        freq, v = tst.fft(channel, l, r)
+        print(freq)
+        print(v)
+        pv.bar(freq, v, channel)
+        pv.show()
+        return pv
 
     # UPDATE UI EVENTS
     # //////////////////////////////////////////////////////////////
@@ -1124,7 +1150,7 @@ class MainWindow(QMainWindow):
             p = participants[i]
             name = p.name
             # checkbox
-            chb = self.createParticipantCheckBox(str(p.key()))
+            chb = self.EMGCreateParticipantCheckBox(p.name)
             widgets.tableWidget_2.setCellWidget(i, 0, chb)
             # name
             q = QTableWidgetItem(name)
@@ -1296,6 +1322,50 @@ class MainWindow(QMainWindow):
         self.participant_filter = filter_str
         self.updateEMGParticipantBox()
 
+    def updateFreqAnalysisParticipantTree(self, participants):
+        widgets.frequency_participants.clear()
+        widgets.frequency_participants.setColumnCount(1)
+        for p in participants:
+            treeItem = QTreeWidgetItem()
+            treeItem.setText(0, p.name)
+            widgets.frequency_participants.addTopLevelItem(treeItem)
+            emg = self.workspace[p].emg
+            for c in emg.getChannels():    
+                treeItem2 = QTreeWidgetItem(treeItem)
+                treeItem2.setText(0, c)   # channel name
+                treeItem.addChild(treeItem2)
+        # connect slots
+        widgets.frequency_participants.itemDoubleClicked.connect(self.updateFreqAnalysisWaveformPanel)
+        widgets.frequency_participants.setHeaderItem(QTreeWidgetItem(["Participant"]))
+        widgets.frequency_participants.addTopLevelItem(treeItem)
+
+    def updateFreqAnalysisWaveformPanel(self, item, column):
+        # if item is top level, return
+        if item.parent() is None:
+            return
+        
+        p_name = item.parent().text(column)
+        channel = item.text(column)
+        p = self.workspace.findParticipant(p_name)
+        x = self.workspace[p].emg.getLinspace()
+        
+        # set state machine
+        logger.info("Frequency Analysis - selecting {} channel {}".format(p.name, channel))
+        self.freqAnalysis = (p, channel)
+        self.freqAnalysisPlots.clear()
+
+        widgets.freq_timedomain.line(x, self.workspace[p].emg[channel], channel)
+        widgets.freq_timedomain.show()
+        self.updateFreqAnalysisFFTPanel()
+    
+    def updateFreqAnalysisFFTPanel(self):
+        ly = widgets.frequency_bottom.layout()
+        for i in reversed(range(ly.count())): 
+            ly.itemAt(i).widget().setParent(None)
+
+        for plot in self.freqAnalysisPlots:
+            ly.addWidget(plot)
+
     # Application Logic/Slots
     # ///////////////////////////////////////////////////////////////
     def reset(self):
@@ -1356,7 +1426,7 @@ class MainWindow(QMainWindow):
                 treeItem.addChild(treeItem2)
         tree.setHeaderItem(QTreeWidgetItem(["Participant"]))
         tree.addTopLevelItem(treeItem)
-
+    
     def tree_item_select(self, i):
         widgets.kinematic_analysis.hide()
         widgets.kinematic_analysis1.hide()
@@ -1420,6 +1490,20 @@ class MainWindow(QMainWindow):
             x, self.inputBuffer, self.workspace[p].emg.getChannels()
         )
         widgets.kinematic_analysis.show()
+
+    def preloadFreqAnalysisPage(self):
+        self.updateFreqAnalysisParticipantTree(self.workspace.getParticipants())
+        self.freqAnalysisPlots.clear()
+
+    def addNewFFTtoFreqAnalysisFFTPanel(self):
+        left = int(widgets.freq_left.text())
+        right = int(widgets.freq_right.text())
+        p, chan = self.freqAnalysis
+
+        newPlot = self.FreqAnalysisCreateQPlotView(p, chan, left, right)
+        self.freqAnalysisPlots.append(newPlot)
+        self.updateFreqAnalysisFFTPanel()
+        
 
     def startSingleEMGProcess(self, p):
         logger.info("started single EMG process for {}".format(p.name))

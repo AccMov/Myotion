@@ -3785,10 +3785,159 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.row_3)
 
         self.stackedWidget.addWidget(self.widgets)
+
+        self.frequency_page = QWidget()
+        self.frequency_page.setObjectName(u"frequency_page")
+        self.horizontalLayout_40 = QHBoxLayout(self.frequency_page)
+        self.horizontalLayout_40.setObjectName(u"horizontalLayout_40")
+        self.horizontalLayout_40.setContentsMargins(0, 0, 0, 0)
+        self.frequency_left = QFrame(self.frequency_page)
+        self.frequency_left.setObjectName(u"frequency_left")
+        sizePolicy18.setHeightForWidth(self.frequency_left.sizePolicy().hasHeightForWidth())
+        self.frequency_left.setSizePolicy(sizePolicy18)
+        self.frequency_left.setStyleSheet(u"border: none;")
+        self.frequency_left.setFrameShape(QFrame.StyledPanel)
+        self.frequency_left.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_20 = QVBoxLayout(self.frequency_left)
+        self.verticalLayout_20.setObjectName(u"verticalLayout_20")
+        self.verticalLayout_20.setContentsMargins(0, 0, 0, 0)
+
+        self.frequency_top = QFrame(self.frequency_left)
+        self.frequency_top.setObjectName(u"frequency_top")
+        sizePolicy19 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy19.setHorizontalStretch(0)
+        sizePolicy19.setVerticalStretch(2)
+        sizePolicy19.setHeightForWidth(self.frequency_top.sizePolicy().hasHeightForWidth())
+        self.frequency_top.setSizePolicy(sizePolicy19)
+        self.frequency_top.setStyleSheet(u"background-color:#f4f4f4;")
+        self.frequency_top.setFrameShape(QFrame.StyledPanel)
+        self.frequency_top.setFrameShadow(QFrame.Raised)
+
+        self.verticalLayout_141 = QVBoxLayout(self.frequency_top)
+        self.freq_timedomain = QPlotView()
+        self.freq_timedomain.setObjectName(u"QPlotView_Freq_Timedomain")
+        sizePolicy12 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy12.setHorizontalStretch(0)
+        sizePolicy12.setVerticalStretch(9)
+        sizePolicy12.setHeightForWidth(self.freq_timedomain.sizePolicy().hasHeightForWidth())
+        self.freq_timedomain.setSizePolicy(sizePolicy12)
+
+        self.verticalLayout_141.addWidget(self.freq_timedomain)
+
+        self.freq_plot_control = QWidget()
+        self.horizontalLayout_141 = QHBoxLayout(self.freq_plot_control)
+
+        self.freq_left_text = QLabel()
+        self.freq_left_text.setObjectName(u"freq_left_text")
+        sizePolicy16 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.freq_left_text.setSizePolicy(sizePolicy16)
+        self.freq_left_text.setStyleSheet(u"margin-left:11px;\n"
+"font-size:12px;\n"
+"\n"
+"font-weight:1;\n"
+"")
+        self.horizontalLayout_141.addWidget(self.freq_left_text)
+
+        self.freq_left = QLineEdit()
+        self.freq_left.setObjectName(u"freq_left")
+        sizePolicy16 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy16.setHorizontalStretch(8)
+        sizePolicy16.setVerticalStretch(0)
+        sizePolicy16.setHeightForWidth(self.freq_left.sizePolicy().hasHeightForWidth())
+        self.freq_left.setSizePolicy(sizePolicy16)
+        self.freq_left.setMinimumSize(QSize(0, 40))
+        self.freq_left.setStyleSheet(u"background-color: rgb(33, 37, 43);\n"
+"")
+        self.freq_left.setMaxLength(16)
+ 
+        self.horizontalLayout_141.addWidget(self.freq_left)
+
+        self.freq_right_text = QLabel()
+        self.freq_right_text.setObjectName(u"freq_right_text")
+        sizePolicy16 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.freq_right_text.setSizePolicy(sizePolicy16)
+        self.freq_right_text.setStyleSheet(u"margin-left:11px;\n"
+"font-size:12px;\n"
+"\n"
+"font-weight:1;\n"
+"")
+        self.horizontalLayout_141.addWidget(self.freq_right_text)
+
+        self.freq_right = QLineEdit()
+        self.freq_right.setObjectName(u"freq_right")
+        sizePolicy16 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy16.setHorizontalStretch(8)
+        sizePolicy16.setVerticalStretch(0)
+        sizePolicy16.setHeightForWidth(self.freq_right.sizePolicy().hasHeightForWidth())
+        self.freq_right.setSizePolicy(sizePolicy16)
+        self.freq_right.setMinimumSize(QSize(0, 40))
+        self.freq_right.setStyleSheet(u"background-color: rgb(33, 37, 43);\n"
+"")
+        self.freq_right.setMaxLength(16)
+
+        self.horizontalLayout_141.addWidget(self.freq_right)
+
+        self.freq_add = QPushButton()
+        self.freq_add.setObjectName(u"freq_add")
+        self.freq_add.setStyleSheet(u"font-size:10px;\n"
+"background-color:#2a2e37;\n"
+"padding:6px 12px;")
+        sizePolicy16.setHeightForWidth(self.freq_right.sizePolicy().hasHeightForWidth())
+        self.freq_add.setSizePolicy(sizePolicy16)
+        self.horizontalLayout_141.addWidget(self.freq_add)
+        self.verticalLayout_141.addWidget(self.freq_plot_control)
+
+        self.verticalLayout_20.addWidget(self.frequency_top)
+
+        self.frequency_bottom = QFrame(self.frequency_left)
+        self.frequency_bottom.setObjectName(u"frequency_bottom")
+        sizePolicy20 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy20.setHorizontalStretch(0)
+        sizePolicy20.setVerticalStretch(4)
+        sizePolicy20.setHeightForWidth(self.frequency_bottom.sizePolicy().hasHeightForWidth())
+        self.frequency_bottom.setSizePolicy(sizePolicy20)
+        self.frequency_bottom.setStyleSheet(u"background-color:#f4f4f4;")
+        self.frequency_bottom.setFrameShape(QFrame.StyledPanel)
+        self.frequency_bottom.setFrameShadow(QFrame.Raised)
+
+        self.verticalLayout_142 = QVBoxLayout(self.frequency_bottom)
+
+        self.verticalLayout_20.addWidget(self.frequency_bottom)
+
+        self.horizontalLayout_40.addWidget(self.frequency_left)
+
+        self.frequency_right = QFrame(self.frequency_page)
+        self.frequency_right.setObjectName(u"frequency_right")
+        sizePolicy9.setHeightForWidth(self.frequency_right.sizePolicy().hasHeightForWidth())
+        self.frequency_right.setSizePolicy(sizePolicy9)
+        self.frequency_right.setStyleSheet(u"background-color:#f4f4f4;")
+        self.frequency_right.setFrameShape(QFrame.StyledPanel)
+        self.frequency_right.setFrameShadow(QFrame.Raised)
+
+        self.verticalLayout_140 = QVBoxLayout(self.frequency_right)
+        self.frequency_participants = QTreeWidget()
+        self.frequency_participants.setObjectName(u"frequency_participants")
+        self.frequency_participants.setStyleSheet(u"font-size:11px;\n"
+"color:rgba(#f4f4f4);")
+        self.frequency_participants.setFrameShape(QFrame.NoFrame)
+        self.frequency_participants.setFrameShadow(QFrame.Sunken)
+        self.frequency_participants.setLineWidth(1)    
+        self.frequency_participants.setMidLineWidth(0)
+        self.frequency_participants.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        self.frequency_participants.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.frequency_participants.setSelectionMode(QAbstractItemView.SingleSelection)
+
+        self.verticalLayout_140.addWidget(self.frequency_participants)
+        self.horizontalLayout_40.addWidget(self.frequency_right)
+
+        self.stackedWidget.addWidget(self.frequency_page)
+
+        '''
         self.new_page = QWidget()
         self.new_page.setObjectName(u"new_page")
         self.verticalLayout_20 = QVBoxLayout(self.new_page)
         self.verticalLayout_20.setObjectName(u"verticalLayout_20")
+        
         self.label = QLabel(self.new_page)
         self.label.setObjectName(u"label")
         self.label.setAlignment(Qt.AlignCenter)
@@ -3796,9 +3945,10 @@ class Ui_MainWindow(object):
         self.verticalLayout_20.addWidget(self.label)
 
         self.stackedWidget.addWidget(self.new_page)
+        '''
 
         self.verticalLayout_15.addWidget(self.stackedWidget)
-
+        
 
         self.horizontalLayout_4.addWidget(self.pagesContainer)
 
@@ -4035,6 +4185,9 @@ class Ui_MainWindow(object):
 
         self.label_35.setText(QCoreApplication.translate("MainWindow", u"-Cut-off frequency-", None))
         self.label_36.setText(QCoreApplication.translate("MainWindow", u"band pass:", None))
+        self.freq_left_text.setText(QCoreApplication.translate("MainWindow", u"Time Start:", None))
+        self.freq_right_text.setText(QCoreApplication.translate("MainWindow", u"Time End:", None))
+        self.freq_add.setText(QCoreApplication.translate("MainWindow", u"Add Frequency Plot", None))
         self.lineEdit_10.setInputMask("")
         self.lineEdit_10.setText("")
         self.lineEdit_10.setPlaceholderText(QCoreApplication.translate("MainWindow", u"cut-off frequency high", None))
@@ -4211,7 +4364,6 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem46.setText(QCoreApplication.translate("MainWindow", u"Line", None));
         self.tableWidget.setSortingEnabled(__sortingEnabled2)
 
-        self.label.setText(QCoreApplication.translate("MainWindow", u"NEW PAGE TEST", None))
         self.btn_message.setText(QCoreApplication.translate("MainWindow", u"Message", None))
         self.btn_print.setText(QCoreApplication.translate("MainWindow", u"Print", None))
         self.btn_logout.setText(QCoreApplication.translate("MainWindow", u"Logout", None))

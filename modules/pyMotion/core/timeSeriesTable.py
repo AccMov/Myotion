@@ -359,14 +359,25 @@ class timeSeriesTable:
     #          frequency domain           #
     # =================================== #
     # return (frequency, abs(Intensity))
+    @multimethod
     def fft(self, key):
         return sif.fftfreq(self.n, d=self.ts)[:self.n//2], np.abs(sif.fft(self.data[key])[0:self.n//2])
     
-    def fft(self, key, l_t, r_t):
+    @multimethod
+    def fft(self, key, l_t:int, r_t:int):
         left = int(l_t / self.time * self.n)
         right = int(left + (r_t - l_t) / self.time * self.n)
         totaln = right - left + 1
         return sif.fftfreq(right - left, d=self.ts)[:totaln//2], np.abs(sif.fft(self.data[key][left:right])[0:totaln//2])
+    
+    @multimethod
+    def fft_db(self, key):
+        x, y = self.fft(key)
+        return x, 20*np.log10(y)
+    @multimethod
+    def fft_db(self, key, l_t:int, r_t:int):
+        x, y = self.fft(key, l_t, r_t)
+        return x, 20*np.log10(y)
     
     @multimethod
     def meanFreq(self, key : str):

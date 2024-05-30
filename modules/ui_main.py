@@ -3889,7 +3889,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_20.addWidget(self.frequency_top)
 
-        self.frequency_bottom = QFrame(self.frequency_left)
+        self.frequency_bottom = QFrame()
         self.frequency_bottom.setObjectName(u"frequency_bottom")
         sizePolicy20 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         sizePolicy20.setHorizontalStretch(0)
@@ -3900,6 +3900,9 @@ class Ui_MainWindow(object):
         self.frequency_bottom.setFrameShape(QFrame.StyledPanel)
         self.frequency_bottom.setFrameShadow(QFrame.Raised)
 
+        #self.frequency_bottom_scroll = QScrollArea(self.frequency_bottom)
+        #self.frequency_bottom_scroll.setWidgetResizable(True)
+        #self.frequency_bottom_diagram = QFrame(self.frequency_bottom_scroll)
         self.verticalLayout_142 = QVBoxLayout(self.frequency_bottom)
 
         self.verticalLayout_20.addWidget(self.frequency_bottom)

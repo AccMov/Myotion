@@ -834,8 +834,8 @@ class MainWindow(QMainWindow):
                 None, "error", "Current EMG process is not finished!", QMessageBox.Ok
             )
             return
-        p = self.selectedParticipants[0]
-        p = self.workspace.findParticipant(p.name)
+        p_name = self.selectedParticipants[0]
+        p = self.workspace.findParticipant(p_name)
         self.startSingleEMGProcess(p)
 
     def participantCheckBoxChanged(self, state):
@@ -1132,9 +1132,11 @@ class MainWindow(QMainWindow):
         pv = QPlotView()
         # calcuate FFT
         tst = self.workspace[p].emg.getTST()
-        freq, v = tst.fft(channel, l, r)
-        print(freq)
-        print(v)
+        freq, v = tst.fft_db(channel, l, r)
+        # delete negliable value
+        to_del = np.argwhere(v <= 1e-3)
+        freq = np.delete(freq, to_del)
+        v = np.delete(v, to_del)
         pv.bar(freq, v, channel)
         pv.show()
         return pv
@@ -1343,7 +1345,7 @@ class MainWindow(QMainWindow):
         # if item is top level, return
         if item.parent() is None:
             return
-        
+
         p_name = item.parent().text(column)
         channel = item.text(column)
         p = self.workspace.findParticipant(p_name)
@@ -1357,10 +1359,10 @@ class MainWindow(QMainWindow):
         widgets.freq_timedomain.line(x, self.workspace[p].emg[channel], channel)
         widgets.freq_timedomain.show()
         self.updateFreqAnalysisFFTPanel()
-    
+
     def updateFreqAnalysisFFTPanel(self):
         ly = widgets.frequency_bottom.layout()
-        for i in reversed(range(ly.count())): 
+        for i in reversed(range(ly.count())):
             ly.itemAt(i).widget().setParent(None)
 
         for plot in self.freqAnalysisPlots:

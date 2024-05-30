@@ -1,6 +1,6 @@
 pacs = c("R.matlab","stringr","ggplot2","plotly","shinycssloaders",
           "ggthemes","shinydashboardPlus","DT","shiny","shinydashboard",
-          "tidyverse","flextable","fresh","rempsyc","ggridges","shinyWidgets")
+          "tidyverse","flextable","fresh","rempsyc","ggridges","shinyWidgets","XML")
 
 lapply(pacs, require, character.only = TRUE)
 

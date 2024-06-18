@@ -18,6 +18,7 @@ import sys
 import os
 import platform
 import re
+import math
 from pathlib import Path
 
 from PySide6.QtCore import (
@@ -75,6 +76,8 @@ from PySide6.QtWidgets import (
     QFileSystemModel,
     QTreeWidget,
     QTreeWidgetItem,
+    QFrame,
+    QSpacerItem,
 )
 from PySide6.QtWebEngineCore import (
     QWebEngineUrlScheme,
@@ -645,7 +648,11 @@ class MainWindow(QMainWindow):
         widgets.checkBox_3.stateChanged.connect(self.EMGParticipantSelectAllClicked)
 
         # Freqency Page
-        widgets.freq_add.clicked.connect(self.addNewFFTtoFreqAnalysisFFTPanel)
+        widgets.pushButton_29.clicked.connect(self.addNewFFTtoFreqAnalysisFFTPanel)
+        widgets.pushButton_28.clicked.connect(self.FFTPlotPrevPageClicked)
+        widgets.pushButton_30.clicked.connect(self.FFTPlotNextPageClicked)
+        widgets.comboBox_19.currentIndexChanged.connect(self.FFTPlotPerPageSelected)
+        widgets.comboBox_20.currentIndexChanged.connect(self.FFTPlotPageIndexSelected)
 
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
@@ -693,6 +700,7 @@ class MainWindow(QMainWindow):
         # FrequencyAnalysis State Machine
         self.freqAnalysis = (None, None)     # (Participant, channel) 
         self.freqAnalysisPlots = []          # plot diagram for frequency analysis
+        self.plotsPerPage_list = [0, 1, 3, 5, 10]  # correspond to ui combox_19 setting
 
         #self.test()
 
@@ -1107,6 +1115,26 @@ class MainWindow(QMainWindow):
 
         self.updateEMGParticipantBox()
 
+    def FFTPlotNextPageClicked(self):
+        widgets.scrollArea_3.nextPage()
+        #widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
+        self.updateFreqAnalysisFFTPanel()
+    
+    def FFTPlotPrevPageClicked(self):
+        widgets.scrollArea_3.prevPage()
+        #widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
+        #widgets.scrollArea_3.show()
+        self.updateFreqAnalysisFFTPanel()
+
+    def FFTPlotPerPageSelected(self, index):
+        #widgets.scrollArea_3.setPlotsPerPage(self.plotsPerPage_list[index])
+        #widgets.scrollArea_3.show()
+        self.updateFreqAnalysisFFTPanel()
+
+    def FFTPlotPageIndexSelected(self, index):
+        widgets.scrollArea_3.setCurrentPage(index)
+        widgets.scrollArea_3.show()
+
     # WIDGET
     # //////////////////////////////////////////////////////////////
     def EMGCreateParticipantCheckBox(self, name):
@@ -1128,7 +1156,8 @@ class MainWindow(QMainWindow):
         w.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
         return container
     
-    def FreqAnalysisCreateQPlotView(self, p, channel, l, r):
+    # draw FFT
+    def FreqAnalysisCreateQPlotView(self, p, channel, l, r, title):
         pv = QPlotView()
         # calcuate FFT
         tst = self.workspace[p].emg.getTST()
@@ -1137,8 +1166,9 @@ class MainWindow(QMainWindow):
         to_del = np.argwhere(v <= 1e-3)
         freq = np.delete(freq, to_del)
         v = np.delete(v, to_del)
-        pv.bar(freq, v, channel)
-        pv.show()
+        #pv.bar(freq, v, channel, title=title,xlabel='Frequency', ylabel='dB')
+        #pv.show()
+        pv.line(freq, v, channel, title=title,xlabel='Frequency', ylabel='dB')
         return pv
 
     # UPDATE UI EVENTS
@@ -1361,12 +1391,22 @@ class MainWindow(QMainWindow):
         self.updateFreqAnalysisFFTPanel()
 
     def updateFreqAnalysisFFTPanel(self):
-        ly = widgets.frequency_bottom.layout()
-        for i in reversed(range(ly.count())):
-            ly.itemAt(i).widget().setParent(None)
+        # update control ui
+        # get pages per frame
+        plotsPerPage = self.plotsPerPage_list[widgets.comboBox_19.currentIndex()]
+        widgets.scrollArea_3.setPlotsPerPage(plotsPerPage)
+        # page index selector
+        currentpage = widgets.scrollArea_3.currentPage()
+        widgets.comboBox_20.clear()
+        widgets.comboBox_20.addItems([str(i + 1) for i in range(0, widgets.scrollArea_3.pages())])
+        
+        widgets.scrollArea_3.setCurrentPage(currentpage)
+        widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
+        widgets.scrollArea_3.show()
+        logger.info("Updating FFT Analysis figure, nums_per_page: {} total page: {}, total plots:{}, current page: {}".format(
+            widgets.scrollArea_3.plotsPerPage(), widgets.scrollArea_3.pages(), widgets.scrollArea_3.size(), widgets.scrollArea_3.currentPage()
+        ))
 
-        for plot in self.freqAnalysisPlots:
-            ly.addWidget(plot)
 
     # Application Logic/Slots
     # ///////////////////////////////////////////////////////////////
@@ -1498,14 +1538,36 @@ class MainWindow(QMainWindow):
         self.freqAnalysisPlots.clear()
 
     def addNewFFTtoFreqAnalysisFFTPanel(self):
-        left = int(widgets.freq_left.text())
-        right = int(widgets.freq_right.text())
         p, chan = self.freqAnalysis
+        tst = self.workspace[p].emg.getTST()
+        try:
+            left = float(widgets.lineEdit_5.text())
+            right = float(widgets.lineEdit_4.text())
+            # check sanity
+            if left < 0 or left > tst.time:
+                left = 0.0
+            if right < 0 or right > tst.time:
+                right = float(tst.time)
+        except Exception:
+            left = 0.0
+            right = float(tst.time)
 
-        newPlot = self.FreqAnalysisCreateQPlotView(p, chan, left, right)
-        self.freqAnalysisPlots.append(newPlot)
-        self.updateFreqAnalysisFFTPanel()
+        widgets.lineEdit_5.setText(str(left))
+        widgets.lineEdit_4.setText(str(right))
+
+        num_plots = 1
+        if widgets.lineEdit_6.text() != "":
+            num_plots = int(widgets.lineEdit_6.text())
         
+        curr_time = left
+        step = (right - left) / num_plots 
+        for i in range(0, num_plots):
+            title = 'Frequency Analysis: {} s to {} s'.format(curr_time, curr_time + step)
+            newPlot = self.FreqAnalysisCreateQPlotView(p, chan, curr_time, curr_time + step, title=title)
+            self.freqAnalysisPlots.append(newPlot)
+            widgets.scrollArea_3.append(newPlot)
+            curr_time += step
+        self.updateFreqAnalysisFFTPanel()
 
     def startSingleEMGProcess(self, p):
         logger.info("started single EMG process for {}".format(p.name))
@@ -1547,7 +1609,6 @@ class MainWindow(QMainWindow):
 
     def selectSingleEMGStep(self, idx):
         p, step, chan = self.singleEMG
-
         if p is None:
             return
         cfg = self.workspace[p].emg.getProcessConfig()
@@ -1583,7 +1644,6 @@ class MainWindow(QMainWindow):
         # clear selectedparitipant
         self.selectedParticipants.clear()
         self.updateEMGParticipantBox()
-
 
 # setting up Url Scheme string before app starts
 # this is for qplotview setup

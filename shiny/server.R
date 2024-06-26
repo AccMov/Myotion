@@ -1,86 +1,151 @@
 pacs = c("R.matlab","stringr","ggplot2","plotly","shinycssloaders",
           "ggthemes","shinydashboardPlus","DT","shiny","shinydashboard",
           "tidyverse","flextable","fresh","rempsyc","ggridges","shinyWidgets","shinyjs",
-         "xtable","kableExtra","car","XML")
+         "xtable","kableExtra","car","XML","viridis","svSocket")
 
 lapply(pacs, require, character.only = TRUE)
 
 
-## functions
-options(shiny.port = 7775)
-
-
-
-# read data
-groupA_names <- list.files("data/Group_A", pattern="*.xml", full.names=TRUE)
-groupA <- lapply(groupA_names, xmlToList)
-
-for(i in 1:length(groupA)){
-  names(groupA)[i] = groupA[[i]]$Person$name
-}
-muscle_name = c(names(groupA$ABC1$emg$timeSeriesTable$channels))
-
-# Time domain parameters names
-time_domain_para = names(groupA$ABC1$emg$statistic)[1:13]
-freq_domain_para = names(groupA$ABC1$emg$statistic)[14:20]
-advanced = names(groupA$ABC1$emg$timeSeriesTable$channels)
-domain_list = list(time_domain_para,freq_domain_para)
-
-domain = c("time_domain_para","freq_domain_para","advanced")
-
-
-
-
-# Initial
-
-domain_select = "time_domain_para"
-para_bar = time_domain_para[3]
-para_bar2 = "Non"
-group_A_select = c("ABC1","ABC2","ABC3","ABC4")
-group_B_select = c("ABC1","ABC2","ABC3","ABC4")
-
-
-## Draw data
-
-df_draw = data.frame(id = c(), muscle = c(), para = c(), value = c(), group = c())
-for (i in 1:length(group_A_select)){
-  ppi = groupA[which(names(groupA) == group_A_select[i])]
-  domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-  domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-  df_bar_ppi = data.frame(id = rep(group_A_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                          muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                          para = rep(para_bar, length(domain_ppi)),
-                          value = domain_ppi,
-                          group = rep("GroupA", length(domain_ppi)))
-  if(para_bar2!="Non"){
-    domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
-    domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
-    df_bar_ppi$value2 = domain_ppi2
-  }
-  df_draw = rbind(df_draw, df_bar_ppi)
-}
-
-for (i in 1:length(group_B_select)){
-  ppi = groupA[which(names(groupA) == group_B_select[i])]
-  domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-  domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-  df_bar_ppi = data.frame(id = rep(group_B_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                          muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                          para = rep(para_bar, length(domain_ppi)),
-                          value = domain_ppi,
-                          group = rep("GroupB", length(domain_ppi)))
-  if(para_bar2!="Non"){
-    domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
-    domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
-    df_bar_ppi$value2 = domain_ppi2
-  }
-  df_draw = rbind(df_draw, df_bar_ppi)
-}
-
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# Define a function to handle client connections
+path = NULL
 ## server
 server <- function(input, output) {
-  observeEvent(input$button, {
-    shinyjs::toggle("mybox_wrapper")
+  
+  
+  handle_client <- function(msg, client, port) {
+    #cat("Client:", client, ":", port, " connected.\n")
+    # Read data from the client
+    cat("Received from client:", msg, "\n")
+    # Close the connection
+    cat("Client connection closed.\n")
+    path <<- msg
+    return(0)
+  }
+  
+  
+  svSocket::startSocketServer(
+    port = 7776,
+    procfun = handle_client ,
+    secure = FALSE,
+    local = TRUE
+  )
+  #print(path)
+  while(is.null(path)){
+    Sys.sleep(3)
+  print(path)
+  oldpath <<- path
+  }
+  
+  ## functions
+  #a =while (TRUE) {}
+  groupA_names <- list.files(path, pattern="*.xml", full.names=TRUE)
+  groupA <- lapply(groupA_names, xmlToList)
+  
+  for(i in 1:length(groupA)){
+    names(groupA)[i] = groupA[[i]]$Person$name
+  }
+  
+  # read data
+  muscle_name = c(names(groupA$ABC1$emg$timeSeriesTable$channels))
+  
+  # Time domain parameters names
+  time_domain_para = names(groupA$ABC1$emg$statistic)[1:13]
+  freq_domain_para = names(groupA$ABC1$emg$statistic)[14:20]
+  advanced = names(groupA$ABC1$emg$timeSeriesTable$channels)
+  domain_list = list(time_domain_para,freq_domain_para)
+  
+  domain = c("time_domain_para","freq_domain_para","advanced")
+  
+  
+  
+  
+  # Initial
+  
+  domain_select = "time_domain_para"
+  para_bar = time_domain_para[3]
+  para_bar2 = "Non"
+  group_A_select = c("ABC1","ABC2","ABC3","ABC4")
+  group_B_select = c("ABC1","ABC2","ABC3","ABC4")
+  
+  
+  ## Draw data
+  
+  df_draw = data.frame(id = c(), muscle = c(), para = c(), value = c(), group = c())
+  for (i in 1:length(group_A_select)){
+    ppi = groupA[which(names(groupA) == group_A_select[i])]
+    domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+    domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+    df_bar_ppi = data.frame(id = rep(group_A_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                            muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                            para = rep(para_bar, length(domain_ppi)),
+                            value = domain_ppi,
+                            group = rep("GroupA", length(domain_ppi)))
+    if(para_bar2!="Non"){
+      domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
+      domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
+      df_bar_ppi$value2 = domain_ppi2
+    }
+    df_draw = rbind(df_draw, df_bar_ppi)
+  }
+  
+  for (i in 1:length(group_B_select)){
+    ppi = groupA[which(names(groupA) == group_B_select[i])]
+    domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+    domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+    df_bar_ppi = data.frame(id = rep(group_B_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
+                            muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
+                            para = rep(para_bar, length(domain_ppi)),
+                            value = domain_ppi,
+                            group = rep("GroupB", length(domain_ppi)))
+    if(para_bar2!="Non"){
+      domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
+      domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
+      df_bar_ppi$value2 = domain_ppi2
+    }
+    df_draw = rbind(df_draw, df_bar_ppi)
+  }
+  
+  observeEvent(path!=oldpath, {
+    oldpath <<- path
+    #a =while (TRUE) {}
+    groupA_names <- list.files(path, pattern="*.xml", full.names=TRUE)
+    groupA <- lapply(groupA_names, xmlToList)
+    
+    for(i in 1:length(groupA)){
+      names(groupA)[i] = groupA[[i]]$Person$name
+    }
+    
+    # read data
+    muscle_name = c(names(groupA$ABC1$emg$timeSeriesTable$channels))
+    
+    # Time domain parameters names
+    time_domain_para = names(groupA$ABC1$emg$statistic)[1:13]
+    freq_domain_para = names(groupA$ABC1$emg$statistic)[14:20]
+    advanced = names(groupA$ABC1$emg$timeSeriesTable$channels)
+    domain_list = list(time_domain_para,freq_domain_para)
+    
+    
+  })
+  
+  observeEvent(input$goButton, {
+    oldpath <<- path
+    #a =while (TRUE) {}
+    groupA_names <- list.files(path, pattern="*.xml", full.names=TRUE)
+    groupA <- lapply(groupA_names, xmlToList)
+    
+    for(i in 1:length(groupA)){
+      names(groupA)[i] = groupA[[i]]$Person$name
+    }
+    
+    # read data
+    muscle_name = c(names(groupA$ABC1$emg$timeSeriesTable$channels))
+    
+    # Time domain parameters names
+    time_domain_para = names(groupA$ABC1$emg$statistic)[1:13]
+    freq_domain_para = names(groupA$ABC1$emg$statistic)[14:20]
+    advanced = names(groupA$ABC1$emg$timeSeriesTable$channels)
+    domain_list = list(time_domain_para,freq_domain_para)
   })
 
   output$out1 <- renderUI({
@@ -103,6 +168,7 @@ server <- function(input, output) {
                        uiOutput('uiselect1'),
                        uiOutput('uiselect2'),
                        uiOutput('uiselect3'),
+                       actionButton("goButton", "Generate figure"),
                        tabsetPanel(id = "tabset_id1", selected = "t1", 
                                    tabPanel("Advanced options",  value = "t3",
                                             uiOutput("plotoption")))
@@ -192,22 +258,30 @@ server <- function(input, output) {
   
   
   output$uiplot1 = renderUI({
-    if(input$select3 != "Density plot"){
       plotlyOutput("plotly_A")  %>% withSpinner(color="orange")
-    } else if(input$select3 == "Density plot") {
-      plotOutput("plot_A")  %>% withSpinner(color="orange")
-    }
   })
   
 
   
   output$plotoption = renderUI({
-    if(input$select3 %in% c("Bar chart","Boxplot","Scatter plot")){
-      checkboxInput("singleplot","Single plot", FALSE)
 
+    if(input$select3 %in% c("Bar chart","Boxplot","Scatter plot", "Density plot")){
+      figure_option_ui = list(
+        checkboxInput("singleplot","Single plot", FALSE),
+        textInput("title_input", "Title", value = ""),
+        textInput("y_input", "Y label", value = ""),
+        textInput("x_input", "X label", value = ""),
+        sliderInput("titlesize", "Title font size", value = 20, min = 1, max = 80),
+        sliderInput("xylabelsize", "x & y label size", value = 15, min = 1, max = 80),
+        sliderInput("xytextsize", "xy-axis text size", value = 10, min = 1, max = 50),
+        selectInput("plotcolor","Color palettes", choices = c("Regular","Black & White","Color blind friendly"), selected = "Regular")
+
+      )
     }
+
+    
+    return(figure_option_ui)
   })
-  
   
   
   df_draw <- reactive({
@@ -378,7 +452,6 @@ server <- function(input, output) {
     group_A_select = input$filterA2 
     group_B_select = input$filterB2
     
-    
     ## Draw data
     
     df_draw_f = data.frame(id = c(), FS = c(), Time_index = c(), value = c(), group = c())
@@ -389,8 +462,6 @@ server <- function(input, output) {
       as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
       domain_ppi[,1] = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
 
-      
-      
       down_sample = seq(from = 1, to = length(ts_ppi[1,]),length.out = 3000)
       ts_ppi = ts_ppi[,down_sample]
       rownames(ts_ppi) = c("FS1","FS2","FS3")
@@ -404,7 +475,7 @@ server <- function(input, output) {
       }
       df_draw_f = rbind(df_draw_f, df_bar_ppi)
     }
-    
+
     for (i in 1:length(group_B_select)){
       ppi = groupA[which(names(groupA) == group_B_select[i])]
       domain_ppi = ppi[[1]][[which(domain==domain_select)]]
@@ -426,137 +497,183 @@ server <- function(input, output) {
     df_draw_f
     
   })
-  
 
-  
-  
+
 
   output$plotly_A = renderPlotly({
-    
+    input$goButton
+    isolate({
     if(length(input$singleplot) == 0){
       single_plot = F
     }else{
       single_plot = input$singleplot
     }
-    
-   
+
+
     ## Draw plot
     if(input$select3 == "Bar chart"){
+      df_bar = df_draw() %>% dplyr::group_by(group, muscle) %>%
+        summarise(sd = sd(value),
+                  Average = mean(value),
+                  Min = min(value),
+                  Max = max(value),
+                  Median = median(value)
+        )
       if(!single_plot){
-        df_bar = df_draw() %>% dplyr::group_by(group, muscle) %>%
-          summarise(sd = sd(value),
-                    Average = mean(value),
-                    Min = min(value),
-                    Max = max(value),
-                    Median = median(value)
-          )
-        
+
         bar_plot = ggplot(df_bar, aes(x=muscle, y= Average, fill=group)) + 
           facet_wrap(~ group, scales = "free_x") + 
           geom_col(alpha = 0.6) + 
           labs(
-            x = "Muscle names",
-            y = "Average parameter values",
-            subtitle = ""
+            x = input$x_input,
+            y = input$y_input,
+            title = input$title_input
           )+
           scale_y_continuous(expand = c(0, 0)) +
           theme(panel.spacing.x = unit(0, "mm")) + theme_tufte()+
-          theme(text = element_text(size = 20),
-                axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+          theme(axis.title = element_text(size = input$xylabelsize),
+                title = element_text(size = input$titlesize),
+                axis.text = element_text(size = input$xytextsize),
+                axis.text.x = element_text(angle = 30, vjust = 0.5, hjust=1),
                 legend.position = "none") +
           guides(fill=guide_legend(title="")) 
       } else{
-        df_bar = df_draw() %>% dplyr::group_by(group, muscle) %>%
-          summarise(sd = sd(value),
-                    Average = mean(value),
-                    Min = min(value),
-                    Max = max(value),
-                    Median = median(value)
-          )
-        
+
         bar_plot = ggplot(df_bar, aes(x=muscle, y= Average, fill=group)) + 
           geom_bar(stat = "identity",  width = 0.6, alpha = 0.6,
                    position=position_dodge(width = 0.6)) + 
           scale_y_continuous(expand = c(0, 0) ) +
           labs(
-            x = "Muscle names",
-            y = "Average parameter values",
-            subtitle = ""
+            x = input$x_input,
+            y = input$y_input,
+            title = input$title_input
           )+
           theme(panel.spacing.x = unit(0, "mm")) + theme_tufte()+
-          theme(text = element_text(size = 20),
+          theme(axis.title = element_text(size = input$xylabelsize),
+                title = element_text(size = input$titlesize),
+                axis.text = element_text(size = input$xytextsize),
                 legend.position = "top") +
           guides(fill=guide_legend(title=""))
       }
       
+      if(input$plotcolor == "Black & White"){
+        bar_plot = bar_plot + scale_fill_grey()
+      } else if(input$plotcolor == "Color blind friendly"){
+        bar_plot = bar_plot + scale_fill_viridis(discrete = T)
+      }else if(input$plotcolor == "Regular"){
+        bar_plot = bar_plot 
+      }
+
       ggplotly(bar_plot)%>%
         layout(legend = list(
           orientation = "h", xanchor = "center", x = 0.5, y= 1
         ))
-      
+
     } else if(input$select3 == "Boxplot"){
       df_box = df_draw()
       df_box$group = as.factor(df_box$group)
-      
-      if(single_plot){
 
-      fig = plot_ly(df_box, x = ~muscle, y = ~value, color = ~group, type = "box", 
-                    colors = c("red", "blue")) %>% layout(boxmode = "group",
-                                                          xaxis = list(tickfont = list(size = 20)), 
-                                                          yaxis = list(tickfont = list(size = 20)))%>%
+      if(single_plot){
+        if(input$plotcolor == "Black & White"){
+          fig = plot_ly(df_box, x = ~muscle, y = ~value, color = ~group, type = "box", colors = c("#F0F0F0","#BDBDBD"))
+        } else if(input$plotcolor == "Color blind friendly"){
+          fig = plot_ly(df_box, x = ~muscle, y = ~value, color = ~group, type = "box", colors = c("#fde725","#440154"))
+        }else if(input$plotcolor == "Regular"){
+          fig = plot_ly(df_box, x = ~muscle, y = ~value, color = ~group, type = "box", colors = c("#F8766D","#00BFC4"))
+        }
+        
+      fig = fig %>%
+        layout(boxmode = "group")%>%
         layout(legend = list(
           orientation = "h", xanchor = "center", x = 0.5, y= 1
-        ))
+        )) %>%
+        layout(title = list(text = input$title_input, font=list(size = input$titlesize)))%>%
+        layout(xaxis = list(title = input$x_input,titlefont = list(size = input$xylabelsize), tickfont = list(size = input$xytextsize)),
+               yaxis = list(title = input$y_input,titlefont = list(size = input$xylabelsize), tickfont = list(size = input$xytextsize)))
+      
       } else{
-        fig = df_box %>%
-          group_by(group) %>%
-          do(p=plot_ly(., x = ~muscle, y = ~value, color = ~ group, type = "box",
-                       colors = c("red", "blue"))) %>%
+        if(input$plotcolor == "Black & White"){
+          fig = df_box %>%
+            group_by(group) %>%
+            do(p=plot_ly(., x = ~muscle, y = ~value, color = ~ group, type = "box", colors = c("#F0F0F0","#BDBDBD")))
+        } else if(input$plotcolor == "Color blind friendly"){
+          fig = df_box %>%
+            group_by(group) %>%
+            do(p=plot_ly(., x = ~muscle, y = ~value, color = ~ group, type = "box", colors = c("#fde725","#440154")))
+        }else if(input$plotcolor == "Regular"){
+          fig = df_box %>%
+            group_by(group) %>%
+            do(p=plot_ly(., x = ~muscle, y = ~value, color = ~ group, type = "box", colors = c("#F8766D","#00BFC4")))
+        }
+        
+        
+        fig = fig %>%
           subplot(nrows = 1, shareX = TRUE, shareY = TRUE)%>%
           layout(legend = list(
             orientation = "h", xanchor = "center", x = 0.5, y= 1
-          ))
-        
+          )) %>%
+          layout(title = list(text = input$title_input, font=list(size = input$titlesize)))%>%
+          layout(xaxis = list(title = input$x_input,titlefont = list(size = input$xylabelsize), tickfont = list(size = input$xytextsize)),
+                 yaxis = list(title = input$y_input,titlefont = list(size = input$xylabelsize), tickfont = list(size = input$xytextsize)),
+                 xaxis2 = list(title = input$x_input,titlefont = list(size = input$xylabelsize), tickfont = list(size = input$xytextsize)),
+                 yaxis2 = list(title = input$y_input,titlefont = list(size = input$xylabelsize), tickfont = list(size = input$xytextsize)))
+
       }
+      
+      
+      
       fig
     } else if(input$select3 == "Scatter plot"){
       df_scat = df_draw()
-      
+
       if(!single_plot){
 
       scat_plot = ggplot(df_scat) + 
         geom_point(size=4, alpha = 0.6,
                    aes(x=value, y=value2, color=group,
                        text = paste("Muscle:", muscle, "\nID:",id))) +
-        geom_smooth(method="lm" , se=TRUE,
+        geom_smooth(method="lm" , se=F,
                     aes(x = value, y = value2, color = group, fill = group))+
         theme_tufte()+ 
         facet_wrap(~ group, scales = "free_x")+
         labs(
-          x = para_bar,
-          y = para_bar2,
-          subtitle = ""
+          x = input$x_input,
+          y = input$y_input,
+          title = input$title_input
         )+
-        theme(text = element_text(size = 20),
+        theme(axis.title = element_text(size = input$xylabelsize),
+              title = element_text(size = input$titlesize),
+              axis.text = element_text(size = input$xytextsize),
               legend.position = "none")
       } else{
         scat_plot = ggplot(df_scat) + 
           geom_point(size=4, alpha = 0.6,
                      aes(x=value, y=value2, color=group,
                          text = paste("Muscle:", muscle, "\nID:",id))) +
-          geom_smooth(method="lm" , se=TRUE,
+          geom_smooth(method="lm" , se=F,
                       aes(x = value, y = value2, color = group, fill = group))+
           theme_tufte()+ 
           labs(
-            x = para_bar,
-            y = para_bar2,
-            subtitle = ""
+            x = input$x_input,
+            y = input$y_input,
+            title = input$title_input
           )+
-          theme(text = element_text(size = 20),
+          theme(axis.title = element_text(size = input$xylabelsize),
+                title = element_text(size = input$titlesize),
+                axis.text = element_text(size = input$xytextsize),
                 legend.position = "top") +
           guides(color=guide_legend(title=""),
                  fill=FALSE) 
       }
+
+      if(input$plotcolor == "Black & White"){
+        scat_plot = scat_plot + scale_color_grey()
+      } else if(input$plotcolor == "Color blind friendly"){
+        scat_plot = scat_plot + scale_color_viridis(discrete = T)
+      } else if(input$plotcolor == "Regular"){
+        scat_plot = scat_plot + scale_color_brewer(palette = "RdBu")
+      }
+      
       
       ggplotly(scat_plot)%>%
         layout(legend = list(
@@ -565,6 +682,37 @@ server <- function(input, output) {
       
       
     } 
+    else if(input$select3 == "Density plot"){
+      df_dens = df_draw()
+      dens_plot = ggplot(df_dens, aes(x = value, fill = group,color = group)) + 
+        geom_density( alpha = 0.5) + 
+        facet_wrap(~ muscle, scales = "free_x")+
+        theme(panel.spacing.x = unit(0, "mm")) + theme_tufte()+
+        theme(axis.title = element_text(size = input$xylabelsize),
+              title = element_text(size = input$titlesize),
+              axis.text = element_text(size = input$xytextsize),
+              legend.position = "none") +
+        labs(
+          x = input$x_input,
+          y = input$y_input,
+          title = input$title_input
+        )
+      
+      if(!single_plot){
+        dens_plot = dens_plot+facet_wrap(~ group+muscle, scales = "free_x")
+      } 
+      
+      if(input$plotcolor == "Black & White"){
+        dens_plot = dens_plot + scale_fill_grey() + scale_color_grey()
+      } else if(input$plotcolor == "Color blind friendly"){
+        dens_plot = dens_plot + scale_fill_viridis(discrete = T) + scale_color_viridis(discrete = T)
+      } else if(input$plotcolor == "Regular"){
+        dens_plot = dens_plot 
+      }
+      
+      
+      ggplotly(dens_plot)
+    }
     else if(input$select3 == "Functional curve"){
       df_scat = df_draw_f()
       mean_curve = df_scat %>% group_by(group,Time_index) %>% summarise(value = mean(value)) %>%
@@ -580,31 +728,41 @@ server <- function(input, output) {
         xlab("Time index") + ylab("Value")+
         facet_wrap(~ group, scales = "free_x")+
         theme(panel.spacing.x = unit(0, "mm")) +
-        theme(text = element_text(size = 20),
+        theme(axis.title = element_text(size = input$xylabelsize),
+              title = element_text(size = input$titlesize),
+              axis.text = element_text(size = input$xytextsize),
               legend.position = "none") 
       
       ggplotly(time_plot)
       
-    } 
+    } })
   })
  
   
-  output$plot_A = renderPlot({
-    df_dens = df_draw()
+  #output$plot_A = renderPlot({
+  #  df_dens = df_draw()
+  #  
+  #  dens_plot = ggplot(df_dens, aes(x = value, y = muscle, fill = group,color = group)) + 
+  #    geom_density_ridges( alpha = 0.5) + 
+  #    facet_wrap(~ group, scales = "free_x")+
+  #    theme(panel.spacing.x = unit(0, "mm")) + theme_tufte()+
+  #    theme(text = element_text(size = 20),
+  #          legend.position = "none") 
     
-    dens_plot = ggplot(df_dens, aes(x = value, y = muscle, fill = group,color = group)) + 
-      geom_density_ridges( alpha = 0.5) + 
-      facet_wrap(~ group, scales = "free_x")+
-      theme(panel.spacing.x = unit(0, "mm")) + theme_tufte()+
-      theme(text = element_text(size = 20),
-            legend.position = "none") 
+  #  dens_plot
+  #  dens_plot = ggplot(df_dens, aes(x = value, fill = group,color = group)) + 
+  #    geom_density( alpha = 0.5) + 
+  #    facet_wrap(~ group, scales = "free_x")+
+  #    theme(panel.spacing.x = unit(0, "mm")) + theme_tufte()+
+  #    theme(text = element_text(size = 20),
+  #          legend.position = "none") 
     
-    dens_plot
+  #  dens_plot
     
-  })
+    
+  # })
   
   output$DTtable1 <- DT::renderDataTable({
-    
     
     ## Draw plot
     if(input$select3 == "Bar chart"){
@@ -621,14 +779,11 @@ server <- function(input, output) {
       dt_table = df_draw()
       rg = range(dt_table$value)
       loc_value = which(names(dt_table) == "value")
-      
-      
+
     } else if(input$select3 == "Scatter plot"){
       dt_table = df_draw()
       rg = range(dt_table$value)
       loc_value = which(names(dt_table) == "value")
-      
-      
       
     } 
     else if(input$select3 == "Density plot"){
@@ -636,8 +791,7 @@ server <- function(input, output) {
       rg = range(dt_table$value)
       loc_value = which(names(dt_table) == "value")
       
-      
-      
+
     } 
     else if(input$select3 == "Functional curve"){
       dt_table = df_draw_f()
@@ -665,7 +819,6 @@ server <- function(input, output) {
   })
   
   
-  
   output$DTtabletest1 <- DT::renderDataTable({
     dt_table = df_draw_test()
     if(dim(dt_table)[1]>0){
@@ -685,7 +838,6 @@ server <- function(input, output) {
                     lengthMenu=list(c(10, -1), c('10', 'All'))), rownames= FALSE) 
     
   })
-  
   
 
   output$html1 <- renderUI({
@@ -725,6 +877,5 @@ server <- function(input, output) {
     }
     
   })
-  
   
 }

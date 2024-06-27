@@ -20,67 +20,24 @@ import platform
 import re
 from pathlib import Path
 
-from PySide6.QtCore import (
-    QCoreApplication,
-    QDate,
-    QDateTime,
-    QLocale,
-    QMetaObject,
-    QObject,
-    QPoint,
-    QRect,
-    QDir,
-    QSize,
-    QTimer,
-    QUrl,
-    Qt,
-    QEvent,
-)
-from PySide6.QtGui import (
-    QBrush,
-    QColor,
-    QConicalGradient,
-    QCursor,
-    QFont,
-    QFontDatabase,
-    QGradient,
-    QIcon,
-    QImage,
-    QKeySequence,
-    QLinearGradient,
-    QPainter,
-    QPalette,
-    QPixmap,
-    QRadialGradient,
-    QTransform,
-)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon,QPalette
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
-    QMenu,
-    QMenuBar,
-    QPushButton,
     QSizePolicy,
-    QStatusBar,
-    QToolBar,
     QMessageBox,
     QDialog,
     QWidget,
     QFileDialog,
     QTableWidgetItem,
     QComboBox,
-    QLineEdit,
-    QCompleter,
     QCheckBox,
     QFileSystemModel,
     QTreeWidget,
     QTreeWidgetItem,
 )
-from PySide6.QtWebEngineCore import (
-    QWebEngineUrlScheme,
-    QWebEngineUrlSchemeHandler,
-    QWebEngineUrlRequestJob,
-)
+from PySide6.QtWebEngineCore import QWebEngineUrlScheme
 
 from modules.kinematics.controller import Controller
 from modules.kinematics.model import Model
@@ -1428,36 +1385,6 @@ class MainWindow(QMainWindow):
                 treeItem.addChild(treeItem2)
         tree.setHeaderItem(QTreeWidgetItem(["Participant"]))
         tree.addTopLevelItem(treeItem)
-    
-    def tree_item_select(self, i):
-        widgets.kinematic_analysis.hide()
-        widgets.kinematic_analysis1.hide()
-        widgets.kinematic_analysis2.hide()
-        name = i.text(0)
-        if name in self.model.kinematic.data.data:
-            d = self.model.kinematic.data[name]
-            xs, ys, zs = [], [], []
-            for p in d:
-                xs.append(p.xyz[0])
-                ys.append(p.xyz[2])
-                zs.append(p.xyz[1])
-            widgets.kinematic_analysis.line(
-                np.arange(0, self.model.kinematic_frames()), xs, name + ".x"
-            )
-            widgets.kinematic_analysis1.line(
-                np.arange(0, self.model.kinematic_frames()), ys, name + ".y"
-            )
-            widgets.kinematic_analysis2.line(
-                np.arange(0, self.model.kinematic_frames()), zs, name + ".z"
-            )
-            widgets.kinematic_analysis.show()
-            widgets.kinematic_analysis1.show()
-            widgets.kinematic_analysis2.show()
-        if name in self.model.emg.Channels:
-            x = self.model.emg.getLinspace()
-            y = self.model.emg[name]
-            widgets.kinematic_analysis.line(x, y, name)
-            widgets.kinematic_analysis.show()
 
     def preloadKinematicPage(self):
         ps = self.workspace.getParticipants()
@@ -1465,33 +1392,16 @@ class MainWindow(QMainWindow):
         p = ps[0]
 
         if p is None:
-            widgets.kinematic_analysis.hide()
-            widgets.kinematic_analysis1.hide()
-            widgets.kinematic_analysis2.hide()
             return
 
         self.model = Model(self.workspace[p])
-        render = widgets.renderWidget
-        playbar = widgets.playSlider
         top = widgets.graph_top
         top.setModel(self.model, widgets.kinematics_label_tree)
         # bottom = widgets.graph_bottom
         # bottom.setModel(self.model, widgets.kinematics_label_tree)
         Controller(
-            self.model, render, playbar, top, None, widgets.kinematics_label_tree
+            self.model, widgets.renderWidget, widgets.playSlider, widgets.kinematic_analysis, None, widgets.kinematics_label_tree
         )
-
-        widgets.kinematics_label_tree.itemDoubleClicked.connect(self.tree_item_select)
-
-        if self.workspace[p].kinematic is not None:
-            widgets.playSlider.playbutton.clicked.connect(
-                widgets.renderWidget.bodyrender.play
-            )
-        x = self.workspace[p].emg.getLinspace()
-        widgets.kinematic_analysis.line(
-            x, self.inputBuffer, self.workspace[p].emg.getChannels()
-        )
-        widgets.kinematic_analysis.show()
 
     def preloadFreqAnalysisPage(self):
         self.updateFreqAnalysisParticipantTree(self.workspace.getParticipants())

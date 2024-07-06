@@ -16,7 +16,6 @@ class BodyRender(Base):
         super().__init__(parent)
         self.model = None
         self.point = None
-        self.playing = False
 
     def initializeGL(self) -> None:
         super().initializeGL()
@@ -63,6 +62,3 @@ class BodyRender(Base):
 
     def setFrame(self, frame):
         self.currentFrame = frame
-    
-    def play(self):
-        self.playing = not self.playing

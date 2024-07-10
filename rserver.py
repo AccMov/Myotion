@@ -3,6 +3,7 @@ import sys
 import os
 import threading
 import time
+from pathlib import Path
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTimer, QUrl, Qt, QEvent)
@@ -17,10 +18,13 @@ class RServer(threading.Thread):
 
     def run(self):
         print("launching R server...")
-        shiny = os.getcwd() + '/shiny/app.R'
-        cmd = 'Rscript ' + shiny
-        p = subprocess.Popen(cmd.split(),
-                             shell=False,
+        app = Path(os.getcwd() + '/shiny/app.R')
+        rscript = Path(os.getcwd() + '/R/bin/Rscript')
+        envscript = 'set "R_LIBS={}"'.format(Path(os.getcwd() + '/R/library'))
+        cmd = '{} && "{}" "{}"'.format(envscript, rscript, app)
+        print(cmd)
+        p = subprocess.Popen(cmd,
+                             shell=True,
                              stdout=sys.stdout,
                              stderr=sys.stderr)
 

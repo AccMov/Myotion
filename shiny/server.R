@@ -5,6 +5,7 @@ pacs = c("R.matlab","stringr","ggplot2","plotly","shinycssloaders",
 
 lapply(pacs, require, character.only = TRUE)
 
+options(shiny.port = 7775)
 
 #setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # Define a function to handle client connections

@@ -13,6 +13,6 @@ xcopy /s "Myotion_logo.ico" "dist\main\Myotion_logo.ico"
 mkdir "dist\main\shiny\data"
 xcopy /s "shiny\data\*" "dist\main\shiny\data\"
 
-:: copy R-4.3.4 to dist
+:: checkout R-win-4.3.4 to dist
 mkdir "dist\main\R"
-xcopy /s "R" "dist\main\R"
+git clone -b R-4.3.4 https://github.com/X-Motion/R.git "dist\main\R"

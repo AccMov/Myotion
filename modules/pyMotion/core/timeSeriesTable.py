@@ -37,19 +37,19 @@ class timeSeriesTable:
             raise ValueError("at least one label required!")
         
         if type(input) is dict:
-            self.data = input
+            self.data = input.copy()
         else:
             for i in range(0, len(labels)):
                 if input is None:
                     self.data[labels[i]] = np.array([])
                 else:
-                    self.data[labels[i]] = np.array(input[i])
+                    self.data[labels[i]] = np.array(input[i].copy())
         
 
         self.metadata = {
             "fs" : fs,
             "ts" : 1.0/fs,
-            "labels":  labels,
+            "labels":  labels.copy(),
             "n" :  len(self.data[labels[0]]),
             "time" : len(self.data[labels[0]]) / fs
         }
@@ -116,8 +116,10 @@ class timeSeriesTable:
 
     # rename channel
     def renameChannel(self, old, new):
-        self.data[new] = self.data.pop(old)
-
+        if old in self.labels:
+            self.data[new] = self.data.pop(old)
+            self.labels[self.labels.index(old)] = new
+            
     # check if has channel
     def hasChannel(self, chan):
         if chan in self.labels:

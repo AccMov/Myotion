@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
     QTreeWidgetItem,
     QFrame,
     QSpacerItem,
+    QHBoxLayout,
 )
 from PySide6.QtWebEngineCore import QWebEngineUrlScheme
 
@@ -61,194 +62,6 @@ widgets = None
 
 # Global Constant
 # ///////////////////////////////////////////////////////////////
-joint_name = [
-    [
-        "UT-L",
-        "UT-R",
-        "MT-L",
-        "MT-R",
-        "LT-L",
-        "LT-R",
-        "AD-L",
-        "AD-R",
-        "MD-L",
-        "MD-R",
-        "PD-L",
-        "PD-R",
-        "PM-L",
-        "PM-R",
-        "LD-L",
-        "LD-R",
-        "BB-L",
-        "BB-R",
-        "TB-L",
-        "TB-R",
-        "BRD-L",
-        "BRD-R",
-        "ECRL-L",
-        "ECRL-R",
-        "ECRB-L",
-        "ECRB-R",
-        "ECU-L",
-        "ECU-R",
-        "ED-L",
-        "ED-R",
-        "EDM-L",
-        "EDM-R",
-        "EI-L",
-        "EI-R",
-        "FCR-L",
-        "FCR-R",
-        "PL-L",
-        "PL-R",
-        "FCU-L",
-        "FCU-R",
-        "FDS-L",
-        "FDS-R",
-        "FDP-L",
-        "FDP-R",
-        "FPL-L",
-        "FPL-R",
-        "SSP-L",
-        "SSP-R",
-        "ISP-L",
-        "ISP-R",
-        "SSC-L",
-        "SSC-R",
-        "TM-L",
-        "TM-R",
-        "RA-L",
-        "RA-R",
-        "EO-L",
-        "EO-R",
-        "IO-L",
-        "IO-R",
-        "TA-L",
-        "TA-R",
-        "ES-L",
-        "ES-R",
-        "GM-L",
-        "GM-R",
-        "Gme-L",
-        "Gme-R",
-        "BF-L",
-        "BF-R",
-        "ST-L",
-        "ST-R",
-        "SM-L",
-        "SM-R",
-        "VL-L",
-        "VL-R",
-        "VM-L",
-        "VM-R",
-        "VI-L",
-        "VI-R",
-        "RF-L",
-        "RF-R",
-        "TA-L",
-        "TA-R",
-        "GM-L",
-        "GM-R",
-        "GL-L",
-        "GL-R",
-        "SOL-L",
-        "SOL-R",
-    ],
-    [
-        "Trapezius (upper)-L",
-        "Trapezius (upper)-R",
-        "Trapezius (middle)-L",
-        "Trapezius (middle)-R",
-        "Trapezius (lower)-L",
-        "Trapezius (lower)-R",
-        "Deltoid (anterior)-L",
-        "Deltoid (anterior)-R",
-        "Deltoid (middle)-L",
-        "Deltoid (middle)-R",
-        "Deltoid (posterior)-L",
-        "Deltoid (posterior)-R",
-        "Pectoralis Major-L",
-        "Pectoralis Major-R",
-        "Latissimus Dorsi-L",
-        "Latissimus Dorsi-R",
-        "Biceps Brachii-L",
-        "Biceps Brachii-R",
-        "Triceps Brachii-L",
-        "Triceps Brachii-R",
-        "Brachioradialis-L",
-        "Brachioradialis-R",
-        "Extensor Carpi Radialis Longus-L",
-        "Extensor Carpi Radialis Longus-R",
-        "Extensor Carpi Radialis Brevis-L",
-        "Extensor Carpi Radialis Brevis-R",
-        "Extensor Carpi Ulnaris-L",
-        "Extensor Carpi Ulnaris-R",
-        "Extensor Digitorum-L",
-        "Extensor Digitorum-R",
-        "Extensor Digiti Minimi-L",
-        "Extensor Digiti Minimi-R",
-        "Extensor Indicis-L",
-        "Extensor Indicis-R",
-        "Flexor Carpi Radialis-L",
-        "Flexor Carpi Radialis-R",
-        "Palmaris Longus-L",
-        "Palmaris Longus-R",
-        "Flexor Carpi Ulnaris-L",
-        "Flexor Carpi Ulnaris-R",
-        "Flexor Digitorum Superficialis-L",
-        "Flexor Digitorum Superficialis-R",
-        "Flexor Digitorum Profundus-L",
-        "Flexor Digitorum Profundus-R",
-        "Flexor Pollicis Longus-L",
-        "Flexor Pollicis Longus-R",
-        "Supraspinatus-L",
-        "Supraspinatus-R",
-        "Infraspinatus-L",
-        "Infraspinatus-R",
-        "Subscapularis-L",
-        "Subscapularis-R",
-        "Teres Major-L",
-        "Teres Major-R",
-        "Rectus Abdominis-L",
-        "Rectus Abdominis-R",
-        "External Oblique-L",
-        "External Oblique-R",
-        "Internal Oblique-L",
-        "Internal Oblique-R",
-        "Transversus Abdominis-L",
-        "Transversus Abdominis-R",
-        "Erector Spinae-L",
-        "Erector Spinae-R",
-        "Gluteus Maximus-L",
-        "Gluteus Maximus-R",
-        "Gluteus Medius-L",
-        "Gluteus Medius-R",
-        "Biceps Femoris-L",
-        "Biceps Femoris-R",
-        "Semitendinosus-L",
-        "Semitendinosus-R",
-        "Semimembranosus-L",
-        "Semimembranosus-R",
-        "Vastus Lateralis-L",
-        "Vastus Lateralis-R",
-        "Vastus Medialis-L",
-        "Vastus Medialis-R",
-        "Vastus Intermedius-L",
-        "Vastus Intermedius-R",
-        "Rectus Femoris-L",
-        "Rectus Femoris-R",
-        "Tibialis Anterior-L",
-        "Tibialis Anterior-R",
-        "Gastrocnemius (medial head)-L",
-        "Gastrocnemius (medial head)-R",
-        "Gastrocnemius (lateral head)-L",
-        "Gastrocnemius (lateral head)-R",
-        "Soleus-L",
-        "Soleus-R",
-    ],
-]
-
-
 class EMGAddWindow(QDialog):
     def __init__(self, workspace, home, width, height, parent=None):
         QDialog.__init__(self, parent)
@@ -265,8 +78,10 @@ class EMGAddWindow(QDialog):
         self.person = None
         self.channels = []
         self.mvcfiles = []
-        self.mvcfilesMap = {}
-        self.formalizedName = {}
+        self.mvcfilesMap = {}   # mapping mvc_file -> chan
+        self.jointMap = {}      # mapping chan -> joints (short name)
+        self.isControlSignal = {} # isControlSignal[chan] = T/F
+
 
         self.widgets.import_btn.clicked.connect(self.importEMGBtnClicked)
         self.widgets.lineEdit.textChanged.connect(self.updateFilterText)
@@ -284,9 +99,10 @@ class EMGAddWindow(QDialog):
         # column width
         w = self.frameGeometry().width()
         # fixed ratio
-        self.widgets.tableWidget.setColumnWidth(1, w * 0.3)
-        self.widgets.tableWidget.setColumnWidth(2, w * 0.4)
-        self.widgets.tableWidget.setColumnWidth(3, w * 0.1)
+        self.widgets.tableWidget.setColumnWidth(0, w * 0.3)
+        self.widgets.tableWidget.setColumnWidth(1, w * 0.1)
+        self.widgets.tableWidget.setColumnWidth(2, w * 0.2)
+        self.widgets.tableWidget.setColumnWidth(3, w * 0.4)
 
         n = len(self.channels)
         self.widgets.tableWidget.setRowCount(n)
@@ -296,42 +112,34 @@ class EMGAddWindow(QDialog):
             q.setTextAlignment(Qt.AlignLeading | Qt.AlignVCenter)
             q.setFlags(q.flags() ^ Qt.ItemIsEditable)
             self.widgets.tableWidget.setItem(i, 0, q)
+            # control signal checkbox
+            self.widgets.tableWidget.setCellWidget(i, 1, self.controlSignalCheckbox(chan))
             # drop down selection
-            self.widgets.tableWidget.setCellWidget(i, 1, self.jointComboBox(chan))
+            self.widgets.tableWidget.setCellWidget(i, 2, self.jointComboBox(chan))
             # mvc file path
-            self.widgets.tableWidget.setCellWidget(i, 2, self.mvcFileDisplay(chan))
+            self.widgets.tableWidget.setCellWidget(i, 3, self.mvcFileDisplay(chan))
 
         self.widgets.tableWidget.resizeColumnToContents(0)
 
     def jointComboBox(self, chan):
         comboBox = QComboBox()
         comboBox.setObjectName(chan)
-        comboBox.addItems(joint_name[1])
-        if chan in self.formalizedName:
-            comboBox.setCurrentText(self.formalizedName[chan])
+        comboBox.setEditable(True)
+        for j in jointName.short:
+            comboBox.addItem(jointName.getConcatName(j))
+        
+        if chan in self.jointMap:
+            comboBox.setCurrentText(jointName.getConcatName(self.jointMap[chan]))
         else:
-            comboBox.setCurrentIndex(0)
+            comboBox.setCurrentIndex(-1)
         comboBox.currentIndexChanged.connect(self.jointBoxChanged)
         return comboBox
-
-    """
-    def mvcFileButton(self, chan):
-        btn = QPushButton()
-        btn.setText('select file')
-        btn.setObjectName(chan)
-        btn.setStyleSheet(u"color:#f4f4f4;\n"
-        "background-color: #333b46;\n"
-        "padding:8px 8px;\n"
-        "border-radius:8px;")
-        btn.clicked.connect(self.importMVCBtnClicked)
-        return btn
-    """
 
     def mvcFileDisplay(self, chan):
         comboBox = QComboBox()
         comboBox.setObjectName(chan)
-
-        # only display  file name instead of full path
+        
+        # only display file name instead of full path
         for f in self.mvcfiles:
             comboBox.addItem(os.path.basename(f))
         if chan in self.mvcfilesMap:
@@ -340,13 +148,30 @@ class EMGAddWindow(QDialog):
             comboBox.setCurrentIndex(-1)
         comboBox.currentIndexChanged.connect(self.MVCFilesChanged)
         return comboBox
+    
+    def controlSignalCheckbox(self,chan):
+        checkbox = QCheckBox()
+        checkbox.setObjectName(chan)
+        checkbox.stateChanged.connect(self.controlSignalChanged)
+        if chan in self.isControlSignal:
+            checkbox.setChecked(self.isControlSignal[chan])
+        else:  
+            self.isControlSignal[chan] = False
+            checkbox.setChecked(False)
+
+        QWid = QWidget()
+        QHBox = QHBoxLayout(QWid)
+        QHBox.addWidget(checkbox)
+        QHBox.setAlignment(Qt.AlignCenter)
+        QHBox.setContentsMargins(0,0,0,0)
+        return QWid
 
     # SIGNALS AND SLOT
     ################################################
     def jointBoxChanged(self, index):
         jointbox = self.sender()
         chan = jointbox.objectName()
-        self.formalizedName[chan] = joint_name[0][index]
+        self.jointMap[chan] = jointName.short[index]
 
     def MVCFilesChanged(self, index):
         mvcBox = self.sender()
@@ -360,11 +185,21 @@ class EMGAddWindow(QDialog):
                 None, "error", "Selected mvc file is invalid!", QMessageBox.Ok
             )
             return
+        
+    def controlSignalChanged(self, state):
+        checkbox = self.sender()
+        chan = checkbox.objectName()
+        self.isControlSignal[chan] = not self.isControlSignal[chan]
 
+        if self.isControlSignal[chan]:
+            self.emg.setControlSignal(chan)
+        else:
+            self.emg.removeControlSignal(chan)
+    
     def updateFilterText(self):
         filter_str = self.widgets.lineEdit.text()
         if filter_str == "":
-            filter_str = ".*"
+            filter_str = ".*" 
 
         # check valid regex string
         try:
@@ -400,6 +235,8 @@ class EMGAddWindow(QDialog):
         self.channels = self.emg.getChannels()
 
         self.widgets.label_3.setText(file)
+        # auto apply joint matching on joint mapping
+        self.applyFuzzMatchOnJoint()
         self.updateChannelBox()
 
     def importMVCBtnClicked(self):
@@ -425,15 +262,14 @@ class EMGAddWindow(QDialog):
 
         # auto apply fuzz matching on MVC mapping
         self.applyFuzzMatchOnMVC()
-
         self.updateChannelBox()
 
     def applyFuzzMatchOnMVC(self):
-        filename = [os.path.basename(f) for f in self.mvcfiles]
+        filenames = [os.path.basename(f) for f in self.mvcfiles]
         for c in self.channels:
             # set only when possiblity bigger than 50%
-            files, possibility = self.workspace.mvcFuzzCheckFiles(
-                c, filename, lower_bound=50
+            files, possibility = self.workspace.matchChanToMVCFile(
+                c, filenames, lower_bound=50
             )
             if files is None:
                 continue
@@ -443,49 +279,69 @@ class EMGAddWindow(QDialog):
                         files[0], c, possibility
                     )
                 )
-                self.mvcfilesMap[c] = filename.index(files[0])
+                self.mvcfilesMap[c] = filenames.index(files[0])
 
-        # apply MVC
+    def applyFuzzMatchOnJoint(self):
         for c in self.channels:
-            if c in self.mvcfilesMap:
-                try:
-                    self.emg.setMVCFile(c, self.mvcfiles[self.mvcfilesMap[c]])
-                except Exception:
-                    logger.error(
-                        None,
-                        "error",
-                        "mvc file {} is invalid!".format(
-                            self.mvcfiles[self.mvcfilesMap[c]]
-                        ),
+            # set only when possiblity bigger than 50%
+            joints, possibility = self.workspace.matchChanToJoint(
+                c, jointName.short, lower_bound=50
+            )
+            if joints is None:
+                continue
+            else:
+                logger.info(
+                    "EMG Select Joint: selecting Joint {} for chan {}, possibility {}".format(
+                        joints[0], c, possibility
                     )
-                    del self.mvcfilesMap[c]
+                )
+                self.jointMap[c] = joints[0]
 
     def sanity(self):
+        #check emg file is selected
         if self.emg is None:
             QMessageBox.critical(None, "error", "No EMG file selected!", QMessageBox.Ok)
             return False
+        #check mvc file is complete
         if not self.emg.isMVCComplete():
             QMessageBox.critical(
                 None, "error", "MVC file not complete!", QMessageBox.Ok
             )
             return False
-        names = set()
-        for old, new in self.formalizedName:
-            if new in names:
+        #check pariticipant name is complete
+        name = self.widgets.lineEdit_3.text()
+        if name == '':
+            QMessageBox.critical(
+                None, "error", "Name of pariticipant not set!", QMessageBox.Ok
+            )
+            return False
+        #check all joint names are selected
+        for c in self.channels:
+            if c not in self.jointMap and self.isControlSignal[c] == False:
+                QMessageBox.critical(
+                    None, "error", "Joint of channel {} not set!".format(c), QMessageBox.Ok
+                )
+                return False
+        #check joint name is unique
+        used_joint = {}
+        for chan, joint in self.jointMap.items():
+            if joint in used_joint:
+                line1 = self.channels.index(used_joint[joint]) + 1
+                line2 = self.channels.index(chan) + 1
                 QMessageBox.critical(
                     None,
                     "error",
-                    "Duplicated joint name found, please assign each channel to joints properly!",
+                    "Duplicated joint name founded, please check line {} and {}".format(line1, line2),
                     QMessageBox.Ok,
                 )
                 return False
-            names.add(new)
+            used_joint[joint] = chan
         return True
 
     def confirmBtnClicked(self):
-        # if not self.sanity():
-        #    return
-
+        if not self.sanity():
+            return
+        
         # creat person
         name = self.widgets.lineEdit_3.text()
         self.person = person(name, "N/A", "N/A")
@@ -496,14 +352,17 @@ class EMGAddWindow(QDialog):
         for c in old:
             if c not in self.channels:
                 self.emg.removeChannel(c)
-        for old, new in self.formalizedName.items():
+
+        for old, new in self.jointMap.items():
             self.emg.renameChannel(old, new)
 
         # update MVC file name matching fuzz string
-        fuzzmap = {}
         for chan, index in self.mvcfilesMap.items():
-            fuzzmap[chan] = os.path.basename(self.mvcfiles[index])
-        self.workspace.mvcFuzzAddDicts(fuzzmap)
+            self.workspace.addChanToMVCFileMap(chan, os.path.basename(self.mvcfiles[index]))
+
+        for chan, joint in self.jointMap.items():
+            self.workspace.addChanToJointMap(chan, joint)
+
         self.close()
 
     def cancelBtnClicked(self):
@@ -743,6 +602,9 @@ class MainWindow(QMainWindow):
     def addEMGButtonClick(self):
         # create person
         p, emgdata, kinematic = EMGAddWindow(self.workspace, self.home, 1200, 800).run()
+        if p is None:
+            return
+        
         logger.info("added participate {}".format(p.name))
 
         # add to workspace
@@ -1396,6 +1258,9 @@ class MainWindow(QMainWindow):
         self.updateWorkSpaceParticipantBox()
         self.updateWorkProjectTreeWidget()
         self.updateEMGChannelSelectorContent()
+
+        # notify rserver
+        self.rserver.UpdateProjectPath(self.home)
         return 0
 
     def saveWorkSpace(self):

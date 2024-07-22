@@ -202,13 +202,15 @@ class Ui_Form(object):
         self.tableWidget.setObjectName(u"tableWidget")
         self.tableWidget.setMinimumSize(QSize(0, 0))
         self.tableWidget.setStyleSheet(u"font-size:14px;")
-        self.tableWidget.setColumnCount(3)
+        self.tableWidget.setColumnCount(4)
         __qtablewidgetitem = QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(1, __qtablewidgetitem1)
         __qtablewidgetitem2 = QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(2, __qtablewidgetitem2)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        self.tableWidget.setHorizontalHeaderItem(3, __qtablewidgetitem3)
         self.verticalLayout_2.addWidget(self.tableWidget)
 
 
@@ -286,9 +288,11 @@ class Ui_Form(object):
         ___qtablewidgetitem = self.tableWidget.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Form", u"Channels", None));
         ___qtablewidgetitem1 = self.tableWidget.horizontalHeaderItem(1)
-        ___qtablewidgetitem1.setText(QCoreApplication.translate("Form", u"Muscle Name", None));
+        ___qtablewidgetitem1.setText(QCoreApplication.translate("Form", u"IsControlSignal", None));
         ___qtablewidgetitem2 = self.tableWidget.horizontalHeaderItem(2)
-        ___qtablewidgetitem2.setText(QCoreApplication.translate("Form", u"MVC Trail File", None));
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("Form", u"Muscle Name", None));
+        ___qtablewidgetitem3 = self.tableWidget.horizontalHeaderItem(3)
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("Form", u"MVC Trail File", None));
         self.import_btn_2.setText(QCoreApplication.translate("Form", u"Confirm", None))
         self.import_btn_3.setText(QCoreApplication.translate("Form", u"Cancel", None))
     # retranslateUi

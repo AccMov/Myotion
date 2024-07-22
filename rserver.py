@@ -4,6 +4,7 @@ import os
 import threading
 import time
 from pathlib import Path
+import socket
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTimer, QUrl, Qt, QEvent)
@@ -29,6 +30,28 @@ class RServer(threading.Thread):
                              stderr=sys.stderr)
 
         self.stdout, self.stderr = p.communicate()
+    
+    def UpdateProjectPath(self, path):
+        host = 'localhost'
+        port = 7776
+
+        # Connect to the R server
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+            client_socket.connect((host, port))
+            print("Connected to the server.")
+
+            # Send messages to the server
+            message = str(Path(path))
+            client_socket.sendall(message.encode())
+            print("Sent:", message)
+
+            # Receive response from the server
+            #response = client_socket.recv(1024)
+            #print("Received:", response.decode())
+
+            # Close the connection
+            print("Closing connection.")
+            client_socket.close()
 
 class RServerBrowser(QWebEngineView):
     def __init__(self, parent=None):
@@ -44,7 +67,6 @@ class RServerBrowser(QWebEngineView):
         self.loadFinished.connect(self.loadFinishedCB)
         self.tryload()
         
-
     def loadFinishedCB(self, ok):
         if ok:
             self.connected = True
@@ -58,4 +80,3 @@ class RServerBrowser(QWebEngineView):
 
     def tryload(self):
         self.load(self.url)
-

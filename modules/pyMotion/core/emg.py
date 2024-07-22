@@ -282,10 +282,8 @@ class emg:
         self.emgMVCTST = None              #emg MVC data
         self.processCFG = None             #emg data process configure
         self.Channels = []                 #channels of emg
-        self.syncChannel = None            #sync up channel
-        # key:val pair
-        # key = channels, val = mvc file path
-        self.mvcFilesMap = {}
+        self.controlSignals = set()        #sync up channel
+        self.mvcFilesMap = {}              # channels:mvc_file_path
         self.isprocessdone = False
 
         # filter of channel name, regex
@@ -310,7 +308,7 @@ class emg:
     # check if MVC TST has all channels in place
     def isMVCComplete(self):
         for c in self.Channels:
-            if self.syncChannel != c and not self.emgMVCTST.hasChannel(c):
+            if c not in self.controlSignals and not self.emgMVCTST.hasChannel(c):
                 return False
         return True
     
@@ -343,8 +341,10 @@ class emg:
 
     # remove a channel from emg
     def removeChannel(self, channel):
-        del self.emgTST[channel]
-        del self.emgMVCTST[channel]
+        if channel in self.Channels:
+            del self.emgTST[channel]
+            del self.emgMVCTST[channel]
+            self.Channels.remove(channel)
 
     # remove a list of channels
     def removeChannels(self, channels):
@@ -353,15 +353,24 @@ class emg:
 
     # rename channel from old to new, keep data the same
     def renameChannel(self, old, new):
-        self.emgTST.renameChannel(old, new)
-        self.emgMVCTST.renameChannel(old, new)
+        if old in self.Channels:
+            self.emgTST.renameChannel(old, new)
+            self.emgMVCTST.renameChannel(old, new)
+            # rename channel name
+            self.Channels[self.Channels.index(old)] = new
 
     # set the name of the sync up channel of emg
-    def setSyncChannel(self, chan):
+    def setControlSignal(self, chan):
         if chan not in self.Channels:
             return -1
         
-        self.syncChannel = chan
+        self.controlSignals.add(chan)
+
+    def removeControlSignal(self, chan):
+        if chan not in self.Channels:
+            return -1
+        
+        self.controlSignals.remove(chan)
 
     # set EMG file path
     def setEMGFile(self, f):
@@ -522,7 +531,7 @@ class emg:
     # process EMG and MVC using configure file
     def processWithConfigure(self):
         for chan in self.Channels:
-            if chan == self.syncChannel:
+            if chan in self.controlSignals:
                 continue
 
             for step in range(0, self.processCFG.size()):

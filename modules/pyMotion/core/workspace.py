@@ -5,7 +5,7 @@ from .report import *
 from .freq_analysis import *
 from .person import *
 from .timeSeriesTable import *
-from thefuzz import fuzz
+from .fuzzMatch import *
 
 '''
 Workspace maintained a set of people with data
@@ -50,14 +50,16 @@ class workspace:
         
         # data of participants, hash:profile
         self.profileList = {}
-        
-        
 
         # list of saved emg config
         self.saved_emgconfig = {}
 
-        # fuzzy match for channels and mvc file name
-        self.fuzzforChanAndMVC = {}
+        # fuzzy match for matching strings
+        self.fuzzs = {}
+        # name match for mvc_file_name -> channel
+        self.fuzzs['mvc_file_to_channel'] = fuzzMatch()
+        # name match for channel name -> joint
+        self.fuzzs['chan_to_joint'] = fuzzMatch()
 
         # report - EMG config
         self.reportemgconfig = self.reportEMGConfig()
@@ -174,33 +176,14 @@ class workspace:
     def loadWorkSpace(self):
         return
     
-    def mvcFuzzAddDicts(self, dicts):
-        for key, val in dicts.items():
-            if key in self.fuzzforChanAndMVC:
-                self.fuzzforChanAndMVC[key].append(val)
-            else:
-                self.fuzzforChanAndMVC[key] = [val]
+    def addChanToMVCFileMap(self, channel, mvc_file_name):
+        self.fuzzs['mvc_file_to_channel'].addPair(channel, mvc_file_name)
 
-    # returned max possibile file
-    # lower_bound: remove item which possiblity is lower than low_bound
-    # return:  (matched_files_with_same_possibility, possibility)
-    def mvcFuzzCheckFiles(self, chan, files, lower_bound=0):
-        if chan not in self.fuzzforChanAndMVC:
-            # if not in fuzz map, try to look for chan in file name
-            candidate_token = [chan]
-        else:
-            candidate_token = self.fuzzforChanAndMVC[chan]
-        
-        matched = None
-        max_p = 0
-        for f in files:
-            for c in candidate_token:
-                p = fuzz.partial_ratio(f, c)
-                if p >= lower_bound:
-                    if p > max_p:
-                        max_p = p
-                        matched = [f]
-                    elif p == max_p:
-                        matched.append(f)
+    def matchChanToMVCFile(self, channel, mvc_file_names, lower_bound = 0):
+        return self.fuzzs['mvc_file_to_channel'].match(channel, mvc_file_names, lower_bound)
+    
+    def addChanToJointMap(self, channel, joint):
+        self.fuzzs['mvc_file_to_channel'].addPair(channel, joint)
 
-        return matched, max_p
+    def matchChanToJoint(self, channel, joints, lower_bound = 0):
+        return self.fuzzs['mvc_file_to_channel'].match(channel, joints, lower_bound)

@@ -5,21 +5,7 @@ pacs = c("R.matlab","stringr","ggplot2","plotly","shinycssloaders",
 lapply(pacs, require, character.only = TRUE)
 
 
-groupA_names <- list.files("data/Group_A", pattern="*.xml", full.names=TRUE)
-groupA <- lapply(groupA_names, xmlToList)
-
-for(i in 1:length(groupA)){
-  names(groupA)[i] = groupA[[i]]$Person$name
-}
-
-
-# Time domain parameters names
-time_domain_para = names(groupA$ABC1$emg$statistic)[1:13]
-freq_domain_para = names(groupA$ABC1$emg$statistic)[14:20]
-advanced = names(groupA$ABC1$emg$timeSeriesTable$channels)
-
-domain = c("time_domain_para","freq_domain_para","advanced")
-
+# Define custom theme
 accmovtheme <- create_theme(
   bs4dash_vars(
     navbar_light_color = "#bec5cb",
@@ -44,140 +30,76 @@ accmovtheme <- create_theme(
   bs4dash_color(gray_900 = "#FFF", white = "#272c30")
 )
 
-convertMenuItem <- function(mi,tabName) {
-  mi$children[[1]]$attribs['data-toggle']="tab"
-  mi$children[[1]]$attribs['data-value'] = tabName
+# Convert Menu Item function
+convertMenuItem <- function(mi, tabName) {
+  mi$children[[1]]$attribs['data-toggle'] <- "tab"
+  mi$children[[1]]$attribs['data-value'] <- tabName
   mi
 }
 
-ui <- dashboardPage(  skin = "black",
-                                          header = dashboardHeader(title = "Grouping"),
-                                          
-                                          
-
-                                          
-                     sidebar = dashboardSidebar( 
-                       
-                       sidebarMenu(id = "tab", 
-                                   
-                                   menuItem("Data visulizations", tabName = "groups", icon = icon("gro")), # No icon yet
-                                   menuItem("Statistical tests", tabName = "tests", icon = icon("tst")) # No icon yet
-                                   
-                       ),
-                       uiOutput("out1"),
-                       uiOutput("testtype")
-                       
-                       ),
-                     dashboardBody(
-                        #use_theme(accmovtheme),
-                                   tags$style(type="text/css",
-                                              ".shiny-output-error { visibility: hidden; }",
-                                              ".shiny-output-error:before { visibility: hidden; }"
-                                   ),
-                                   tabItems(
-                       # First tab content
-                       tabItem(tabName = "groups",
-                               fluidRow(
-                                 box(title = "Group A",
-                                     pickerInput("filterA1", "Filter 1 (demo only)", choices = c("Male","Female"),
-                                                 selected = "Male"),
-                                     pickerInput("filterA2", "Add by ID", choices = c(names(groupA)),
-                                                 selected = c("ABC1","ABC2","ABC3","ABC4"),
-                                                 multiple = TRUE),
-                                     collapsible = TRUE),
-                                 
-                                 box(
-                                   title = "Group B",
-                                   pickerInput("filterB1", "Filter 1 (demo only)", choices = c("Male","Female"),
-                                               selected = "Female"),
-                                   pickerInput("filterB2", "Add by ID", choices = c(names(groupA)),
-                                               selected = c("ABC1","ABC2","ABC3","ABC4"),
-                                               multiple = TRUE),
-                                   collapsible = TRUE
-                                 ),
-                                 tabBox(
-                                   height = 500,width = 12,
-                                     tabPanel("Figures",
-                                       uiOutput("uiplot1"),
-                                       DT::dataTableOutput("DTtable1")%>% withSpinner(color="orange"))
-                                     )
-                                 
-                               )
-                       ),
-                       
-                       # Second tab content
-                       tabItem(tabName = "tests",
-                               fluidRow(
-                                 box(title = "Group 1",
-                                     pickerInput("filter11", "Filter 1 (demo only)", choices = c("Male","Female"),
-                                                 selected = "Male"),
-                                     pickerInput("filter12", "Add by ID", choices = c(names(groupA)),
-                                                 selected = NULL,
-                                                 multiple = TRUE),
-                                     collapsible = TRUE,
-                                     collapsed = T),
-                                 box(
-                                   title = "Group 2",
-                                   pickerInput("filter21", "Filter 1 (demo only)", choices = c("Male","Female"),
-                                               selected = "Female"),
-                                   pickerInput("filter22", "Add by ID", choices = c(names(groupA)),
-                                               selected = NULL,
-                                               multiple = TRUE),
-                                   collapsible = TRUE,
-                                   collapsed = T
-                                 ),
-                                 box(
-                                   title = "Group 3",
-                                   pickerInput("filter31", "Filter 1 (demo only)", choices = c("Male","Female"),
-                                               selected = "Female"),
-                                   pickerInput("filter32", "Add by ID", choices = c(names(groupA)),
-                                               selected = NULL,
-                                               multiple = TRUE),
-                                   collapsible = TRUE,
-                                   collapsed = T
-                                 ),
-                                 box(
-                                   title = "Group 4",
-                                   pickerInput("filter41", "Filter 1 (demo only)", choices = c("Male","Female"),
-                                               selected = "Female"),
-                                   pickerInput("filter42", "Add by ID", choices = c(names(groupA)),
-                                               selected = NULL,
-                                               multiple = TRUE),
-                                   collapsible = TRUE,
-                                   collapsed = T
-                                 ),
-                                 box(
-                                   title = "Group 5",
-                                   pickerInput("filter51", "Filter 1 (demo only)", choices = c("Male","Female"),
-                                               selected = "Female"),
-                                   pickerInput("filter52", "Add by ID", choices = c(names(groupA)),
-                                               selected = NULL,
-                                               multiple = TRUE),
-                                   collapsible = TRUE,
-                                   collapsed = T
-                                 ),
-                                 box(
-                                   title = "Group 6",
-                                   pickerInput("filter61", "Filter 1 (demo only)", choices = c("Male","Female"),
-                                               selected = "Female"),
-                                   pickerInput("filter62", "Add by ID", choices = c(names(groupA)),
-                                               selected = NULL,
-                                               multiple = TRUE),
-                                   collapsible = TRUE,
-                                   collapsed = T
-                                 ),
-                                 tabBox(
-                                        height = 500,width = 12,
-                                        tabPanel("Statistical tests",
-                                                 htmlOutput("html1"),
-                                                 DT::dataTableOutput("DTtabletest1")%>% withSpinner(color="orange"))
-                                 )
-                                 
-                               )
-                       )
-                     )
-                     )           )
-
+# UI definition
+ui <- dashboardPage(
+  skin = "black",
+  header = dashboardHeader(title = "Grouping"),
+  sidebar = dashboardSidebar(
+    sidebarMenu(id = "tab",
+                menuItem("Data Visualizations", tabName = "groups", icon = icon("chart-bar")),
+                menuItem("Statistical Tests", tabName = "tests", icon = icon("flask"))
+    ),
+    uiOutput("out1"),
+    uiOutput("testtype")
+  ),
+  dashboardBody(
+    # use_theme(accmovtheme), # Uncomment to use the theme
+    tags$style(type = "text/css",
+               ".shiny-output-error { visibility: hidden; }",
+               ".shiny-output-error:before { visibility: hidden; }"
+    ),
+    tabItems(
+      tabItem(tabName = "groups",
+              fluidRow(
+                box(
+                  title = "Group A",
+                  pickerInput("filterA1", "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Male"),
+                  uiOutput("filteruiA"),
+                  collapsible = TRUE
+                ),
+                box(
+                  title = "Group B",
+                  pickerInput("filterB1", "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Female"),
+                  uiOutput("filteruiB"),
+                  collapsible = TRUE
+                ),
+                tabBox(
+                  height = 500, width = 12,
+                  tabPanel("Figures",
+                           uiOutput("uiplot1"),
+                           DT::dataTableOutput("DTtable1") %>% withSpinner(color = "orange"))
+                )
+              )
+      ),
+      tabItem(tabName = "tests",
+              fluidRow(
+                lapply(1:6, function(i) {
+                  box(
+                    title = paste("Group", i),
+                    pickerInput(paste0("filter", i, "1"), "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Female"),
+                    uiOutput(paste0("filterui", i)),
+                    collapsible = TRUE,
+                    collapsed = TRUE
+                  )
+                }),
+                tabBox(
+                  height = 500, width = 12,
+                  tabPanel("Statistical Tests",
+                           htmlOutput("html1"),
+                           DT::dataTableOutput("DTtabletest1") %>% withSpinner(color = "orange"))
+                )
+              )
+      )
+    )
+  )
+)
 
 
 

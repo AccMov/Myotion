@@ -7,13 +7,73 @@ lapply(pacs, require, character.only = TRUE)
 
 options(shiny.port = 7775)
 
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# Define a function to handle client connections
 path = NULL
 ## server
+# Helper function to process each group
+process_group <- function(group_data, group_select, para_bar, para_bar2, group_label) {
+  df_group <- data.frame(id = character(), muscle = character(), para = character(), value = numeric(), group = character(), stringsAsFactors = FALSE)
+  
+  for (id in group_select) {
+    ppi <- group_data[which(names(group_data) == id)]
+    domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
+    domain_ppi = as.numeric(base::strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
+    muscles <- names(ppi[[1]]$emg$timeSeriesTable$channels)
+
+    df_temp <- data.frame(
+      id = rep(id, length(domain_ppi)),
+      muscle = muscles,
+      para = rep(para_bar, length(domain_ppi)),
+      value = domain_ppi,
+      group = rep(group_label, length(domain_ppi)),
+      stringsAsFactors = FALSE
+    )
+    
+    if (para_bar2 != "Non") {
+      domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
+      domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
+      df_temp$value2 <- domain_ppi2
+    }
+ 
+    
+    df_group <- rbind(df_group, df_temp)
+  }
+  
+  df_group
+}
+
+# Helper function to process each group
+process_group_test <- function(group_data, group_select, para_bar, group_label) {
+  df_group <- data.frame(id = character(), muscle = character(), para = character(), value = numeric(), group = character(), stringsAsFactors = FALSE)
+  
+  for (id in group_select) {
+   
+    ppi <- group_data[which(names(group_data) == id)]
+    if (!is.null(ppi)) {
+      domain_ppi_str <- ppi[[1]]$emg$statistic[[para_bar]]
+      if (is.character(domain_ppi_str)) {
+        domain_ppi <- as.numeric(strsplit(domain_ppi_str, split = " ", fixed = TRUE)[[1]])
+        muscles <- names(ppi[[1]]$emg$timeSeriesTable$channels)
+        
+        df_temp <- data.frame(
+          id = rep(id, length(domain_ppi)),
+          muscle = muscles,
+          para = rep(para_bar, length(domain_ppi)),
+          value = domain_ppi,
+          group = rep(group_label, length(domain_ppi)),
+          stringsAsFactors = FALSE
+        )
+        
+        df_group <- rbind(df_group, df_temp)
+      }
+    }
+  }
+  
+  df_group
+}
+
+
 server <- function(input, output) {
-  
-  
+
   handle_client <- function(msg, client, port) {
     #cat("Client:", client, ":", port, " connected.\n")
     # Read data from the client
@@ -23,7 +83,6 @@ server <- function(input, output) {
     path <<- msg
     return(0)
   }
-  
   
   svSocket::startSocketServer(
     port = 7776,
@@ -40,7 +99,7 @@ server <- function(input, output) {
   
   ## functions
   #a =while (TRUE) {}
-  groupA_names <- list.files(path, pattern="*.xml", full.names=TRUE)
+  groupA_names <- list.files(path, pattern="*.rpt", full.names=TRUE)
   groupA <- lapply(groupA_names, xmlToList)
   
   for(i in 1:length(groupA)){
@@ -48,64 +107,29 @@ server <- function(input, output) {
   }
   
   # read data
-  muscle_name = c(names(groupA$ABC1$emg$timeSeriesTable$channels))
+  muscle_name = c(names(groupA[[1]]$emg$timeSeriesTable$channels))
   
   # Time domain parameters names
-  time_domain_para = names(groupA$ABC1$emg$statistic)[1:13]
-  freq_domain_para = names(groupA$ABC1$emg$statistic)[14:20]
-  advanced = names(groupA$ABC1$emg$timeSeriesTable$channels)
+  time_domain_para = names(groupA[[1]]$emg$statistic)[1:13]
+  freq_domain_para = names(groupA[[1]]$emg$statistic)[14:20]
+  advanced = names(groupA[[1]]$emg$timeSeriesTable$channels)
   domain_list = list(time_domain_para,freq_domain_para)
   
   domain = c("time_domain_para","freq_domain_para","advanced")
-  
-  
-  
-  
+
   # Initial
   
   domain_select = "time_domain_para"
   para_bar = time_domain_para[3]
   para_bar2 = "Non"
-  group_A_select = c("ABC1","ABC2","ABC3","ABC4")
-  group_B_select = c("ABC1","ABC2","ABC3","ABC4")
-  
+  group_A_select = names(groupA)[1]
+  group_B_select = tail(names(groupA),1)
   
   ## Draw data
-  
-  df_draw = data.frame(id = c(), muscle = c(), para = c(), value = c(), group = c())
-  for (i in 1:length(group_A_select)){
-    ppi = groupA[which(names(groupA) == group_A_select[i])]
-    domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-    domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-    df_bar_ppi = data.frame(id = rep(group_A_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                            muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                            para = rep(para_bar, length(domain_ppi)),
-                            value = domain_ppi,
-                            group = rep("GroupA", length(domain_ppi)))
-    if(para_bar2!="Non"){
-      domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
-      domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
-      df_bar_ppi$value2 = domain_ppi2
-    }
-    df_draw = rbind(df_draw, df_bar_ppi)
-  }
-  
-  for (i in 1:length(group_B_select)){
-    ppi = groupA[which(names(groupA) == group_B_select[i])]
-    domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-    domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-    df_bar_ppi = data.frame(id = rep(group_B_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                            muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                            para = rep(para_bar, length(domain_ppi)),
-                            value = domain_ppi,
-                            group = rep("GroupB", length(domain_ppi)))
-    if(para_bar2!="Non"){
-      domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
-      domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
-      df_bar_ppi$value2 = domain_ppi2
-    }
-    df_draw = rbind(df_draw, df_bar_ppi)
-  }
+  df_A <- process_group(groupA, group_A_select, para_bar, para_bar2, "GroupA")
+  df_B <- process_group(groupA, group_B_select, para_bar, para_bar2, "GroupB")
+  # Combine data frames
+  df_draw <- rbind(df_A, df_B)
   
   observeEvent(path!=oldpath, {
     oldpath <<- path
@@ -118,12 +142,12 @@ server <- function(input, output) {
     }
     
     # read data
-    muscle_name = c(names(groupA$ABC1$emg$timeSeriesTable$channels))
+    muscle_name = c(names(groupA[[1]]$emg$timeSeriesTable$channels))
     
     # Time domain parameters names
-    time_domain_para = names(groupA$ABC1$emg$statistic)[1:13]
-    freq_domain_para = names(groupA$ABC1$emg$statistic)[14:20]
-    advanced = names(groupA$ABC1$emg$timeSeriesTable$channels)
+    time_domain_para = names(groupA[[1]]$emg$statistic)[1:13]
+    freq_domain_para = names(groupA[[1]]$emg$statistic)[14:20]
+    advanced = names(groupA[[1]]$emg$timeSeriesTable$channels)
     domain_list = list(time_domain_para,freq_domain_para)
     
     
@@ -140,27 +164,67 @@ server <- function(input, output) {
     }
     
     # read data
-    muscle_name = c(names(groupA$ABC1$emg$timeSeriesTable$channels))
+    muscle_name = c(names(groupA[[1]]$emg$timeSeriesTable$channels))
     
     # Time domain parameters names
-    time_domain_para = names(groupA$ABC1$emg$statistic)[1:13]
-    freq_domain_para = names(groupA$ABC1$emg$statistic)[14:20]
-    advanced = names(groupA$ABC1$emg$timeSeriesTable$channels)
+    time_domain_para = names(groupA[[1]]$emg$statistic)[1:13]
+    freq_domain_para = names(groupA[[1]]$emg$statistic)[14:20]
+    advanced = names(groupA[[1]]$emg$timeSeriesTable$channels)
     domain_list = list(time_domain_para,freq_domain_para)
   })
 
+  
+  output$filteruiA <- renderUI({
+    pickerInput("filterA2", "Add by ID", choices = c(names(groupA)),
+                selected = c(),
+                multiple = TRUE)
+})
+  
+  output$filteruiB <- renderUI({
+    pickerInput("filterB2", "Add by ID", choices = c(names(groupA)),
+                selected = c(),
+                multiple = TRUE)
+    })
+  
+  output$filterui1 <- renderUI({
+    pickerInput("filter12", "Add by ID", choices = c(names(groupA)),
+                selected = NULL,
+                multiple = TRUE)})
+  
+  output$filterui2 <- renderUI({
+    pickerInput("filter22", "Add by ID", choices = c(names(groupA)),
+                selected = NULL,
+                multiple = TRUE)})
+  
+  output$filterui3 <- renderUI({
+    pickerInput("filter32", "Add by ID", choices = c(names(groupA)),
+                selected = NULL,
+                multiple = TRUE)})
+  
+  output$filterui4 <- renderUI({
+    pickerInput("filter42", "Add by ID", choices = c(names(groupA)),
+                selected = NULL,
+                multiple = TRUE)})
+  
+  output$filterui5 <- renderUI({
+    pickerInput("filter52", "Add by ID", choices = c(names(groupA)),
+                selected = NULL,
+                multiple = TRUE)})
+  
+  output$filterui6 <- renderUI({
+    pickerInput("filter62", "Add by ID", choices = c(names(groupA)),
+                selected = NULL,
+                multiple = TRUE)})
+    
   output$out1 <- renderUI({
 
     if (input$tab == "tests") {
-
       
         dyn_ui <- list(selectInput("testselect2", "Select domain ", choices = domain,
                                    selected = "time_domain_para"),
                        uiOutput('testuiselect1'),
                        pickerInput("testselect4", "Select muscles", choices = muscle_name,
-                                     selected = muscle_name[1], multiple = F))
-        
-      
+                                     selected = muscle_name[1], multiple = F))      
     } 
     if (input$tab == "groups") {
       
@@ -172,8 +236,7 @@ server <- function(input, output) {
                        actionButton("goButton", "Generate figure"),
                        tabsetPanel(id = "tabset_id1", selected = "t1", 
                                    tabPanel("Advanced options",  value = "t3",
-                                            uiOutput("plotoption")))
-                       
+                                            uiOutput("plotoption")))                 
       )
     }
     return(dyn_ui)
@@ -253,16 +316,9 @@ server <- function(input, output) {
   })
   
 
-  
-
-  
-  
-  
   output$uiplot1 = renderUI({
       plotlyOutput("plotly_A")  %>% withSpinner(color="orange")
   })
-  
-
   
   output$plotoption = renderUI({
 
@@ -276,11 +332,8 @@ server <- function(input, output) {
         sliderInput("xylabelsize", "x & y label size", value = 15, min = 1, max = 80),
         sliderInput("xytextsize", "xy-axis text size", value = 10, min = 1, max = 50),
         selectInput("plotcolor","Color palettes", choices = c("Regular","Black & White","Color blind friendly"), selected = "Regular")
-
       )
-    }
-
-    
+    } 
     return(figure_option_ui)
   })
   
@@ -291,159 +344,49 @@ server <- function(input, output) {
     para_bar2 = input$select22
     group_A_select = input$filterA2 
     group_B_select = input$filterB2
-    
-    
+
     ## Draw data
-    
-    df_draw = data.frame(id = c(), muscle = c(), para = c(), value = c(), group = c())
-    for (i in 1:length(group_A_select)){
-      ppi = groupA[which(names(groupA) == group_A_select[i])]
-      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-      df_bar_ppi = data.frame(id = rep(group_A_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                              para = rep(para_bar, length(domain_ppi)),
-                              value = domain_ppi,
-                              group = rep("GroupA", length(domain_ppi)))
-      if(para_bar2!="Non"){
-        domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
-        domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
-        df_bar_ppi$value2 = domain_ppi2
-      }
-      df_draw = rbind(df_draw, df_bar_ppi)
-      
-    }
-    
-    for (i in 1:length(group_B_select)){
-      ppi = groupA[which(names(groupA) == group_B_select[i])]
-      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-      df_bar_ppi = data.frame(id = rep(group_B_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                              para = rep(para_bar, length(domain_ppi)),
-                              value = domain_ppi,
-                              group = rep("GroupB", length(domain_ppi)))
-      if(para_bar2!="Non"){
-        domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
-        domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
-        df_bar_ppi$value2 = domain_ppi2
-      }
-      df_draw = rbind(df_draw, df_bar_ppi)
-      
-    }
-    df_draw
-    
+    df_A <- process_group(groupA, group_A_select, para_bar, para_bar2, "GroupA")
+    df_B <- process_group(groupA, group_B_select, para_bar, para_bar2, "GroupB")
+    # Combine data frames
+    df_draw <- rbind(df_A, df_B)
   })
   
+  # Reactive function
   df_draw_test <- reactive({
-    domain_select = input$testselect2
-    para_bar_seq = input$testselect3
-    para_bar2 = "Non"
-    group_1_select = input$filter12 
-    group_2_select = input$filter22
-    group_3_select = input$filter32 
-    group_4_select = input$filter42
-    group_5_select = input$filter52 
-    group_6_select = input$filter62
+    domain_select <- input$testselect2
+    para_bar_seq <- input$testselect3
+    para_bar2 <- "Non"
+    group_1_select <- input$filter12 
+    group_2_select <- input$filter22
+    group_3_select <- input$filter32 
+    group_4_select <- input$filter42
+    group_5_select <- input$filter52 
+    group_6_select <- input$filter62
     
-    ## Draw data
-    df_draw_test_all = c()
-    for(j in 1:length(para_bar_seq)){
-      para_bar = para_bar_seq[j]
-    df_draw_test = data.frame(id = c(), muscle = c(), para = c(), value = c(), group = c())
-    if(length(group_1_select)>0){for (i in 1:length(group_1_select)){
+    # Process each group for each parameter
+    df_draw_test_all <- lapply(para_bar_seq, function(para_bar) {
+      df_1 <- process_group_test(groupA, group_1_select, para_bar, "Group 1")
+      df_2 <- process_group_test(groupA, group_2_select, para_bar, "Group 2")
+      df_3 <- process_group_test(groupA, group_3_select, para_bar, "Group 3")
+      df_4 <- process_group_test(groupA, group_4_select, para_bar, "Group 4")
+      df_5 <- process_group_test(groupA, group_5_select, para_bar, "Group 5")
+      df_6 <- process_group_test(groupA, group_6_select, para_bar, "Group 6")
       
-      ppi = groupA[which(names(groupA) == group_1_select[i])]
-      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-      df_bar_ppi = data.frame(id = rep(group_1_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                              para = rep(para_bar, length(domain_ppi)),
-                              value = domain_ppi,
-                              group = rep("Group 1", length(domain_ppi)))
-      df_draw_test = rbind(df_draw_test, df_bar_ppi)
-      
-    }}
+      # Combine data frames for this parameter
+      df_combined <- rbind(df_1, df_2, df_3, df_4, df_5, df_6)
+      df_combined
+    })
     
-    if(length(group_2_select)>0){for (i in 1:length(group_2_select)){
-      
-      ppi = groupA[which(names(groupA) == group_2_select[i])]
-      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-      df_bar_ppi = data.frame(id = rep(group_2_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                              para = rep(para_bar, length(domain_ppi)),
-                              value = domain_ppi,
-                              group = rep("Group 2", length(domain_ppi)))
-      df_draw_test = rbind(df_draw_test, df_bar_ppi)
-      
-    }}
+    # Combine all results into one data frame
+    df_draw_test_all <- do.call(rbind, df_draw_test_all)
     
-    if(length(group_3_select)>0){for (i in 1:length(group_3_select)){
-      
-      ppi = groupA[which(names(groupA) == group_3_select[i])]
-      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-      df_bar_ppi = data.frame(id = rep(group_3_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                              para = rep(para_bar, length(domain_ppi)),
-                              value = domain_ppi,
-                              group = rep("Group 3", length(domain_ppi)))
-      df_draw_test = rbind(df_draw_test, df_bar_ppi)
-      
-    }}
-    
-    if(length(group_4_select)>0){for (i in 1:length(group_4_select)){
-      
-      ppi = groupA[which(names(groupA) == group_4_select[i])]
-      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-      df_bar_ppi = data.frame(id = rep(group_4_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                              para = rep(para_bar, length(domain_ppi)),
-                              value = domain_ppi,
-                              group = rep("Group 4", length(domain_ppi)))
-      df_draw_test = rbind(df_draw_test, df_bar_ppi)
-      
-    }}
-    
-    if(length(group_5_select)>0){for (i in 1:length(group_5_select)){
-      
-      ppi = groupA[which(names(groupA) == group_5_select[i])]
-      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-      df_bar_ppi = data.frame(id = rep(group_5_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                              para = rep(para_bar, length(domain_ppi)),
-                              value = domain_ppi,
-                              group = rep("Group 5", length(domain_ppi)))
-      df_draw_test = rbind(df_draw_test, df_bar_ppi)
-      
-    }}
-    
-    if(length(group_6_select)>0){for (i in 1:length(group_6_select)){
-      
-      ppi = groupA[which(names(groupA) == group_6_select[i])]
-      domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-      domain_ppi = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-      df_bar_ppi = data.frame(id = rep(group_6_select[i], length(domain_ppi)), # fix the number of muscle to 10 for now
-                              muscle = names(ppi[[1]]$emg$timeSeriesTable$channels),
-                              para = rep(para_bar, length(domain_ppi)),
-                              value = domain_ppi,
-                              group = rep("Group 6", length(domain_ppi)))
-      df_draw_test = rbind(df_draw_test, df_bar_ppi)
-      
-    }}
-    df_draw_test_all = rbind(df_draw_test_all, df_draw_test)
+    # Filter by selected muscle if the data frame is not empty
+    if (nrow(df_draw_test_all) > 0) {
+      df_draw_test_all <- df_draw_test_all %>% filter(muscle == input$testselect4)
     }
     
-    df_draw_test = df_draw_test_all
-  
-    if(dim(df_draw_test)[1]>0){
-      df_draw_test = df_draw_test %>% filter(muscle == input$testselect4)
-    }
-    
-    df_draw_test
+    df_draw_test_all
   })
   
   df_draw_f <- reactive({
@@ -499,8 +442,6 @@ server <- function(input, output) {
     
   })
 
-
-
   output$plotly_A = renderPlotly({
     input$goButton
     isolate({
@@ -509,7 +450,6 @@ server <- function(input, output) {
     }else{
       single_plot = input$singleplot
     }
-
 
     ## Draw plot
     if(input$select3 == "Bar chart"){
@@ -605,8 +545,7 @@ server <- function(input, output) {
           fig = df_box %>%
             group_by(group) %>%
             do(p=plot_ly(., x = ~muscle, y = ~value, color = ~ group, type = "box", colors = c("#F8766D","#00BFC4")))
-        }
-        
+        }     
         
         fig = fig %>%
           subplot(nrows = 1, shareX = TRUE, shareY = TRUE)%>%
@@ -619,10 +558,7 @@ server <- function(input, output) {
                  xaxis2 = list(title = input$x_input,titlefont = list(size = input$xylabelsize), tickfont = list(size = input$xytextsize)),
                  yaxis2 = list(title = input$y_input,titlefont = list(size = input$xylabelsize), tickfont = list(size = input$xytextsize)))
 
-      }
-      
-      
-      
+      }  
       fig
     } else if(input$select3 == "Scatter plot"){
       df_scat = df_draw()
@@ -672,16 +608,12 @@ server <- function(input, output) {
       } else if(input$plotcolor == "Color blind friendly"){
         scat_plot = scat_plot + scale_color_viridis(discrete = T)
       } else if(input$plotcolor == "Regular"){
-        scat_plot = scat_plot + scale_color_brewer(palette = "RdBu")
-      }
-      
-      
+        scat_plot = scat_plot 
+      }   
       ggplotly(scat_plot)%>%
         layout(legend = list(
           orientation = "h", xanchor = "center", x = 0.5, y= 1
         ))
-      
-      
     } 
     else if(input$select3 == "Density plot"){
       df_dens = df_draw()
@@ -710,8 +642,7 @@ server <- function(input, output) {
       } else if(input$plotcolor == "Regular"){
         dens_plot = dens_plot 
       }
-      
-      
+
       ggplotly(dens_plot)
     }
     else if(input$select3 == "Functional curve"){
@@ -739,32 +670,7 @@ server <- function(input, output) {
     } })
   })
  
-  
-  #output$plot_A = renderPlot({
-  #  df_dens = df_draw()
-  #  
-  #  dens_plot = ggplot(df_dens, aes(x = value, y = muscle, fill = group,color = group)) + 
-  #    geom_density_ridges( alpha = 0.5) + 
-  #    facet_wrap(~ group, scales = "free_x")+
-  #    theme(panel.spacing.x = unit(0, "mm")) + theme_tufte()+
-  #    theme(text = element_text(size = 20),
-  #          legend.position = "none") 
-    
-  #  dens_plot
-  #  dens_plot = ggplot(df_dens, aes(x = value, fill = group,color = group)) + 
-  #    geom_density( alpha = 0.5) + 
-  #    facet_wrap(~ group, scales = "free_x")+
-  #    theme(panel.spacing.x = unit(0, "mm")) + theme_tufte()+
-  #    theme(text = element_text(size = 20),
-  #          legend.position = "none") 
-    
-  #  dens_plot
-    
-    
-  # })
-  
   output$DTtable1 <- DT::renderDataTable({
-    
     ## Draw plot
     if(input$select3 == "Bar chart"){
       dt_table = df_draw() %>% dplyr::group_by(group, muscle) %>%
@@ -819,7 +725,6 @@ server <- function(input, output) {
     
   })
   
-  
   output$DTtabletest1 <- DT::renderDataTable({
     dt_table = df_draw_test()
     if(dim(dt_table)[1]>0){
@@ -840,7 +745,6 @@ server <- function(input, output) {
     
   })
   
-
   output$html1 <- renderUI({
     dt_test = df_draw_test()
     if(length(unique(dt_test$group))>=2){
@@ -873,10 +777,8 @@ server <- function(input, output) {
       } else {
         HTML(
           "<font size= 50> Please fill in at least two groups to perform statistical tests </font>"
-        )
-      
+        )    
     }
-    
   })
-  
 }
+

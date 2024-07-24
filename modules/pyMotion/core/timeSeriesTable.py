@@ -82,8 +82,12 @@ class timeSeriesTable:
     def __getattr__(self, key):
         if key in self.metadata:
             return self.metadata[key]
+        elif key == 'channels':
+            return self.metadata['labels']
 
     # iterator
+    # for c in timeSeriesTable:
+    #   c[0] = ...
     def __iter__(self):
         self.iter = 0
         return self
@@ -119,6 +123,12 @@ class timeSeriesTable:
         if old in self.labels:
             self.data[new] = self.data.pop(old)
             self.labels[self.labels.index(old)] = new
+
+    # remove channel
+    def removeChannel(self, chan):
+        if chan in self.labels:
+            self.data.pop(chan)
+            del self.labels[self.labels.index(chan)]
             
     # check if has channel
     def hasChannel(self, chan):

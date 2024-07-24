@@ -394,7 +394,7 @@ class timeSeriesTable:
     def medFreq(self, key : str):
         #https://luscinia.sourceforge.net/page26/page36/page36.html
         freq, val = self.fft(key)
-        return freq[np.searchsorted(np.cumsum(val), np.sum(val)/2, side='right')]
+        return freq[min(len(freq)-1, np.searchsorted(np.cumsum(val), np.sum(val)/2, side='right'))]
     @multimethod
     def medFreq(self):
         return [self.medFreq(key) for key in self.labels]

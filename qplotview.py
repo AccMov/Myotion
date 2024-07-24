@@ -15,17 +15,19 @@ from PySide6.QtWidgets import (
     QTreeWidget, QVBoxLayout, QWidget, QTreeView)
 import math
 
-from PySide6.QtWidgets import (QVBoxLayout, QWidget)
+from PySide6.QtWidgets import QVBoxLayout, QWidget, QStackedWidget
 import pandas as pd
-#from modules.pyMotion import logger as logger
+
+# from modules.pyMotion import logger as logger
 
 # set max points
 PLOTY_MAX_POINTS = -1
 # url scheme name
-URL_SCHEME = 'local'
+URL_SCHEME = "local"
 # axis label
-X_LABEL = 'Time(s)'
-Y_LABEL = 'Magnitude'
+X_LABEL = "Time(s)"
+Y_LABEL = "Magnitude"
+
 
 # html load handler with custom scheme
 class UrlSchemeHandler(QWebEngineUrlSchemeHandler):
@@ -37,11 +39,12 @@ class UrlSchemeHandler(QWebEngineUrlSchemeHandler):
         self.data = str(data).encode()
 
     def requestStarted(self, job):
-        mime = QByteArray(b'text/html')
+        mime = QByteArray(b"text/html")
         buffer = QBuffer(job)
         buffer.open(QIODevice.OpenModeFlag.WriteOnly)
         buffer.write(self.data)
         job.reply(mime, buffer)
+
 
 # Plot timerSeriesTable using plotly
 class QPlotView(QWebEngineView):
@@ -55,50 +58,52 @@ class QPlotView(QWebEngineView):
 
         # install handler
         self.schemeHandler = UrlSchemeHandler(self)
-        self.schemeHandler.setHtml('<html><body></body></html>')
+        self.schemeHandler.setHtml("<html><body></body></html>")
         self.profile.installUrlSchemeHandler(
-            bytes(URL_SCHEME, 'ascii'), self.schemeHandler)
+            bytes(URL_SCHEME, "ascii"), self.schemeHandler
+        )
 
         # create new page
         self.page = QWebEnginePage(self.profile, parent)
         self.setPage(self.page)
 
         # set URL
-        self.url = QUrl('any_url_works_to_trigger_handler')
+        self.url = QUrl("any_url_works_to_trigger_handler")
         self.url.setScheme(URL_SCHEME)
         self.setUrl(self.url)
 
     # style setting
-    def update_layout(self, y_label = Y_LABEL):
+    def update_layout(self, y_label=Y_LABEL):
         # set label to be on the bottom of the fig
-        self.fig.update_layout(legend=dict(yanchor='bottom', xanchor='center', y=-0.5, x=0.5, orientation='h'))
+        self.fig.update_layout(
+            legend=dict(
+                yanchor="bottom", xanchor="center", y=-0.5, x=0.5, orientation="h"
+            )
+        )
         self.fig.update_layout(yaxis_title=y_label)
 
     # bar, plot by timeSeriesTable
-    def bar(self, tst, channel, title='',xlabel=X_LABEL, ylabel=Y_LABEL, color=[]):
+    def bar(self, tst, channel, title="", xlabel=X_LABEL, ylabel=Y_LABEL, color=[]):
         chans = []
         if type(channel) is not list:
             chans = [channel]
 
-        for c in chans:    
+        for c in chans:
             if not tst.hasChannel(c):
                 logger.error("channel {} not exist".format(c))
                 return -1
-            
+
         df = tst.toPandasFrame()
         df[xlabel] = tst.getLinspace()
         df = df[:PLOTY_MAX_POINTS]
-        self.fig = px.bar(df,
-                     x = xlabel,
-                     y = chans,
-                     barmode="relative",
-                     title = title,
-                     markers = True)
+        self.fig = px.bar(
+            df, x=xlabel, y=chans, barmode="relative", title=title, markers=True
+        )
         self.update_layout(ylabel)
         return 0
-        
+
     # bar, plot by list
-    def bar(self, x_, y_, channel, title='', xlabel=X_LABEL, ylabel=Y_LABEL, color=[]):
+    def bar(self, x_, y_, channel, title="", xlabel=X_LABEL, ylabel=Y_LABEL, color=[]):
         chans = []
         data = []
         # type and sanity check
@@ -107,7 +112,7 @@ class QPlotView(QWebEngineView):
         else:
             chans = channel
         if len(y_) == 0:
-            logger.error('data y is empty')
+            logger.error("data y is empty")
             return -1
         if type(y_[0]) is list:
             n = len(y_[0])
@@ -116,12 +121,12 @@ class QPlotView(QWebEngineView):
         else:
             n = len(y_)
             m = 1
-            data = [ y_ ]
+            data = [y_]
         if n != len(x_):
-            logger.error('x and y need to have same dimension')
+            logger.error("x and y need to have same dimension")
             return -1
         if m != len(chans):
-            logger.error('row of data and channel labels should have same dimension')
+            logger.error("row of data and channel labels should have same dimension")
             return -1
         table = {}
         for i in range(0, m):
@@ -129,40 +134,32 @@ class QPlotView(QWebEngineView):
         df = pd.DataFrame(table)
         df[xlabel] = x_
         df = df[:PLOTY_MAX_POINTS]
-        self.fig = px.bar(df,
-                     x = xlabel,
-                     y = chans,
-                     title = title,
-                     barmode="relative")
+        self.fig = px.bar(df, x=xlabel, y=chans, title=title, barmode="relative")
         self.update_layout(ylabel)
         return 0
-        
-        
+
     # line, plot by timeSeriesTable
-    def line(self, tst, channel, title='', xlabel=X_LABEL, ylabel=Y_LABEL, color=[]):
+    def line(self, tst, channel, title="", xlabel=X_LABEL, ylabel=Y_LABEL, color=[]):
         chans = []
         if type(channel) is not list:
             chans = [channel]
 
-        for c in chans:    
+        for c in chans:
             if not tst.hasChannel(c):
                 logger.error("channel {} not exist".format(c))
                 return -1
-        
+
         df = tst.toPandasFrame()
         df[xlabel] = tst.getLinspace()
         df = df[:PLOTY_MAX_POINTS]
-        self.fig = px.line(df,
-                     x = xlabel,
-                     y = chans,
-                     title = title,
-                     markers = False,
-                     ender_mode='webgl')
+        self.fig = px.line(
+            df, x=xlabel, y=chans, title=title, markers=False, ender_mode="webgl"
+        )
         self.update_layout(ylabel)
         return 0
-    
+
     # line, plot by list
-    def line(self, x_, y_, channel, title='', xlabel=X_LABEL, ylabel=Y_LABEL, color=[]):
+    def line(self, x_, y_, channel, title="", xlabel=X_LABEL, ylabel=Y_LABEL, color=[]):
         chans = []
         data = []
         # type and sanity check
@@ -171,7 +168,7 @@ class QPlotView(QWebEngineView):
         else:
             chans = channel
         if len(y_) == 0:
-            logger.error('data y is empty')
+            logger.error("data y is empty")
             return -1
         if type(y_[0]) is list:
             n = len(y_[0])
@@ -180,12 +177,12 @@ class QPlotView(QWebEngineView):
         else:
             n = len(y_)
             m = 1
-            data = [ y_ ]
+            data = [y_]
         if n != len(x_):
-            logger.error('x and y need to have same dimension')
+            logger.error("x and y need to have same dimension")
             return -1
         if m != len(chans):
-            logger.error('row of data and channel labels should have same dimension')
+            logger.error("row of data and channel labels should have same dimension")
             return -1
         table = {}
         for i in range(0, m):
@@ -193,12 +190,9 @@ class QPlotView(QWebEngineView):
         df = pd.DataFrame(table)
         df[xlabel] = x_
         df = df[:PLOTY_MAX_POINTS]
-        self.fig = px.line(df,
-                     x = xlabel,
-                     y = chans,
-                     title = title,
-                     markers = False,
-                     render_mode='webgl')
+        self.fig = px.line(
+            df, x=xlabel, y=chans, title=title, markers=False, render_mode="webgl"
+        )
         self.update_layout(ylabel)
         return 0
 
@@ -209,19 +203,20 @@ class QPlotView(QWebEngineView):
 
         self.setUrl(self.url)
         self.update()
-    
+
     def hide(self):
-        html = '<html><body></body></html>'
+        html = "<html><body></body></html>"
         self.setHtml(html)
         self.update()
+
 
 # QPlotViews with subpages in scrollAreas
 class QPlotMultiViewSubPages(QStackedWidget):
     def __init__(self, scroll_=True, parent=None):
         self.parent = parent
         super(QPlotMultiViewSubPages, self).__init__(parent)
-        self.plots = []   # list of plots
-        self.stacked_widgets = [] # list of stacked_widget
+        self.plots = []  # list of plots
+        self.stacked_widgets = []  # list of stacked_widget
 
         self.scroll = scroll_
         self.plot_per_page = 0  # 0 means display all in on page
@@ -230,8 +225,10 @@ class QPlotMultiViewSubPages(QStackedWidget):
 
         self.repaint = True
         self.del_icon = QIcon()
-        self.del_icon.addFile(u":/icons/images/icons/cil-x.png", QSize(), QIcon.Normal, QIcon.Off)
-    
+        self.del_icon.addFile(
+            ":/icons/images/icons/cil-x.png", QSize(), QIcon.Normal, QIcon.Off
+        )
+
     def clear(self):
         for i in range(0, self.count()):
             sc = self.widget(i)
@@ -254,9 +251,9 @@ class QPlotMultiViewSubPages(QStackedWidget):
             idx = 0
             for i in range(0, self.num_page):
                 sc = QScrollArea(self)
-                sc.setStyleSheet(u"QScrollBar::handle:vertical{\n"
-    "	background-color:#595c64;\n"
-    "}")
+                sc.setStyleSheet(
+                    "QScrollBar::handle:vertical{\n" "	background-color:#595c64;\n" "}"
+                )
                 sc.setWidgetResizable(True)
                 content = QWidget()
                 content.setGeometry(QRect(0, 0, 811, 622))
@@ -275,10 +272,11 @@ class QPlotMultiViewSubPages(QStackedWidget):
                     hLayout.addWidget(self.plots[j])
                     # add delete button
                     del_btn = QPushButton()
-                    del_btn.setObjectName('{}'.format(j))
+                    del_btn.setObjectName("{}".format(j))
                     del_btn.setCursor(QCursor(Qt.PointingHandCursor))
-                    del_btn.setStyleSheet(u"background-color:rgba(0,0,0,0.8);\n"
-                    "margin:3px 2px;")
+                    del_btn.setStyleSheet(
+                        "background-color:rgba(0,0,0,0.8);\n" "margin:3px 2px;"
+                    )
                     del_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
                     del_btn.setIcon(self.del_icon)
                     del_btn.clicked.connect(self.__btnDeletePage)
@@ -289,8 +287,9 @@ class QPlotMultiViewSubPages(QStackedWidget):
                 idx += self.plot_per_page
                 # add page index
                 page_index = QLabel()
-                page_index.setStyleSheet(u"font-weight: bold;\n"
-                "font-size:16px;color:rgba(0,0,0,0.4);")
+                page_index.setStyleSheet(
+                    "font-weight: bold;\n" "font-size:16px;color:rgba(0,0,0,0.4);"
+                )
                 page_index.setText("{}/{}".format(i + 1, self.num_page))
                 vLayout.addWidget(page_index, alignment=Qt.AlignHCenter)
 
@@ -311,7 +310,7 @@ class QPlotMultiViewSubPages(QStackedWidget):
             else:
                 self.num_page = 0
         else:
-            self.num_page = math.ceil(len(self.plots)/self.plot_per_page)
+            self.num_page = math.ceil(len(self.plots) / self.plot_per_page)
 
     def append(self, plot):
         plot.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -339,10 +338,10 @@ class QPlotMultiViewSubPages(QStackedWidget):
 
     def pages(self):
         return self.num_page
-    
+
     def size(self):
         return len(self.plots)
-    
+
     def setCurrentPage(self, index):
         if index == self.currentPage:
             return
@@ -353,7 +352,7 @@ class QPlotMultiViewSubPages(QStackedWidget):
     def nextPage(self):
         if self.currentpage + 1 < self.num_page:
             self.currentpage += 1
-    
+
     def prevPage(self):
         if self.currentpage > 0:
             self.currentpage -= 1

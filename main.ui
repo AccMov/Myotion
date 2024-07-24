@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1340</width>
-    <height>795</height>
+    <width>1613</width>
+    <height>1141</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -25,7 +25,6 @@
     <font>
      <family>Segoe UI</family>
      <pointsize>10</pointsize>
-     <weight>50</weight>
      <italic>false</italic>
      <bold>false</bold>
     </font>
@@ -644,7 +643,7 @@ Button */
               </size>
              </property>
              <property name="styleSheet">
-              <string notr="true">background:url(:/images/Myotion_logo.png)</string>
+              <string notr="true">background:url(:/images_myotion/Myotion_logo.png)</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::NoFrame</enum>
@@ -666,7 +665,6 @@ Button */
               <font>
                <family>Segoe UI Semibold</family>
                <pointsize>-1</pointsize>
-               <weight>75</weight>
                <italic>false</italic>
                <bold>true</bold>
               </font>
@@ -701,7 +699,6 @@ font-weight:bold;</string>
               <font>
                <family>Segoe UI</family>
                <pointsize>-1</pointsize>
-               <weight>50</weight>
                <italic>false</italic>
                <bold>false</bold>
               </font>
@@ -792,7 +789,6 @@ font-size:10px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -858,7 +854,6 @@ font-size:10px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -895,7 +890,6 @@ font-size:10px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -932,7 +926,6 @@ font-size:10px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -969,7 +962,6 @@ font-size:10px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -1006,7 +998,6 @@ font-size:10px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -1043,7 +1034,6 @@ font-size:10px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -1107,7 +1097,6 @@ font-size:10px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -1372,7 +1361,6 @@ font-size:10px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -1409,7 +1397,6 @@ font-size:10px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>
@@ -1963,7 +1950,6 @@ margin:3px 2px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>-1</pointsize>
-                    <weight>75</weight>
                     <italic>false</italic>
                     <bold>true</bold>
                    </font>
@@ -2201,7 +2187,6 @@ padding:6px 0px;</string>
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>10</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                     <stylestrategy>PreferDefault</stylestrategy>
@@ -2350,7 +2335,7 @@ padding:6px 0px;</string>
                       <string notr="true">background: transparent;</string>
                      </property>
                      <property name="currentIndex">
-                      <number>6</number>
+                      <number>2</number>
                      </property>
                      <widget class="QWidget" name="start_page">
                       <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -2697,7 +2682,7 @@ QScrollBar::handle:vertical{
                               <rect>
                                <x>0</x>
                                <y>0</y>
-                               <width>502</width>
+                               <width>244</width>
                                <height>1200</height>
                               </rect>
                              </property>
@@ -3536,7 +3521,6 @@ border: none;</string>
                                             <font>
                                              <family>Segoe UI</family>
                                              <pointsize>10</pointsize>
-                                             <weight>50</weight>
                                              <italic>false</italic>
                                              <bold>false</bold>
                                             </font>
@@ -3788,8 +3772,8 @@ font-weight:bold;</string>
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>156</width>
-                                     <height>284</height>
+                                     <width>150</width>
+                                     <height>276</height>
                                     </rect>
                                    </property>
                                    <attribute name="label">
@@ -3867,7 +3851,6 @@ margin-left:1px;</string>
                                        <font>
                                         <family>Segoe UI</family>
                                         <pointsize>10</pointsize>
-                                        <weight>75</weight>
                                         <italic>false</italic>
                                         <bold>true</bold>
                                        </font>
@@ -3906,8 +3889,8 @@ border:1px solid rgba(0,0,0,0.1);
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>156</width>
-                                     <height>283</height>
+                                     <width>150</width>
+                                     <height>81</height>
                                     </rect>
                                    </property>
                                    <attribute name="label">
@@ -3939,7 +3922,7 @@ border:1px solid rgba(0,0,0,0.1);
                                       </property>
                                       <layout class="QVBoxLayout" name="verticalLayout_63">
                                        <property name="spacing">
-                                        <number>-1</number>
+                                        <number>6</number>
                                        </property>
                                        <property name="leftMargin">
                                         <number>0</number>
@@ -3983,7 +3966,6 @@ margin:4px 12px;</string>
                                           <font>
                                            <family>Segoe UI</family>
                                            <pointsize>10</pointsize>
-                                           <weight>75</weight>
                                            <italic>false</italic>
                                            <bold>true</bold>
                                           </font>
@@ -4025,8 +4007,8 @@ border:1px solid rgba(0,0,0,0.1);
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>156</width>
-                                     <height>285</height>
+                                     <width>121</width>
+                                     <height>271</height>
                                     </rect>
                                    </property>
                                    <property name="styleSheet">
@@ -4170,7 +4152,6 @@ margin:2px 0px;</string>
                                                 <font>
                                                  <family>Segoe UI</family>
                                                  <pointsize>-1</pointsize>
-                                                 <weight>75</weight>
                                                  <italic>false</italic>
                                                  <bold>true</bold>
                                                 </font>
@@ -4231,7 +4212,7 @@ font-size:12px;</string>
                                          </property>
                                          <layout class="QVBoxLayout" name="verticalLayout_60">
                                           <property name="spacing">
-                                           <number>-1</number>
+                                           <number>6</number>
                                           </property>
                                           <property name="leftMargin">
                                            <number>0</number>
@@ -4537,8 +4518,8 @@ font-size:12px;</string>
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>156</width>
-                                     <height>283</height>
+                                     <width>126</width>
+                                     <height>45</height>
                                     </rect>
                                    </property>
                                    <attribute name="label">
@@ -4609,8 +4590,8 @@ font-size:12px;</string>
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>156</width>
-                                     <height>283</height>
+                                     <width>92</width>
+                                     <height>174</height>
                                     </rect>
                                    </property>
                                    <attribute name="label">
@@ -4645,7 +4626,7 @@ font-size:12px;</string>
                                       </property>
                                       <layout class="QVBoxLayout" name="verticalLayout_53">
                                        <property name="spacing">
-                                        <number>-1</number>
+                                        <number>6</number>
                                        </property>
                                        <property name="leftMargin">
                                         <number>0</number>
@@ -4675,7 +4656,7 @@ font-size:12px;</string>
                                          </property>
                                          <layout class="QVBoxLayout" name="verticalLayout_68">
                                           <property name="spacing">
-                                           <number>-1</number>
+                                           <number>6</number>
                                           </property>
                                           <property name="leftMargin">
                                            <number>0</number>
@@ -4761,7 +4742,7 @@ font-weight: bold;</string>
                                          </property>
                                          <layout class="QVBoxLayout" name="verticalLayout_69">
                                           <property name="spacing">
-                                           <number>-1</number>
+                                           <number>6</number>
                                           </property>
                                           <property name="leftMargin">
                                            <number>0</number>
@@ -4907,8 +4888,8 @@ font-weight:bold;</string>
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>156</width>
-                                     <height>283</height>
+                                     <width>134</width>
+                                     <height>156</height>
                                     </rect>
                                    </property>
                                    <attribute name="label">
@@ -4943,7 +4924,7 @@ font-weight:bold;</string>
                                       </property>
                                       <layout class="QVBoxLayout" name="verticalLayout_55">
                                        <property name="spacing">
-                                        <number>-1</number>
+                                        <number>6</number>
                                        </property>
                                        <property name="leftMargin">
                                         <number>14</number>
@@ -5862,7 +5843,7 @@ color:rgba(0,0,0,0.5);
                                   </property>
                                   <layout class="QHBoxLayout" name="horizontalLayout_21">
                                    <property name="spacing">
-                                    <number>-1</number>
+                                    <number>6</number>
                                    </property>
                                    <property name="leftMargin">
                                     <number>0</number>
@@ -6069,6 +6050,15 @@ margin:3px 2px;</string>
                                           </color>
                                          </brush>
                                         </colorrole>
+                                        <colorrole role="PlaceholderText">
+                                         <brush brushstyle="SolidPattern">
+                                          <color alpha="128">
+                                           <red>221</red>
+                                           <green>221</green>
+                                           <blue>221</blue>
+                                          </color>
+                                         </brush>
+                                        </colorrole>
                                        </active>
                                        <inactive>
                                         <colorrole role="WindowText">
@@ -6125,6 +6115,15 @@ margin:3px 2px;</string>
                                           </color>
                                          </brush>
                                         </colorrole>
+                                        <colorrole role="PlaceholderText">
+                                         <brush brushstyle="SolidPattern">
+                                          <color alpha="128">
+                                           <red>221</red>
+                                           <green>221</green>
+                                           <blue>221</blue>
+                                          </color>
+                                         </brush>
+                                        </colorrole>
                                        </inactive>
                                        <disabled>
                                         <colorrole role="WindowText">
@@ -6178,6 +6177,15 @@ margin:3px 2px;</string>
                                            <red>0</red>
                                            <green>0</green>
                                            <blue>0</blue>
+                                          </color>
+                                         </brush>
+                                        </colorrole>
+                                        <colorrole role="PlaceholderText">
+                                         <brush brushstyle="SolidPattern">
+                                          <color alpha="128">
+                                           <red>221</red>
+                                           <green>221</green>
+                                           <blue>221</blue>
                                           </color>
                                          </brush>
                                         </colorrole>
@@ -6238,11 +6246,11 @@ QTableWidget::item:selected
                                      <attribute name="horizontalHeaderCascadingSectionResizes">
                                       <bool>true</bool>
                                      </attribute>
-                                     <attribute name="horizontalHeaderDefaultSectionSize">
-                                      <number>106</number>
-                                     </attribute>
                                      <attribute name="horizontalHeaderMinimumSectionSize">
                                       <number>66</number>
+                                     </attribute>
+                                     <attribute name="horizontalHeaderDefaultSectionSize">
+                                      <number>106</number>
                                      </attribute>
                                      <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
                                       <bool>true</bool>
@@ -6256,14 +6264,14 @@ QTableWidget::item:selected
                                      <attribute name="verticalHeaderCascadingSectionResizes">
                                       <bool>false</bool>
                                      </attribute>
+                                     <attribute name="verticalHeaderMinimumSectionSize">
+                                      <number>20</number>
+                                     </attribute>
                                      <attribute name="verticalHeaderDefaultSectionSize">
                                       <number>30</number>
                                      </attribute>
                                      <attribute name="verticalHeaderHighlightSections">
                                       <bool>false</bool>
-                                     </attribute>
-                                     <attribute name="verticalHeaderMinimumSectionSize">
-                                      <number>20</number>
                                      </attribute>
                                      <attribute name="verticalHeaderStretchLastSection">
                                       <bool>true</bool>
@@ -6376,9 +6384,6 @@ QTableWidget::item:selected
                                      <item row="0" column="1">
                                       <property name="text">
                                        <string>David Lee</string>
-                                      </property>
-                                      <property name="textAlignment">
-                                       <set>AlignLeading|AlignVCenter</set>
                                       </property>
                                      </item>
                                      <item row="0" column="2">
@@ -6841,6 +6846,12 @@ border:none;</string>
                                        <verstretch>9</verstretch>
                                       </sizepolicy>
                                      </property>
+                                     <property name="minimumSize">
+                                      <size>
+                                       <width>200</width>
+                                       <height>0</height>
+                                      </size>
+                                     </property>
                                      <property name="frameShape">
                                       <enum>QFrame::StyledPanel</enum>
                                      </property>
@@ -6877,13 +6888,273 @@ border:none;</string>
                             </property>
                             <layout class="QVBoxLayout" name="verticalLayout_49">
                              <item>
-                              <widget class="QProgressBar" name="progressBar">
+                              <widget class="QSlider" name="horizontalSlider_2">
                                <property name="styleSheet">
-                                <string notr="true"/>
+                                <string notr="true"> QSlider::groove:horizontal {
+                border: 1px solid #bbb;
+                background: white;
+                height: 15px;
+                border-radius: 8px;
+            }
+QSlider::sub-page:horizontal {
+     			background: qlineargradient(x1: 0, y1: 0,    x2: 0, y2: 1,
+                stop: 0 #fb6c05, stop: 1 #ea995a);
+                background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 1,
+                stop: 0 #ea995a, stop: 1 #fb6c05);
+                border: 1px solid #777;
+                height: 15px;
+                border-radius: 8px;
+				border-top-right-radius:1px;
+				border-bottom-right-radius:1px;
+            }
+  QSlider::add-page:horizontal {
+                background: #fff;
+                border: 1px solid #777;
+                height: 15px;
+                border-radius: 8px;
+				 border-top-left-radius:1px;
+				border-bottom-left-radius:1px;
+            }
+            QSlider::handle:horizontal {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #eee, stop:1 #ccc);
+                border: 1px solid #777;
+                width: 15px;
+                margin20-top: -2px;
+                margin-bottom: -2px;
+                border-radius: 8px;
+            }
+            QSlider::handle:horizontal:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #fff, stop:1 #ddd);
+                border: 1px solid #444;
+                border-radius: 8px;
+            }
+            QSlider::sub-page:horizontal:disabled {
+                background: #bbb;
+                border-color: #999;
+            }
+            QSlider::add-page:horizontal:disabled {
+                background: #eee;
+                border-color: #999;
+            }
+            QSlider::handle:horizontal:disabled {
+                background: #eee;
+                border: 1px solid #aaa;
+                border-radius: 4px;
+            }</string>
                                </property>
-                               <property name="value">
-                                <number>24</number>
+                               <property name="sliderPosition">
+                                <number>8</number>
                                </property>
+                               <property name="orientation">
+                                <enum>Qt::Horizontal</enum>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QLineEdit" name="lineEdit_13">
+                               <property name="text">
+                                <string>Current Frame: 10</string>
+                               </property>
+                               <property name="alignment">
+                                <set>Qt::AlignCenter</set>
+                               </property>
+                              </widget>
+                             </item>
+                             <item>
+                              <widget class="QFrame" name="buttongroup">
+                               <property name="frameShape">
+                                <enum>QFrame::StyledPanel</enum>
+                               </property>
+                               <property name="frameShadow">
+                                <enum>QFrame::Raised</enum>
+                               </property>
+                               <layout class="QHBoxLayout" name="horizontalLayout_47">
+                                <item>
+                                 <spacer name="horizontalSpacer_22">
+                                  <property name="orientation">
+                                   <enum>Qt::Horizontal</enum>
+                                  </property>
+                                  <property name="sizeHint" stdset="0">
+                                   <size>
+                                    <width>198</width>
+                                    <height>20</height>
+                                   </size>
+                                  </property>
+                                 </spacer>
+                                </item>
+                                <item>
+                                 <widget class="QPushButton" name="pushButton_24">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>150</width>
+                                    <height>30</height>
+                                   </size>
+                                  </property>
+                                  <property name="font">
+                                   <font>
+                                    <family>Segoe UI</family>
+                                    <pointsize>10</pointsize>
+                                    <italic>false</italic>
+                                    <bold>false</bold>
+                                   </font>
+                                  </property>
+                                  <property name="cursor">
+                                   <cursorShape>PointingHandCursor</cursorShape>
+                                  </property>
+                                  <property name="styleSheet">
+                                   <string notr="true">background-color: rgb(52, 59, 72);</string>
+                                  </property>
+                                  <property name="text">
+                                   <string>Previous</string>
+                                  </property>
+                                  <property name="icon">
+                                   <iconset theme="media-seek-backward" resource="resources.qrc">
+                                    <normaloff>:/icons/images/icons/cil-media-skip-backward.png</normaloff>:/icons/images/icons/cil-media-skip-backward.png</iconset>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="QPushButton" name="pushButton_25">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>150</width>
+                                    <height>30</height>
+                                   </size>
+                                  </property>
+                                  <property name="font">
+                                   <font>
+                                    <family>Segoe UI</family>
+                                    <pointsize>10</pointsize>
+                                    <italic>false</italic>
+                                    <bold>false</bold>
+                                   </font>
+                                  </property>
+                                  <property name="cursor">
+                                   <cursorShape>PointingHandCursor</cursorShape>
+                                  </property>
+                                  <property name="styleSheet">
+                                   <string notr="true">background-color: rgb(52, 59, 72);</string>
+                                  </property>
+                                  <property name="text">
+                                   <string>Play/Pause</string>
+                                  </property>
+                                  <property name="icon">
+                                   <iconset resource="resources.qrc">
+                                    <normaloff>:/icons/images/icons/cil-media-play.png</normaloff>:/icons/images/icons/cil-media-play.png</iconset>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="QPushButton" name="pushButton_26">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>150</width>
+                                    <height>30</height>
+                                   </size>
+                                  </property>
+                                  <property name="font">
+                                   <font>
+                                    <family>Segoe UI</family>
+                                    <pointsize>10</pointsize>
+                                    <italic>false</italic>
+                                    <bold>false</bold>
+                                   </font>
+                                  </property>
+                                  <property name="cursor">
+                                   <cursorShape>PointingHandCursor</cursorShape>
+                                  </property>
+                                  <property name="styleSheet">
+                                   <string notr="true">background-color: rgb(52, 59, 72);</string>
+                                  </property>
+                                  <property name="text">
+                                   <string>Next</string>
+                                  </property>
+                                  <property name="icon">
+                                   <iconset resource="resources.qrc">
+                                    <normaloff>:/icons/images/icons/cil-media-skip-forward.png</normaloff>:/icons/images/icons/cil-media-skip-forward.png</iconset>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="QComboBox" name="comboBox_3">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>120</width>
+                                    <height>0</height>
+                                   </size>
+                                  </property>
+                                  <property name="maximumSize">
+                                   <size>
+                                    <width>120</width>
+                                    <height>50</height>
+                                   </size>
+                                  </property>
+                                  <property name="font">
+                                   <font>
+                                    <family>Segoe UI</family>
+                                    <pointsize>10</pointsize>
+                                    <italic>false</italic>
+                                    <bold>false</bold>
+                                   </font>
+                                  </property>
+                                  <property name="autoFillBackground">
+                                   <bool>false</bool>
+                                  </property>
+                                  <property name="styleSheet">
+                                   <string notr="true">background-color: rgb(33, 37, 43);</string>
+                                  </property>
+                                  <property name="iconSize">
+                                   <size>
+                                    <width>16</width>
+                                    <height>16</height>
+                                   </size>
+                                  </property>
+                                  <property name="frame">
+                                   <bool>true</bool>
+                                  </property>
+                                  <item>
+                                   <property name="text">
+                                    <string>Increment</string>
+                                   </property>
+                                  </item>
+                                  <item>
+                                   <property name="text">
+                                    <string>1</string>
+                                   </property>
+                                  </item>
+                                  <item>
+                                   <property name="text">
+                                    <string>2</string>
+                                   </property>
+                                  </item>
+                                  <item>
+                                   <property name="text">
+                                    <string>5</string>
+                                   </property>
+                                  </item>
+                                  <item>
+                                   <property name="text">
+                                    <string>10</string>
+                                   </property>
+                                  </item>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <spacer name="horizontalSpacer_23">
+                                  <property name="orientation">
+                                   <enum>Qt::Horizontal</enum>
+                                  </property>
+                                  <property name="sizeHint" stdset="0">
+                                   <size>
+                                    <width>198</width>
+                                    <height>20</height>
+                                   </size>
+                                  </property>
+                                 </spacer>
+                                </item>
+                               </layout>
                               </widget>
                              </item>
                             </layout>
@@ -7051,7 +7322,6 @@ background-repeat: no-repeat;</string>
                                    <font>
                                     <family>Segoe UI</family>
                                     <pointsize>10</pointsize>
-                                    <weight>50</weight>
                                     <italic>false</italic>
                                     <bold>false</bold>
                                    </font>
@@ -7112,7 +7382,6 @@ background-repeat: no-repeat;</string>
                                      <font>
                                       <family>Segoe UI</family>
                                       <pointsize>10</pointsize>
-                                      <weight>50</weight>
                                       <italic>false</italic>
                                       <bold>false</bold>
                                      </font>
@@ -7247,8 +7516,8 @@ background-repeat: no-repeat;</string>
                                 <rect>
                                  <x>0</x>
                                  <y>0</y>
-                                 <width>288</width>
-                                 <height>224</height>
+                                 <width>218</width>
+                                 <height>218</height>
                                 </rect>
                                </property>
                                <property name="styleSheet">
@@ -7284,7 +7553,6 @@ background-repeat: no-repeat;</string>
                                <font>
                                 <family>Segoe UI</family>
                                 <pointsize>10</pointsize>
-                                <weight>50</weight>
                                 <italic>false</italic>
                                 <bold>false</bold>
                                </font>
@@ -7468,6 +7736,15 @@ background-repeat: no-repeat;</string>
                                  </color>
                                 </brush>
                                </colorrole>
+                               <colorrole role="PlaceholderText">
+                                <brush brushstyle="SolidPattern">
+                                 <color alpha="128">
+                                  <red>221</red>
+                                  <green>221</green>
+                                  <blue>221</blue>
+                                 </color>
+                                </brush>
+                               </colorrole>
                               </active>
                               <inactive>
                                <colorrole role="WindowText">
@@ -7524,6 +7801,15 @@ background-repeat: no-repeat;</string>
                                  </color>
                                 </brush>
                                </colorrole>
+                               <colorrole role="PlaceholderText">
+                                <brush brushstyle="SolidPattern">
+                                 <color alpha="128">
+                                  <red>221</red>
+                                  <green>221</green>
+                                  <blue>221</blue>
+                                 </color>
+                                </brush>
+                               </colorrole>
                               </inactive>
                               <disabled>
                                <colorrole role="WindowText">
@@ -7577,6 +7863,15 @@ background-repeat: no-repeat;</string>
                                   <red>0</red>
                                   <green>0</green>
                                   <blue>0</blue>
+                                 </color>
+                                </brush>
+                               </colorrole>
+                               <colorrole role="PlaceholderText">
+                                <brush brushstyle="SolidPattern">
+                                 <color alpha="128">
+                                  <red>221</red>
+                                  <green>221</green>
+                                  <blue>221</blue>
                                  </color>
                                 </brush>
                                </colorrole>
@@ -7974,7 +8269,7 @@ border:none;</string>
                                      </property>
                                      <layout class="QHBoxLayout" name="horizontalLayout_42">
                                       <property name="spacing">
-                                       <number>-1</number>
+                                       <number>6</number>
                                       </property>
                                       <property name="leftMargin">
                                        <number>0</number>
@@ -8032,7 +8327,7 @@ color:rgba(0,0,0,0.4);</string>
                                      </property>
                                      <layout class="QHBoxLayout" name="horizontalLayout_41">
                                       <property name="spacing">
-                                       <number>-1</number>
+                                       <number>6</number>
                                       </property>
                                       <property name="leftMargin">
                                        <number>0</number>
@@ -8120,7 +8415,6 @@ border:none;</string>
                                       <font>
                                        <family>Segoe UI</family>
                                        <pointsize>10</pointsize>
-                                       <weight>50</weight>
                                        <italic>false</italic>
                                        <bold>false</bold>
                                       </font>
@@ -8406,8 +8700,8 @@ margin:3px 2px;
                                     <rect>
                                      <x>0</x>
                                      <y>0</y>
-                                     <width>811</width>
-                                     <height>622</height>
+                                     <width>92</width>
+                                     <height>602</height>
                                     </rect>
                                    </property>
                                    <layout class="QVBoxLayout" name="verticalLayout_82">
@@ -8655,7 +8949,6 @@ margin:3px 2px;
                             <font>
                              <family>Segoe UI</family>
                              <pointsize>10</pointsize>
-                             <weight>50</weight>
                              <italic>false</italic>
                              <bold>false</bold>
                             </font>
@@ -8692,7 +8985,6 @@ margin:3px 2px;
                             <font>
                              <family>Segoe UI</family>
                              <pointsize>10</pointsize>
-                             <weight>50</weight>
                              <italic>false</italic>
                              <bold>false</bold>
                             </font>
@@ -8729,7 +9021,6 @@ margin:3px 2px;
                             <font>
                              <family>Segoe UI</family>
                              <pointsize>10</pointsize>
-                             <weight>50</weight>
                              <italic>false</italic>
                              <bold>false</bold>
                             </font>
@@ -8808,7 +9099,6 @@ margin:3px 2px;
                    <font>
                     <family>Segoe UI</family>
                     <pointsize>-1</pointsize>
-                    <weight>50</weight>
                     <italic>false</italic>
                     <bold>false</bold>
                    </font>

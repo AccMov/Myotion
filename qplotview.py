@@ -11,8 +11,8 @@ from PySide6.QtWebEngineCore import (QWebEngineUrlScheme,
                                      QWebEngineUrlSchemeHandler, QWebEngineUrlRequestJob,
                                      QWebEngineProfile, QWebEnginePage)
 from PySide6.QtWidgets import (
-    QStackedWidget, QTableWidget, QTableWidgetItem, QToolBox,
-    QTreeWidget, QVBoxLayout, QWidget, QTreeView)
+    QStackedWidget, QTableWidget, QTableWidgetItem, QToolBox, QSizePolicy, QHBoxLayout,
+    QTreeWidget, QVBoxLayout, QWidget, QTreeView, QScrollArea, QPushButton, QLabel)
 import math
 
 from PySide6.QtWidgets import QVBoxLayout, QWidget, QStackedWidget

@@ -35,11 +35,14 @@ class Controller:
         self.render.setController(self)
 
         self.playbar.setController(self)
-        self.playbar.slider.setRange(0,model.kinematic_frames())
+        self.playbar.slider.setRange(0, model.kinematic_frames())
+
         self.playbar.slider.valueChanged.connect(self.slider_valuechange)
         self.playbar.playbutton.clicked.connect(self.on_play_button_clicked)
         self.playbar.prevFrameButton.clicked.connect(self.on_prev_frame_button_clicked)
         self.playbar.nextFrameButton.clicked.connect(self.on_next_frame_button_clicked)
+        self.playbar.step.currentTextChanged.connect(self.on_combo_box_changed)
+        self.step = 1
         self.labeltree.itemDoubleClicked.connect(self.tree_item_select)
 
         self.timer = QTimer()
@@ -59,18 +62,26 @@ class Controller:
 
     def on_play_button_clicked(self):
         self.notify()
-    
+
     def on_prev_frame_button_clicked(self):
-        self.frame -= 1
+        self.frame -= self.step
         if self.frame < 0:
             self.frame = 0
         self.notify()
+
     def on_next_frame_button_clicked(self):
-        self.frame += 1
+        self.frame += self.step
         if self.frame >= self.model.kinematic_frames():
             self.frame = self.model.kinematic_frames() - 1
         self.notify()
-        
+
+    def on_combo_box_changed(self):
+        print(self.playbar.step.currentText())
+        if self.playbar.step.currentText() == "Increment":
+            self.step = 1
+        else:
+            self.step = int(self.playbar.step.currentText())
+
     def slider_valuechange(self, value):
         self.render.bodyrender.setFrame(value)
         self.playbar.slider.setValue(value)

@@ -1,16 +1,17 @@
 from enum import Enum
 
-from PySide6.QtGui import QMouseEvent, QPainter, QIcon
+from PySide6.QtGui import QMouseEvent, QPainter, QIcon, QAction
 from PySide6.QtWidgets import (
     QSlider,
     QPushButton,
     QStyle,
     QWidget,
-    QHBoxLayout,
     QVBoxLayout,
+    QHBoxLayout,
     QStyleOptionSlider,
     QLabel,
     QFrame,
+    QComboBox,
 )
 from PySide6.QtCore import Qt, QPoint, QRect
 
@@ -244,22 +245,26 @@ class PlayBarWidget(QWidget):
         self.playbutton.setCheckable(True)
         self.playbutton.setStyleSheet(buttonStyle)
 
-        self.prevFrameButton = QPushButton("Prev", parent)
+        self.prevFrameButton = QPushButton("Prev", self.button_group)
         self.prevFrameButton.clicked.connect(self.on_frame_button_clicked)
         self.prevFrameButton.setStyleSheet(buttonStyle)
 
         self.prevFrameButton.setIcon(QIcon(BackwardIcon))
 
-        self.nextFrameButton = QPushButton("Next", parent)
+        self.nextFrameButton = QPushButton("Next", self.button_group)
         self.nextFrameButton.clicked.connect(self.on_frame_button_clicked)
         self.nextFrameButton.setIcon(QIcon(ForwardIcon))
         self.nextFrameButton.setStyleSheet(buttonStyle)
+
+        self.step = QComboBox(self.button_group)
+        self.step.addItems(["Increment", "5", "10", "20", "50", "100"])
 
         hboxlayout = QHBoxLayout(self.button_group)
         hboxlayout.addStretch()
         hboxlayout.addWidget(self.prevFrameButton)
         hboxlayout.addWidget(self.playbutton)
         hboxlayout.addWidget(self.nextFrameButton)
+        hboxlayout.addWidget(self.step)
         hboxlayout.addStretch()
         vboxlayout.addWidget(self.slider)
         vboxlayout.addWidget(self.current_frame_label)

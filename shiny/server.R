@@ -134,7 +134,7 @@ server <- function(input, output) {
   observeEvent(path!=oldpath, {
     oldpath <<- path
     #a =while (TRUE) {}
-    groupA_names <- list.files(path, pattern="*.xml", full.names=TRUE)
+    groupA_names <- list.files(path, pattern="*.rpt", full.names=TRUE)
     groupA <- lapply(groupA_names, xmlToList)
     
     for(i in 1:length(groupA)){

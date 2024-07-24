@@ -446,10 +446,17 @@ class emg:
         self.emgTST.setname('EMG')
         # top tree
         root = xmlElement('emg')
+
+        # get a copy of emgTST, filter out control signal
+        tmpTST = self.emgTST.copy()
+        for c in tmpTST.channels:
+            if c in self.controlSignals:
+                tmpTST.removeChannel(c)
+
         # emg Time Series Data
-        root.addSubTree(self.emgTST.toXML())
+        root.addSubTree(tmpTST.toXML())
         # emg Statistical data
-        stats = emgStatistic(self.emgTST)
+        stats = emgStatistic(tmpTST)
         root.addSubTree(stats.toXML())
         # emg process configuration
         root.addSubTree(self.processCFG.toXML())

@@ -22,7 +22,7 @@ import math
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon,QPalette
+from PySide6.QtGui import QIcon, QPalette
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -60,6 +60,7 @@ os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100
 # ///////////////////////////////////////////////////////////////
 widgets = None
 
+
 # Global Constant
 # ///////////////////////////////////////////////////////////////
 class EMGAddWindow(QDialog):
@@ -78,10 +79,9 @@ class EMGAddWindow(QDialog):
         self.person = None
         self.channels = []
         self.mvcfiles = []
-        self.mvcfilesMap = {}   # mapping mvc_file -> chan
-        self.jointMap = {}      # mapping chan -> joints (short name)
-        self.isControlSignal = {} # isControlSignal[chan] = T/F
-
+        self.mvcfilesMap = {}  # mapping mvc_file -> chan
+        self.jointMap = {}  # mapping chan -> joints (short name)
+        self.isControlSignal = {}  # isControlSignal[chan] = T/F
 
         self.widgets.import_btn.clicked.connect(self.importEMGBtnClicked)
         self.widgets.lineEdit.textChanged.connect(self.updateFilterText)
@@ -113,7 +113,9 @@ class EMGAddWindow(QDialog):
             q.setFlags(q.flags() ^ Qt.ItemIsEditable)
             self.widgets.tableWidget.setItem(i, 0, q)
             # control signal checkbox
-            self.widgets.tableWidget.setCellWidget(i, 1, self.controlSignalCheckbox(chan))
+            self.widgets.tableWidget.setCellWidget(
+                i, 1, self.controlSignalCheckbox(chan)
+            )
             # drop down selection
             self.widgets.tableWidget.setCellWidget(i, 2, self.jointComboBox(chan))
             # mvc file path
@@ -127,7 +129,7 @@ class EMGAddWindow(QDialog):
         comboBox.setEditable(True)
         for j in jointName.short:
             comboBox.addItem(jointName.getConcatName(j))
-        
+
         if chan in self.jointMap:
             comboBox.setCurrentText(jointName.getConcatName(self.jointMap[chan]))
         else:
@@ -138,7 +140,7 @@ class EMGAddWindow(QDialog):
     def mvcFileDisplay(self, chan):
         comboBox = QComboBox()
         comboBox.setObjectName(chan)
-        
+
         # only display file name instead of full path
         for f in self.mvcfiles:
             comboBox.addItem(os.path.basename(f))
@@ -148,14 +150,14 @@ class EMGAddWindow(QDialog):
             comboBox.setCurrentIndex(-1)
         comboBox.currentIndexChanged.connect(self.MVCFilesChanged)
         return comboBox
-    
-    def controlSignalCheckbox(self,chan):
+
+    def controlSignalCheckbox(self, chan):
         checkbox = QCheckBox()
         checkbox.setObjectName(chan)
         checkbox.stateChanged.connect(self.controlSignalChanged)
         if chan in self.isControlSignal:
             checkbox.setChecked(self.isControlSignal[chan])
-        else:  
+        else:
             self.isControlSignal[chan] = False
             checkbox.setChecked(False)
 
@@ -163,7 +165,7 @@ class EMGAddWindow(QDialog):
         QHBox = QHBoxLayout(QWid)
         QHBox.addWidget(checkbox)
         QHBox.setAlignment(Qt.AlignCenter)
-        QHBox.setContentsMargins(0,0,0,0)
+        QHBox.setContentsMargins(0, 0, 0, 0)
         return QWid
 
     # SIGNALS AND SLOT
@@ -185,7 +187,7 @@ class EMGAddWindow(QDialog):
                 None, "error", "Selected mvc file is invalid!", QMessageBox.Ok
             )
             return
-        
+
     def controlSignalChanged(self, state):
         checkbox = self.sender()
         chan = checkbox.objectName()
@@ -195,11 +197,11 @@ class EMGAddWindow(QDialog):
             self.emg.setControlSignal(chan)
         else:
             self.emg.removeControlSignal(chan)
-    
+
     def updateFilterText(self):
         filter_str = self.widgets.lineEdit.text()
         if filter_str == "":
-            filter_str = ".*" 
+            filter_str = ".*"
 
         # check valid regex string
         try:
@@ -268,61 +270,66 @@ class EMGAddWindow(QDialog):
         filenames = [os.path.basename(f) for f in self.mvcfiles]
         for c in self.channels:
             # set only when possiblity bigger than 50%
-            files, possibility = self.workspace.matchChanToMVCFile(
+            candidate_list = self.workspace.matchChanToMVCFile(
                 c, filenames, lower_bound=50
             )
-            if files is None:
+            if len(candidate_list) == 0:
                 continue
             else:
+                file, possibility = candidate_list[0]
                 logger.info(
                     "EMG ADD MVC: selecting file {} for chan {}, possibility {}".format(
-                        files[0], c, possibility
+                        file, c, possibility
                     )
                 )
-                self.mvcfilesMap[c] = filenames.index(files[0])
+                self.mvcfilesMap[c] = filenames.index(file)
 
     def applyFuzzMatchOnJoint(self):
         for c in self.channels:
             # set only when possiblity bigger than 50%
-            joints, possibility = self.workspace.matchChanToJoint(
+            candidate_list = self.workspace.matchChanToJoint(
                 c, jointName.short, lower_bound=50
             )
-            if joints is None:
+            if len(candidate_list) == 0:
                 continue
             else:
+                joint, possibility = candidate_list[0]
                 logger.info(
                     "EMG Select Joint: selecting Joint {} for chan {}, possibility {}".format(
-                        joints[0], c, possibility
+                        joint, c, possibility
                     )
                 )
-                self.jointMap[c] = joints[0]
+                self.jointMap[c] = joint
 
     def sanity(self):
-        #check emg file is selected
+        # check emg file is selected
         if self.emg is None:
             QMessageBox.critical(None, "error", "No EMG file selected!", QMessageBox.Ok)
             return False
-        #check mvc file is complete
+        # check mvc file is complete
         if not self.emg.isMVCComplete():
             QMessageBox.critical(
                 None, "error", "MVC file not complete!", QMessageBox.Ok
             )
             return False
-        #check pariticipant name is complete
+        # check pariticipant name is complete
         name = self.widgets.lineEdit_3.text()
-        if name == '':
+        if name == "":
             QMessageBox.critical(
                 None, "error", "Name of pariticipant not set!", QMessageBox.Ok
             )
             return False
-        #check all joint names are selected
+        # check all joint names are selected
         for c in self.channels:
             if c not in self.jointMap and self.isControlSignal[c] == False:
                 QMessageBox.critical(
-                    None, "error", "Joint of channel {} not set!".format(c), QMessageBox.Ok
+                    None,
+                    "error",
+                    "Joint of channel {} not set!".format(c),
+                    QMessageBox.Ok,
                 )
                 return False
-        #check joint name is unique
+        # check joint name is unique
         used_joint = {}
         for chan, joint in self.jointMap.items():
             if joint in used_joint:
@@ -331,7 +338,9 @@ class EMGAddWindow(QDialog):
                 QMessageBox.critical(
                     None,
                     "error",
-                    "Duplicated joint name founded, please check line {} and {}".format(line1, line2),
+                    "Duplicated joint name founded, please check line {} and {}".format(
+                        line1, line2
+                    ),
                     QMessageBox.Ok,
                 )
                 return False
@@ -341,7 +350,7 @@ class EMGAddWindow(QDialog):
     def confirmBtnClicked(self):
         if not self.sanity():
             return
-        
+
         # creat person
         name = self.widgets.lineEdit_3.text()
         self.person = person(name, "N/A", "N/A")
@@ -358,7 +367,9 @@ class EMGAddWindow(QDialog):
 
         # update MVC file name matching fuzz string
         for chan, index in self.mvcfilesMap.items():
-            self.workspace.addChanToMVCFileMap(chan, os.path.basename(self.mvcfiles[index]))
+            self.workspace.addChanToMVCFileMap(
+                chan, os.path.basename(self.mvcfiles[index])
+            )
 
         for chan, joint in self.jointMap.items():
             self.workspace.addChanToJointMap(chan, joint)
@@ -514,11 +525,11 @@ class MainWindow(QMainWindow):
         self.outputBuffer = None  # buffer for single EMG process
 
         # FrequencyAnalysis State Machine
-        self.freqAnalysis = (None, None)     # (Participant, channel) 
-        self.freqAnalysisPlots = []          # plot diagram for frequency analysis
+        self.freqAnalysis = (None, None)  # (Participant, channel)
+        self.freqAnalysisPlots = []  # plot diagram for frequency analysis
         self.plotsPerPage_list = [0, 1, 3, 5, 10]  # correspond to ui combox_19 setting
 
-        #self.test()
+        # self.test()
 
     def test(self):
         self.newWorkSpace(os.getcwd(), "test")
@@ -568,7 +579,7 @@ class MainWindow(QMainWindow):
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
             self.preloadKinematicPage()
             return
-        
+
         if btnName == "btn_frequency":
             widgets.stackedWidget.setCurrentWidget(widgets.frequency_page)  # SET PAGE
             UIFunctions.resetStyle(self, btnName)
@@ -604,7 +615,7 @@ class MainWindow(QMainWindow):
         p, emgdata, kinematic = EMGAddWindow(self.workspace, self.home, 1200, 800).run()
         if p is None:
             return
-        
+
         logger.info("added participate {}".format(p.name))
 
         # add to workspace
@@ -936,18 +947,18 @@ class MainWindow(QMainWindow):
 
     def FFTPlotNextPageClicked(self):
         widgets.scrollArea_3.nextPage()
-        #widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
+        # widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
         self.updateFreqAnalysisFFTPanel()
-    
+
     def FFTPlotPrevPageClicked(self):
         widgets.scrollArea_3.prevPage()
-        #widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
-        #widgets.scrollArea_3.show()
+        # widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
+        # widgets.scrollArea_3.show()
         self.updateFreqAnalysisFFTPanel()
 
     def FFTPlotPerPageSelected(self, index):
-        #widgets.scrollArea_3.setPlotsPerPage(self.plotsPerPage_list[index])
-        #widgets.scrollArea_3.show()
+        # widgets.scrollArea_3.setPlotsPerPage(self.plotsPerPage_list[index])
+        # widgets.scrollArea_3.show()
         self.updateFreqAnalysisFFTPanel()
 
     def FFTPlotPageIndexSelected(self, index):
@@ -974,7 +985,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(w, alignment=Qt.AlignHCenter)
         w.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
         return container
-    
+
     # draw FFT
     def FreqAnalysisCreateQPlotView(self, p, channel, l, r, title):
         pv = QPlotView()
@@ -985,9 +996,9 @@ class MainWindow(QMainWindow):
         to_del = np.argwhere(v <= 1e-3)
         freq = np.delete(freq, to_del)
         v = np.delete(v, to_del)
-        #pv.bar(freq, v, channel, title=title,xlabel='Frequency', ylabel='dB')
-        #pv.show()
-        pv.line(freq, v, channel, title=title,xlabel='Frequency', ylabel='dB')
+        # pv.bar(freq, v, channel, title=title,xlabel='Frequency', ylabel='dB')
+        # pv.show()
+        pv.line(freq, v, channel, title=title, xlabel="Frequency", ylabel="dB")
         return pv
 
     # UPDATE UI EVENTS
@@ -1181,12 +1192,14 @@ class MainWindow(QMainWindow):
             treeItem.setText(0, p.name)
             widgets.frequency_participants.addTopLevelItem(treeItem)
             emg = self.workspace[p].emg
-            for c in emg.getChannels():    
+            for c in emg.getChannels():
                 treeItem2 = QTreeWidgetItem(treeItem)
-                treeItem2.setText(0, c)   # channel name
+                treeItem2.setText(0, c)  # channel name
                 treeItem.addChild(treeItem2)
         # connect slots
-        widgets.frequency_participants.itemDoubleClicked.connect(self.updateFreqAnalysisWaveformPanel)
+        widgets.frequency_participants.itemDoubleClicked.connect(
+            self.updateFreqAnalysisWaveformPanel
+        )
         widgets.frequency_participants.setHeaderItem(QTreeWidgetItem(["Participant"]))
         widgets.frequency_participants.addTopLevelItem(treeItem)
 
@@ -1199,9 +1212,11 @@ class MainWindow(QMainWindow):
         channel = item.text(column)
         p = self.workspace.findParticipant(p_name)
         x = self.workspace[p].emg.getLinspace()
-        
+
         # set state machine
-        logger.info("Frequency Analysis - selecting {} channel {}".format(p.name, channel))
+        logger.info(
+            "Frequency Analysis - selecting {} channel {}".format(p.name, channel)
+        )
         self.freqAnalysis = (p, channel)
         self.freqAnalysisPlots.clear()
 
@@ -1217,15 +1232,21 @@ class MainWindow(QMainWindow):
         # page index selector
         currentpage = widgets.scrollArea_3.currentPage()
         widgets.comboBox_20.clear()
-        widgets.comboBox_20.addItems([str(i + 1) for i in range(0, widgets.scrollArea_3.pages())])
-        
+        widgets.comboBox_20.addItems(
+            [str(i + 1) for i in range(0, widgets.scrollArea_3.pages())]
+        )
+
         widgets.scrollArea_3.setCurrentPage(currentpage)
         widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
         widgets.scrollArea_3.show()
-        logger.info("Updating FFT Analysis figure, nums_per_page: {} total page: {}, total plots:{}, current page: {}".format(
-            widgets.scrollArea_3.plotsPerPage(), widgets.scrollArea_3.pages(), widgets.scrollArea_3.size(), widgets.scrollArea_3.currentPage()
-        ))
-
+        logger.info(
+            "Updating FFT Analysis figure, nums_per_page: {} total page: {}, total plots:{}, current page: {}".format(
+                widgets.scrollArea_3.plotsPerPage(),
+                widgets.scrollArea_3.pages(),
+                widgets.scrollArea_3.size(),
+                widgets.scrollArea_3.currentPage(),
+            )
+        )
 
     # Application Logic/Slots
     # ///////////////////////////////////////////////////////////////
@@ -1305,7 +1326,12 @@ class MainWindow(QMainWindow):
         # bottom = widgets.graph_bottom
         # bottom.setModel(self.model, widgets.kinematics_label_tree)
         Controller(
-            self.model, widgets.renderWidget, widgets.playSlider, widgets.kinematic_analysis, None, widgets.kinematics_label_tree
+            self.model,
+            widgets.renderWidget,
+            widgets.playSlider,
+            widgets.kinematic_analysis,
+            None,
+            widgets.kinematics_label_tree,
         )
 
     def preloadFreqAnalysisPage(self):
@@ -1333,12 +1359,16 @@ class MainWindow(QMainWindow):
         num_plots = 1
         if widgets.lineEdit_6.text() != "":
             num_plots = int(widgets.lineEdit_6.text())
-        
+
         curr_time = left
-        step = (right - left) / num_plots 
+        step = (right - left) / num_plots
         for i in range(0, num_plots):
-            title = 'Frequency Analysis: {} s to {} s'.format(curr_time, curr_time + step)
-            newPlot = self.FreqAnalysisCreateQPlotView(p, chan, curr_time, curr_time + step, title=title)
+            title = "Frequency Analysis: {} s to {} s".format(
+                curr_time, curr_time + step
+            )
+            newPlot = self.FreqAnalysisCreateQPlotView(
+                p, chan, curr_time, curr_time + step, title=title
+            )
             self.freqAnalysisPlots.append(newPlot)
             widgets.scrollArea_3.append(newPlot)
             curr_time += step
@@ -1419,6 +1449,7 @@ class MainWindow(QMainWindow):
         # clear selectedparitipant
         self.selectedParticipants.clear()
         self.updateEMGParticipantBox()
+
 
 # setting up Url Scheme string before app starts
 # this is for qplotview setup

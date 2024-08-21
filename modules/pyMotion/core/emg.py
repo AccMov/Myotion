@@ -6,31 +6,35 @@ from enum import Enum
 from .logger import *
 import re
 
-class emgDCOffset():
-    def __init__(self):
-        self.enable = False
-    
-    def toXML(self, e):
-        e.addNode('enable', self.enable)
-        return e
 
-class emgRectification():
+class emgDCOffset:
     def __init__(self):
         self.enable = False
 
     def toXML(self, e):
-        e.addNode('enable', self.enable)
+        e.addNode("enable", self.enable)
         return e
 
-class emgNormalization():
+
+class emgRectification:
     def __init__(self):
         self.enable = False
-    
+
     def toXML(self, e):
-        e.addNode('enable', self.enable)
+        e.addNode("enable", self.enable)
         return e
 
-class emgSummary():
+
+class emgNormalization:
+    def __init__(self):
+        self.enable = False
+
+    def toXML(self, e):
+        e.addNode("enable", self.enable)
+        return e
+
+
+class emgSummary:
     def __init__(self):
         self.max = 0
         self.min = 0
@@ -43,11 +47,14 @@ class emgSummary():
         # we don't save temp calculation to config file
         return e
 
+
 class emgFilterEnum(Enum):
     LOW_PASS = 0
     BAND_PASS = 1
     MAX = 2
-class emgFilter():
+
+
+class emgFilter:
     def __init__(self):
         self.enable = False
         self.type = emgFilterEnum.LOW_PASS
@@ -56,9 +63,9 @@ class emgFilter():
         self.order = 2
 
         self.nameMap = {
-            emgFilterEnum.LOW_PASS: 'low pass filter',
-            emgFilterEnum.BAND_PASS: 'band pass filter',
-            emgFilterEnum.MAX: 'N/A',
+            emgFilterEnum.LOW_PASS: "low pass filter",
+            emgFilterEnum.BAND_PASS: "band pass filter",
+            emgFilterEnum.MAX: "N/A",
         }
 
     def setType(self, t):
@@ -67,26 +74,27 @@ class emgFilter():
             return -1
 
         self.type = t
-    
+
     def setCutOff_L(self, freq):
         self.cutoff_l = freq
 
     def setCutOff_H(self, freq):
         self.cutoff_h = freq
-    
+
     def setOrder(self, index):
         self.order = index
 
     # add nodes to xml tree
     def toXML(self, e):
-        e.addNode('type', self.nameMap[self.type])
-        e.addNode('order', str(self.order))
-        e.addNode('cutoff_l', str(self.cutoff_l))
-        e.addNode('cutoff_h', str(self.cutoff_h))
+        e.addNode("type", self.nameMap[self.type])
+        e.addNode("order", str(self.order))
+        e.addNode("cutoff_l", str(self.cutoff_l))
+        e.addNode("cutoff_h", str(self.cutoff_h))
         return e
 
     def fromXML(self, xml):
         return
+
 
 class emgActivation:
     def __init__(self):
@@ -104,14 +112,15 @@ class emgActivation:
         self.cutoff_h = freq
 
     def toXML(self, e):
-        e.addNode('threhold', str(self.threhold))
-        e.addNode('n_above', str(self.n_above))
-        e.addNode('n_below', str(self.n_below))
+        e.addNode("threhold", str(self.threhold))
+        e.addNode("n_above", str(self.n_above))
+        e.addNode("n_below", str(self.n_below))
         return e
 
     def fromXML(self, xml_element):
         return
-    
+
+
 class emgConfigureEnum(Enum):
     # name of steps
     FILTER = 0
@@ -121,7 +130,9 @@ class emgConfigureEnum(Enum):
     NORMALIZATION = 4
     SUMMARY = 5
     MAX = 6
-class emgConfigure():
+
+
+class emgConfigure:
     def __init__(self):
         # pre-loaded steps
         self.classical_steps = [
@@ -134,12 +145,12 @@ class emgConfigure():
         ]
 
         self.nameMap = {
-            emgConfigureEnum.DC_OFFSET: 'remove_dc_offset',
-            emgConfigureEnum.FULL_W_RECT: 'full_wave_rectification',
-            emgConfigureEnum.FILTER: 'filter',
-            emgConfigureEnum.NORMALIZATION: 'normalization',
-            emgConfigureEnum.ACTIVATION: 'activation',
-            emgConfigureEnum.SUMMARY: 'summary',
+            emgConfigureEnum.DC_OFFSET: "remove_dc_offset",
+            emgConfigureEnum.FULL_W_RECT: "full_wave_rectification",
+            emgConfigureEnum.FILTER: "filter",
+            emgConfigureEnum.NORMALIZATION: "normalization",
+            emgConfigureEnum.ACTIVATION: "activation",
+            emgConfigureEnum.SUMMARY: "summary",
         }
 
         # set default
@@ -153,7 +164,7 @@ class emgConfigure():
     # use step id as key to access config file
     def __getitem__(self, id):
         return self.stepConfig[id]
-    
+
     def copy(self):
         t = emgConfigure()
         t.stepConfig = self.stepConfig.copy()
@@ -168,19 +179,19 @@ class emgConfigure():
         self.step.insert(pos, idx)
 
     # remove step
-    def removeStep(self, pos):        
+    def removeStep(self, pos):
         self.step.remove(pos)
-    
+
     def getTypeInfo(self, idx):
         type_id = self.step[idx]
         return type_id, self.nameMap[type_id]
 
     def getStepStringList(self):
         return [self.nameMap[s] for s in self.step]
-    
+
     def size(self):
         return len(self.step)
-    
+
     # create a config for one step
     def initConfig(self, type):
         if type == emgConfigureEnum.FILTER:
@@ -197,7 +208,8 @@ class emgConfigure():
             return emgSummary()
         else:
             return None
-    '''
+
+    """
     <emgConfigure>
         <remove_dc_offset/>
         <filter> 
@@ -205,10 +217,11 @@ class emgConfigure():
            ...
         </filter>
     </emgConfigure>
-    '''
+    """
+
     def toXML(self):
         # top tree
-        e = xmlElement('emgConfigure')
+        e = xmlElement("emgConfigure")
         for i in range(0, len(self.step)):
             # subtree for each step
             subElement = xmlElement(self.nameMap[self.step[i]])
@@ -222,19 +235,19 @@ class emgConfigure():
 
 
 class emg:
-    def __init__(self, file=''):
-        self.emgFile = file                #file path
-        self.emgTST = None                 #emg data
-        self.emgMVCTST = None              #emg MVC data
-        self.processCFG = None             #emg data process configure
-        self.Channels = []                 #channels of emg
-        self.controlSignals = set()        #sync up channel
-        self.mvcFilesMap = {}              # channels:mvc_file_path
-        self.chanMap = {}                  # old chan name: new chan name
+    def __init__(self, file=""):
+        self.emgFile = file  # file path
+        self.emgTST = None  # emg data
+        self.emgMVCTST = None  # emg MVC data
+        self.processCFG = None  # emg data process configure
+        self.Channels = []  # channels of emg
+        self.controlSignals = set()  # sync up channel
+        self.mvcFilesMap = {}  # channels:mvc_file_path
+        self.chanMap = {}  # old chan name: new chan name
         self.isprocessdone = False
 
         # filter of channel name, regex
-        self.channel_filter = '(emg|EMG)+'
+        self.channel_filter = "(emg|EMG)+"
 
         if file != None and len(file):
             self.setEMGFile(file)
@@ -254,48 +267,48 @@ class emg:
         for old, new in self.chanMap.items():
             self.renameChannel(old, new)
         return 0
-    
+
     # applying tst to emg, used when
     # loading emg from a report
-    def load_from_report(self,tst):
+    def load_from_report(self, tst):
         self.emgTST = tst.copy()
         self.isprocessdone = True
         self.Channels = tst.labels.copy()
-    
+
     # use channel as key to access TST
     def __getitem__(self, chan):
         return self.emgTST[chan]
-    
+
     def getLinspace(self):
         return self.emgTST.getLinspace()
 
     def isC3D(self, f):
-        return f.endswith('.c3d')
-    
+        return f.endswith(".c3d")
+
     def isMAT(self, f):
-        return f.endswith('.mat')
-    
+        return f.endswith(".mat")
+
     # check if MVC TST has all channels in place
     def isMVCComplete(self):
         for c in self.Channels:
             if c not in self.controlSignals and not self.emgMVCTST.hasChannel(c):
                 return False
         return True
-    
+
     # remove old data
     def clear(self):
         self.emgTST = None
         self.emgMVCTST = None
         self.Channels.clear()
         self.mvcFilesMap.clear()
-        
+
     # return channels
     def getChannels(self):
         return self.Channels
-    
+
     def getfs(self):
         return self.emgTST.fs
-    
+
     def getTST(self):
         return self.emgTST
 
@@ -334,13 +347,13 @@ class emg:
     def setControlSignal(self, chan):
         if chan not in self.Channels:
             return -1
-        
+
         self.controlSignals.add(chan)
 
     def removeControlSignal(self, chan):
         if chan not in self.Channels:
             return -1
-        
+
         self.controlSignals.remove(chan)
 
     # set EMG file path
@@ -356,23 +369,23 @@ class emg:
                 c3d = c3dFile(f)
                 self.Channels = c3d.analog.labels
 
-                #load TST
+                # load TST
                 self.emgTST = c3d.analog.convertToTST()
 
             elif self.isMAT(f):
                 mat = matFile(f)
                 self.Channels = mat.labels
-                #load TST
+                # load TST
                 self.emgTST = mat.convertToTST()
             else:
                 logger.error("unsupported file format")
         except:
             raise Exception(logger.errstr)
-        
+
         # sanities
         assert self.Channels != None, "channels not extracted"
         assert self.emgTST != None, "emg cannot be convert to TimeSeriesTable"
-        
+
         # update MVC TST
         self.emgMVCTST = timeSeriesTable(self.emgTST.fs, self.emgTST.labels)
 
@@ -385,7 +398,7 @@ class emg:
         if channel not in self.Channels:
             logger.error("channel {} does not exists!".format(channel))
             raise Exception(logger.errstr)
-        
+
         MVCTST = None
         # open file and load TST
         try:
@@ -404,72 +417,75 @@ class emg:
         except:
             logger.error("cannot open mvc file")
             raise Exception(logger.errstr)
-        
+
         # check if targetted channel exists in f
         if channel not in MVCChannels:
             logger.error("Targetted channel not found in file")
             raise Exception(logger.errstr)
-        
+
         self.emgMVCTST[channel] = MVCTST[channel]
         self.mvcFilesMap[channel] = f
 
     def toXML(self):
-        root = xmlElement('emg')
+        root = xmlElement("emg")
         root.addNode("path", self.emgFile)
-        root.addDict('mvcPath',self.mvcFilesMap)
+        root.addDict("mvcPath", self.mvcFilesMap)
         root.addNode("controlSignals", self.controlSignals)
-        # channel name migh have spaces or invalid chars, 
+        # channel name migh have spaces or invalid chars,
         # so addDict is not applicable here
-        t = xmlElement('chanMap')
+        t = xmlElement("chanMap")
         for old, new in self.chanMap.items():
-            t.addNode("chan", new, {'name':xmlString(old)})
+            t.addNode("chan", new, {"name": xmlString(old)})
         root.addSubTree(t)
         return root
-    
+
     @staticmethod
     def fromXML(xml):
-        root = xml.find('emg')
+        root = xml.find("emg")
         if root == None:
             return None
         emg_obj = emg()
-        e = root.find('path')
+        e = root.find("path")
         if e == None:
             return None
         emg_obj.emgFile = xmlStringParse(e.text)
-        e = root.find('mvcPath')
-        if e != None:
-            for el in e:    
-                emg_obj.mvcFilesMap[el.tag] = xmlStringParse(el.text)
-        e = root.find('controlSignals')
-        if e != None:
-            emg_obj.controlSignals = xmlStringParseList(e.text)
-        e = root.find('chanMap')
+        e = root.find("mvcPath")
         if e != None:
             for el in e:
-                emg_obj.chanMap[xmlStringParse(el.attrib['name'])] = xmlStringParse(el.text)
+                emg_obj.mvcFilesMap[el.tag] = xmlStringParse(el.text)
+        e = root.find("controlSignals")
+        if e != None:
+            emg_obj.controlSignals = xmlStringParseList(e.text)
+        e = root.find("chanMap")
+        if e != None:
+            for el in e:
+                emg_obj.chanMap[xmlStringParse(el.attrib["name"])] = xmlStringParse(
+                    el.text
+                )
         return emg_obj
-        
+
     def isProcessDone(self):
         return self.isprocessdone
-    
+
     def setProcessDone(self):
         self.isprocessdone = True
 
     def startProcess(self):
         self.processCFG = emgConfigure()
-    
+
     # return EMG configure file
     def getProcessConfig(self):
         return self.processCFG
+
     # assign EMG configure file
     def setProcessConfig(self, cfg):
         self.processCFG = cfg
-    
+
     def __tryConfigStepImpl(self, tst, chan, step):
         if chan not in self.Channels:
             logger.error("Targetted channel not exist")
             raise Exception(logger.errstr)
-        
+
         if step >= self.processCFG.size():
             logger.error("Selected step out of bound")
             raise Exception(logger.errstr)
@@ -484,7 +500,9 @@ class emg:
                     if cfg.type == emgFilterEnum.LOW_PASS:
                         output = tst.lowpass(chan, cfg.cutoff_l, cfg.order)
                     elif cfg.type == emgFilterEnum.BAND_PASS:
-                        output = tst.bandpass(chan, cfg.cutoff_l, cfg.cutoff_h, cfg.order)
+                        output = tst.bandpass(
+                            chan, cfg.cutoff_l, cfg.cutoff_h, cfg.order
+                        )
                     else:
                         output = None
             elif type == emgConfigureEnum.FULL_W_RECT:
@@ -494,7 +512,9 @@ class emg:
                 if cfg.enable:
                     output = tst.removeDC(chan)
             elif type == emgConfigureEnum.ACTIVATION:
-                output = tst.threholdDetection(chan, cfg.threhold, cfg.n_above, cfg.n_below)
+                output = tst.threholdDetection(
+                    chan, cfg.threhold, cfg.n_above, cfg.n_below
+                )
             elif type == emgConfigureEnum.NORMALIZATION:
                 if cfg.enable:
                     # get max from MVCTST
@@ -510,18 +530,20 @@ class emg:
                 cfg.zeros = tst.countZeros(chan)
         except:
             output = [0] * tst.size()
-            logger.error("cannot apply configuration on chan: {}, step: {}".format(chan, tname))
+            logger.error(
+                "cannot apply configuration on chan: {}, step: {}".format(chan, tname)
+            )
         return output
-       
+
     def tryConfigStep(self, chan, step):
         return self.__tryConfigStepImpl(self.emgTST, chan, step)
-    
+
     def tryConfigStepTo(self, chan, step):
         tst = self.emgTST.copy()
         for i in range(0, step + 1):
             tst[chan] = self.__tryConfigStepImpl(tst, chan, i)
         return tst[chan]
-        
+
     # process EMG and MVC using configure file
     def processWithConfigure(self):
         for chan in self.Channels:
@@ -530,7 +552,6 @@ class emg:
 
             for step in range(0, self.processCFG.size()):
                 self.emgTST[chan] = self.__tryConfigStepImpl(self.emgTST, chan, step)
-                self.emgMVCTST[chan] = self.__tryConfigStepImpl(self.emgMVCTST, chan, step)
-
-
-        
+                self.emgMVCTST[chan] = self.__tryConfigStepImpl(
+                    self.emgMVCTST, chan, step
+                )

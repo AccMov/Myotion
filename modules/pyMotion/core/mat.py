@@ -3,7 +3,7 @@ import numpy as np
 from .logger import *
 from .timeSeriesTable import *
 
-'''
+"""
 mat data class
 
 movement_data:   input raw data from mat file
@@ -14,11 +14,21 @@ format:
  ...
  "data":
 }
-'''
+"""
+
+
 class matdata:
     def __init__(self, movement_data):
-
-        self.metadata_keys = ["type", "name", "time_units", "begin_time", "frequency", "count", "units", "data"]
+        self.metadata_keys = [
+            "type",
+            "name",
+            "time_units",
+            "begin_time",
+            "frequency",
+            "count",
+            "units",
+            "data",
+        ]
 
         self.keys = self.metadata_keys
         self.keys.append("data")
@@ -42,6 +52,7 @@ class matdata:
         elif key == "keys":
             return self.keys
 
+
 class matFile:
     def __init__(self, file):
         self.file = file
@@ -54,33 +65,33 @@ class matFile:
 
         assert len(self.keylist) > 3, "mat keylist less then 4"
 
-        #['__globals__', '__header__', '__version__', 'TABLE']
+        # ['__globals__', '__header__', '__version__', 'TABLE']
         self.raw = self.reader[self.keylist[3]]
 
         # ['info', 'movements']
-        info = self.raw['info'].tolist()
+        info = self.raw["info"].tolist()
 
         self.metadata = {
-            "create_version" : info['created_with_version'].tolist(),
-            "export_version" : info['exported_with_version'].tolist(),
-            "last_name"    : info['last_name'].tolist(),
-            "first_name"    : info['first name'].tolist(),
-            "gender"  : info['sex'].tolist(),
-            "date"    : info['measurement_date'].tolist(),
-            "record_name"    : info['record_name'].tolist(),
-            "channel_number":    0,
-            "labels":    [],
+            "create_version": info["created_with_version"].tolist(),
+            "export_version": info["exported_with_version"].tolist(),
+            "last_name": info["last_name"].tolist(),
+            "first_name": info["first name"].tolist(),
+            "gender": info["sex"].tolist(),
+            "date": info["measurement_date"].tolist(),
+            "record_name": info["record_name"].tolist(),
+            "channel_number": 0,
+            "labels": [],
         }
 
         # ['type', 'name', 'time_begin', 'time_end', sources]
-        movements = self.raw['movements'].tolist()
-   
-        assert 'sources' in movements.dtype.names, "sources is not found in movements"
-        # [ 'sources', 'signals' ]
-        sources = movements['sources'].tolist()
+        movements = self.raw["movements"].tolist()
 
-        assert 'signals' in sources.dtype.names, "signal is not found in sources"
-        signals = sources['signals'].tolist()
+        assert "sources" in movements.dtype.names, "sources is not found in movements"
+        # [ 'sources', 'signals' ]
+        sources = movements["sources"].tolist()
+
+        assert "signals" in sources.dtype.names, "signal is not found in sources"
+        signals = sources["signals"].tolist()
 
         # matdata type
         movement_datas = []
@@ -93,12 +104,12 @@ class matFile:
         assert len(movement_datas) != 0, "movement data not extracted from mat"
 
         self.movements = {
-            "type" : movements['type'].tolist(),
-            "name" : movements['name'].tolist(),
-            "time_begin"  : movements['time_begin'].tolist(),
-            "time_end"    : movements['time_end'].tolist(),
-            "source"      : sources,
-            "channels"      : movement_datas,
+            "type": movements["type"].tolist(),
+            "name": movements["name"].tolist(),
+            "time_begin": movements["time_begin"].tolist(),
+            "time_end": movements["time_end"].tolist(),
+            "source": sources,
+            "channels": movement_datas,
         }
 
         self.metadata["labels"] = [m.name for m in self.movements["channels"]]
@@ -115,18 +126,21 @@ class matFile:
             return self.movements[key]
 
     def __getitem__(self, idx):
-        return self.data[idx] 
+        return self.data[idx]
+
     def __setitem__(self, idx, value):
-            self.data[idx] = value
+        self.data[idx] = value
+
     def __delitem__(self, key):
         return
+
     def __missing__(self, key):
-        return  
-    
+        return
+
     def convertToTST(self):
         if self.channel_number == 0:
             return None
-        
+
         label = [c.name for c in self.channels]
         data = [c.data for c in self.channels]
         fs = self.channels[0].frequency

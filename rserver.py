@@ -5,10 +5,23 @@ import threading
 import time
 from pathlib import Path
 import socket
-from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-    QMetaObject, QObject, QPoint, QRect,
-    QSize, QTimer, QUrl, Qt, QEvent)
+from PySide6.QtCore import (
+    QCoreApplication,
+    QDate,
+    QDateTime,
+    QLocale,
+    QMetaObject,
+    QObject,
+    QPoint,
+    QRect,
+    QSize,
+    QTimer,
+    QUrl,
+    Qt,
+    QEvent,
+)
 from PySide6.QtWebEngineWidgets import QWebEngineView
+
 
 # R server for statistic analysis
 class RServer(threading.Thread):
@@ -19,20 +32,17 @@ class RServer(threading.Thread):
 
     def run(self):
         print("launching R server...")
-        app = Path(os.getcwd() + '/shiny/app.R')
-        rscript = Path(os.getcwd() + '/R/bin/Rscript')
-        envscript = 'set "R_LIBS={}"'.format(Path(os.getcwd() + '/R/library'))
+        app = Path(os.getcwd() + "/shiny/app.R")
+        rscript = Path(os.getcwd() + "/R/bin/Rscript")
+        envscript = 'set "R_LIBS={}"'.format(Path(os.getcwd() + "/R/library"))
         cmd = '{} && "{}" "{}"'.format(envscript, rscript, app)
         print(cmd)
-        p = subprocess.Popen(cmd,
-                             shell=True,
-                             stdout=sys.stdout,
-                             stderr=sys.stderr)
+        p = subprocess.Popen(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
         self.stdout, self.stderr = p.communicate()
-    
+
     def UpdateProjectPath(self, path):
-        host = 'localhost'
+        host = "localhost"
         port = 7776
 
         # Connect to the R server
@@ -46,12 +56,13 @@ class RServer(threading.Thread):
             print("Sent:", message)
 
             # Receive response from the server
-            #response = client_socket.recv(1024)
-            #print("Received:", response.decode())
+            # response = client_socket.recv(1024)
+            # print("Received:", response.decode())
 
             # Close the connection
             print("Closing connection.")
             client_socket.close()
+
 
 class RServerBrowser(QWebEngineView):
     def __init__(self, parent=None):
@@ -66,14 +77,14 @@ class RServerBrowser(QWebEngineView):
 
         self.loadFinished.connect(self.loadFinishedCB)
         self.tryload()
-        
+
     def loadFinishedCB(self, ok):
         if ok:
             self.connected = True
             self.timer.stop()
-            #self.parent.update()
+            # self.parent.update()
             return
-        
+
         print("html loaded failed, retry in 5 secs")
         # delay 5 sec and try again
         self.timer.start(5000)

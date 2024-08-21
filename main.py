@@ -381,6 +381,7 @@ class EMGAddWindow(QDialog):
         self.emg = None
         self.close()
 
+
 class ConfigWindow(QDialog):
     def __init__(self, width, height, parent=None):
         QDialog.__init__(self, parent)
@@ -395,12 +396,13 @@ class ConfigWindow(QDialog):
     def run(self):
         self.exec()
         return self.person, self.emg, self.kinematic
-    
+
     def confirmBtnClicked(self):
         return
-    
+
     def cancelBtnClicked(self):
         self.close()
+
 
 class MainWindow(QMainWindow):
     # SIGNALS
@@ -660,8 +662,10 @@ class MainWindow(QMainWindow):
     def ifOldProjectOpened(self):
         if self.workspace is not None:
             relpy = QMessageBox.question(
-                None, "warning", "Current workspace not closed, do you want to save and continue?",
-                QMessageBox.Yes | QMessageBox.No
+                None,
+                "warning",
+                "Current workspace not closed, do you want to save and continue?",
+                QMessageBox.Yes | QMessageBox.No,
             )
 
             if relpy == QMessageBox.Yes:
@@ -686,13 +690,13 @@ class MainWindow(QMainWindow):
         )
         if filename[0] == "":
             return
-        
+
         proj_full_name = os.path.basename(filename[0])
-        dir = filename[0][:-len(proj_full_name)]
-        
-        proj_name = proj_full_name[:-len(PROJ_EXT)]
-        print('#############################', dir)
-        print('#############################', proj_name)
+        dir = filename[0][: -len(proj_full_name)]
+
+        proj_name = proj_full_name[: -len(PROJ_EXT)]
+        print("#############################", dir)
+        print("#############################", proj_name)
         if not checkValidPath(dir):
             QMessageBox.critical(
                 None, "error", "Selected path does not exist!", QMessageBox.Ok
@@ -709,7 +713,7 @@ class MainWindow(QMainWindow):
 
         # Jump to EMG page
         widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
-    
+
     def saveProjectButtonClick(self):
         if self.workspace is None:
             logger.info("workspace is empty, nothing to save")
@@ -721,11 +725,11 @@ class MainWindow(QMainWindow):
             )
             return
         logger.info("workspace is saved")
-    
+
     def loadProjectButtonClick(self):
         if self.ifOldProjectOpened():
             return -1
-        
+
         filepath, extension = QFileDialog.getOpenFileNames(
             None,
             caption="open Project file",
@@ -735,16 +739,16 @@ class MainWindow(QMainWindow):
 
         if len(filepath) == 0:
             return
-        
+
         file = os.path.basename(filepath[0])
-        path = filepath[0][:-len(file)]
-        
+        path = filepath[0][: -len(file)]
+
         if self.loadWorkSpace(path, file):
             QMessageBox.critical(
                 None, "error", "Failed to load Workspace!", QMessageBox.Ok
             )
             return
-        
+
         # Jump to EMG page
         widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
 
@@ -1092,7 +1096,7 @@ class MainWindow(QMainWindow):
         # pv.show()
         pv.line(freq, v, channel, title=title, xlabel="Frequency", ylabel="dB")
         return pv
-    
+
     # Signals
     # //////////////////////////////////////////////////////////////
     def emitPariticipantUpdate(self):
@@ -1280,10 +1284,10 @@ class MainWindow(QMainWindow):
         except re.error:
             logger.error("regex not valid")
             return
-        
+
         if filter_str == self.participant_filter:
             return
-        
+
         self.participant_filter = filter_str
         self.selectedParticipants.clear()
         self.updateEMGParticipantBox()
@@ -1384,9 +1388,11 @@ class MainWindow(QMainWindow):
     def saveWorkSpace(self):
         self.workspace.saveWorkSpace(self.home)
         return 0
-    
+
     def loadWorkSpace(self, path, file):
-        self.workspace = workspace.loadWorkSpace(path, file, self.emitPariticipantUpdate)
+        self.workspace = workspace.loadWorkSpace(
+            path, file, self.emitPariticipantUpdate
+        )
         if self.workspace == None:
             return -1
         self.home = self.workspace.fpath

@@ -1,12 +1,15 @@
-import threading
-
 from .emg import *
 from .report import *
 from .freq_analysis import *
 from .person import *
 from .timeSeriesTable import *
 from .fuzzMatch import *
+from .logger import *
+import os
+import threading
 
+
+PROJ_EXT = '.myo'
 '''
 Workspace maintained a set of people with data
 '''
@@ -17,15 +20,57 @@ class workspace:
             self.emg = emg
             self.report = None
             self.kinematic = kin
+            self.loading = False
 
+        def isLoading(self):
+            return self.loading
+        
         def isEMGReady(self):
+            if self.loading:
+                return False
             return self.emg.isProcessDone()
         
         def isReportReady(self):
+            if self.loading:
+                return False
             return self.report != None
 
         def getDataStatus(self):
-            return self.emg.isEMGReady(), self.isReportReady()
+            return self.isLoading(), self.emg.isEMGReady() and self.isReportReady()
+        
+        def toXML(self):
+            root = xmlElement('profile')
+            root.addSubTree(self.emg.toXML())
+            if self.report != None:
+                # add report location to xml
+                root.addNode('report', xmlString(self.report.getPath()))
+            return root
+        
+        @staticmethod
+        def fromXML(xml):
+            root = xml.find('profile')
+            if root == None:
+                logger.error("loadWorkSpace: no profile found")
+                return None
+            
+            profile_obj = workspace.profile(None, None)
+            # load emg
+            emg_obj = emg.fromXML(root)
+            report_obj = None
+ 
+            # if report exists, use report data
+            # otherwise, load emg data from file
+            report_path = root.find('report')
+            if report_path != None:
+                # load report data to emg
+                report_obj = report(None, None)
+                report_obj.fpath = xmlStringParse(report_path.text)
+    
+            profile_obj.loading = True
+            profile_obj.emg = emg_obj
+            profile_obj.kin = None
+            profile_obj.report = report_obj
+            return profile_obj
     
     class reportEMGConfig:
         def __init__(self):
@@ -42,8 +87,9 @@ class workspace:
         def outputMAT(self, st):
             self.mat = st
 
-    def __init__(self, name = ''):
+    def __init__(self, path, name):
         self.name = name
+        self.fpath = path
         # list of participants in workspace
         self.participants = []
         self.filtered_participants = []
@@ -63,6 +109,16 @@ class workspace:
 
         # report - EMG config
         self.reportemgconfig = self.reportEMGConfig()
+
+        # loading thread
+        self.emgloaderthread = None
+        self.emgloaderstop = False
+
+    def __del__(self):
+        # stop emg loader thread
+        if self.emgloaderthread:
+            self.emgloaderstop = True
+            self.emgloaderthread.join()
 
     def clear(self):
         self.participants.clear()
@@ -136,15 +192,7 @@ class workspace:
         if not self.hasParticipant(person):
             return
         profile = self.profileList[person.name]
-
-        root = xmlElement('report')
-        # person data
-        root.addSubTree(person.toXML())
-        # emg data
-        # MVC is saved in splited file
-        root.addSubTree(profile.emg.toXML())
-        profile.report = root
-
+        profile.report = report(person, profile.emg)
         profile.emg.setProcessDone()
 
     def saveReport(self, person, path):
@@ -156,8 +204,7 @@ class workspace:
         
         # save "rpt" report
         report_name = path + '/' + person.name + '.rpt'
-        writer = xmlWriter(report_name, profile.report)
-        writer.write()
+        profile.report.writeXML(report_name)
 
         # save csv
         if self.reportemgconfig.csv:
@@ -170,11 +217,81 @@ class workspace:
             emgmvcdf = profile.emg.emgMVCTST.toPandasFrame()
             emgmvcdf.to_csv(mvccsv_name, sep=',', encoding='utf-8')
     
-    def saveWorkSpace(self):
-        return
+    def saveWorkSpace(self, path):
+        filename = os.path.normpath(path + '/' + self.name + PROJ_EXT)
+        root = xmlElement("workspace")
+        root.addNode('directory', xmlString(self.fpath))
+        #save pariticpant list, emg, and filepath
+        
+        for person in self.participants:
+            p = xmlElement('participant')
+            p.addSubTree(person.toXML())
+            p.addSubTree(self.profileList[person.name].toXML())
+            root.addSubTree(p)
+
+        writer = xmlWriter(filename, root)
+        writer.write()
     
-    def loadWorkSpace(self):
-        return
+    @staticmethod
+    def loadWorkSpace(path, file, doneCallback):
+        logger.info("loadWorkSpace: loading from {}/{}...".format(path, file))
+        proj_name = file[:-len(PROJ_EXT)]
+        workspace_obj = workspace(None, proj_name)
+
+        # parse myo file
+        xml = xmlReader(path + '/' + file).get()
+        if xml == None:
+            logger.error("loadWorkSpace: file is empty")
+            return -1
+        root = xml.find('workspace')
+        if root == None:
+            logger.error("loadWorkSpace: no workspace found")
+            return -1
+        
+        # project direction
+        e = root.find('directory')
+        if e is None:
+            logger.error("loadWorkSpace: no directory found")
+            return -1
+        workspace_obj.fpath = xmlStringParse(e.text)
+        logger.info("loadWorkSpace: project path {}".format(workspace_obj.fpath))
+        # participants
+        pending_load = {}
+        for el in root.iter('participant'):
+            person_obj, profile_obj = person.fromXML(el), workspace.profile.fromXML(el)
+            if person_obj is None or profile_obj is None:
+                logger.error("loadWorkSpace: failed to parse participant, continue")
+                continue
+
+            logger.info("loadWorkSpace: loading participant {}".format(person_obj.name))
+            workspace_obj.participants.append(person_obj) 
+            workspace_obj.profileList[person_obj.name] = profile_obj
+            pending_load[person_obj.name] = profile_obj
+        
+        # spawn a loading thread to load emg
+        if len(pending_load):
+            workspace_obj.emgloaderthread = threading.Thread(target=workspace_obj.emgAsyncLoader, args=(pending_load, doneCallback))
+            workspace_obj.emgloaderthread.start()
+        return workspace_obj
+    
+    def emgAsyncLoader(self, pending_load, doneCallback):
+        for name, profile in pending_load.items():
+            if profile.report == None:
+                logger.info("emg async loader: loading profile {} from {}".format(name, profile.emg.emgFile))
+                profile.emg.async_load()
+                logger.info("emg async loader: done")
+            else:
+                logger.info("emg async loader: loading profile {} from {}".format(name, profile.report.fpath))
+                tst = profile.report.async_load()
+                #construct emg from tst
+                profile.emg.load_from_report(tst)
+                logger.info("emg async loader: done")
+            profile.loading = False
+            doneCallback()
+            if self.emgloaderstop:
+                logger.info("emg async loader: stopping")
+                return
+        self.emgloaderthread = None
     
     def addChanToMVCFileMap(self, channel, mvc_file_name):
         self.fuzzs['mvc_file_to_channel'].addPair(channel, mvc_file_name)

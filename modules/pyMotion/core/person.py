@@ -3,8 +3,8 @@ import time
 class person:
     def __init__(self,
                  name, 
-                 dob,
-                 gender,
+                 dob='',
+                 gender='',
                  height='',
                  weight='',
                  first_name='', 
@@ -21,7 +21,6 @@ class person:
             "height": str(height),
             "weight": str(weight),
         }
-        self.timestamp = str(time.localtime())
     
     def __getattr__(self, key):
         if key in self.data.keys():
@@ -35,16 +34,38 @@ class person:
         return
     def __missing__(self, key):
         return
-    '''
-    # deprecated
-    def key(self):
-        return hash(self.name + self.timestamp)
-    '''
 
     def toXML(self):
-        e = xmlElement('Person')
+        e = xmlElement('person')
         for key in self.data.keys():
             e.addNode(key, str(self.data[key]))
         return e     
 
-    #def fromXML(self, xml):
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find('person')
+        if root == None:
+            return None
+        
+        e = root.find('name')
+        if e is None:
+            return None
+
+        p = person(xmlStringParse(e.text,str))
+
+        data = {
+            "first_name": "",
+            "middle_name": "",
+            "last_name": "",
+            "dob": "",
+            "gender": "",
+            "height": "",
+            "weight": "",
+        }
+        for key in data.keys():
+            e = root.find(key)
+            if e != None:
+                p[key] = e.text
+        
+        return p
+

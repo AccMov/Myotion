@@ -85,7 +85,7 @@ class emgFilter():
         e.addNode('cutoff_h', str(self.cutoff_h))
         return e
 
-    def fromXML(self, xml_element):
+    def fromXML(self, xml):
         return
 
 class emgActivation:
@@ -219,61 +219,7 @@ class emgConfigure():
 
     def fromXML(self, xml_element):
         return
-    
-class emgStatistic:
-    def __init__(self, tst):
-        #time_domain
-        self.min = tst.min()
-        self.max = tst.max()
-        self.mean = tst.mean()
-        self.med = tst.median()
-        self.std = tst.std()
-        self.var = tst.var()
-        self.ptp = tst.ptp()
-        self.zc = tst.countZeros()
-        self.auc = tst.trapz()
-        self.rms = tst.rms()
-        self.mp = tst.trapz()
-        self.mav = tst.meanAbsoluate()
-        self.en = None
-        self.sk = tst.skew()
-        self.kur = tst.kurtosis()
 
-        #freq domain
-        self.mnf = tst.meanFreq()
-        self.mdf = tst.medFreq()
-
-        bandpower = tst.BandPower()
-        self.bpd = [bandpower[idx]["delta"] for idx in range(0, tst.chanSize())]
-        self.bdt = [bandpower[idx]["theta"] for idx in range(0, tst.chanSize())]
-        self.bpa = [bandpower[idx]["alpha"] for idx in range(0, tst.chanSize())]
-        self.bpb = [bandpower[idx]["beta"] for idx in range(0, tst.chanSize())]
-        self.bpg = [bandpower[idx]["gamma"] for idx in range(0, tst.chanSize())]
-
-    def toXML(self):
-        e = xmlElement('statistic')
-        e.addNode('min', xmlString(self.min))
-        e.addNode('max', xmlString(self.max))
-        e.addNode('mean', xmlString(self.mean))
-        e.addNode('med', xmlString(self.med))
-        e.addNode('std', xmlString(self.std))
-        e.addNode('var', xmlString(self.var))
-        e.addNode('ptp', xmlString(self.ptp))
-        e.addNode('zc', xmlString(self.zc))
-        e.addNode('auc', xmlString(self.auc))
-        e.addNode('rms', xmlString(self.rms))
-        e.addNode('mp', xmlString(self.mp))
-        e.addNode('sk', xmlString(self.sk))
-        e.addNode('kur', xmlString(self.kur))
-
-        e.addNode('mnf', xmlString(self.mnf))
-        e.addNode('mdf', xmlString(self.mdf))
-        e.addNode('bpd', xmlString(self.bpd))
-        e.addNode('bdt', xmlString(self.bdt))
-        e.addNode('bpa', xmlString(self.bpa))
-        e.addNode('bpb', xmlString(self.bpb))
-        e.addNode('bpg', xmlString(self.bpg))
-        return e
 
 class emg:
     def __init__(self, file=''):
@@ -284,14 +230,38 @@ class emg:
         self.Channels = []                 #channels of emg
         self.controlSignals = set()        #sync up channel
         self.mvcFilesMap = {}              # channels:mvc_file_path
+        self.chanMap = {}                  # old chan name: new chan name
         self.isprocessdone = False
 
         # filter of channel name, regex
         self.channel_filter = '(emg|EMG)+'
 
-        if len(file):
+        if file != None and len(file):
             self.setEMGFile(file)
 
+    # async load of emg file, use for loading file in worker thread
+    # required emgfile, mvcfile and mvcfilemap to be pre-configured
+    def async_load(self):
+        if self.emgFile == None:
+            return -1
+        else:
+            self.setEMGFile(self.emgFile)
+
+        for chan, mvcfile in self.mvcFilesMap.items():
+            self.setMVCFile(chan, mvcfile)
+
+        # rename channel using map
+        for old, new in self.chanMap.items():
+            self.renameChannel(old, new)
+        return 0
+    
+    # applying tst to emg, used when
+    # loading emg from a report
+    def load_from_report(self,tst):
+        self.emgTST = tst.copy()
+        self.isprocessdone = True
+        self.Channels = tst.labels.copy()
+    
     # use channel as key to access TST
     def __getitem__(self, chan):
         return self.emgTST[chan]
@@ -358,6 +328,7 @@ class emg:
             self.emgMVCTST.renameChannel(old, new)
             # rename channel name
             self.Channels[self.Channels.index(old)] = new
+            self.chanMap[old] = new
 
     # set the name of the sync up channel of emg
     def setControlSignal(self, chan):
@@ -443,24 +414,40 @@ class emg:
         self.mvcFilesMap[channel] = f
 
     def toXML(self):
-        self.emgTST.setname('EMG')
-        # top tree
         root = xmlElement('emg')
-
-        # get a copy of emgTST, filter out control signal
-        tmpTST = self.emgTST.copy()
-        for c in tmpTST.channels:
-            if c in self.controlSignals:
-                tmpTST.removeChannel(c)
-
-        # emg Time Series Data
-        root.addSubTree(tmpTST.toXML())
-        # emg Statistical data
-        stats = emgStatistic(tmpTST)
-        root.addSubTree(stats.toXML())
-        # emg process configuration
-        root.addSubTree(self.processCFG.toXML())
+        root.addNode("path", self.emgFile)
+        root.addDict('mvcPath',self.mvcFilesMap)
+        root.addNode("controlSignals", self.controlSignals)
+        # channel name migh have spaces or invalid chars, 
+        # so addDict is not applicable here
+        t = xmlElement('chanMap')
+        for old, new in self.chanMap.items():
+            t.addNode("chan", new, {'name':xmlString(old)})
+        root.addSubTree(t)
         return root
+    
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find('emg')
+        if root == None:
+            return None
+        emg_obj = emg()
+        e = root.find('path')
+        if e == None:
+            return None
+        emg_obj.emgFile = xmlStringParse(e.text)
+        e = root.find('mvcPath')
+        if e != None:
+            for el in e:    
+                emg_obj.mvcFilesMap[el.tag] = xmlStringParse(el.text)
+        e = root.find('controlSignals')
+        if e != None:
+            emg_obj.controlSignals = xmlStringParseList(e.text)
+        e = root.find('chanMap')
+        if e != None:
+            for el in e:
+                emg_obj.chanMap[xmlStringParse(el.attrib['name'])] = xmlStringParse(el.text)
+        return emg_obj
         
     def isProcessDone(self):
         return self.isprocessdone

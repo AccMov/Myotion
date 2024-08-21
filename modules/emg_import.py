@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QHeaderView,
     QSpacerItem, QTableWidget, QTableWidgetItem, QVBoxLayout,
     QWidget)
 
-class Ui_Form(object):
+class Ui_EMGImport(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")

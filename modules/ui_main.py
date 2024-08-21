@@ -4477,7 +4477,7 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem1 = self.tableWidget_2.horizontalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("MainWindow", u"Participant", None));
         ___qtablewidgetitem2 = self.tableWidget_2.horizontalHeaderItem(2)
-        ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindow", u"Data Valid", None));
+        ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindow", u"Ready", None));
         ___qtablewidgetitem3 = self.tableWidget_2.horizontalHeaderItem(3)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("MainWindow", u"Report", None));
         ___qtablewidgetitem4 = self.tableWidget_2.verticalHeaderItem(0)

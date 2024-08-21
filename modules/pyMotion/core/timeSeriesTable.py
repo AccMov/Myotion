@@ -461,13 +461,52 @@ class timeSeriesTable:
     '''
     def toXML(self):
         e = xmlElement('timeSeriesTable', {"name":self.name})
-        e.addNode('channels_num', str(len(self.labels)))
-        e.addNode('channels_name','"' + '" "'.join(self.labels) + '"')
-        e.addNode('fs', str(self.fs))
-        e.addNode('N', str(self.n))
+        e.addNode('channels_num', xmlString(len(self.labels)))
+        e.addNode('channels_name',xmlString(self.labels))
+        e.addNode('fs', xmlString(self.fs))
+        e.addNode('N', xmlString(self.n))
 
         c = xmlElement('channels')
         e.addSubTree(c)
         for k in self.labels:
             c.addNode(k, ' '.join(format(x, '.6f') for x in self.data[k]))
         return e
+    
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find('timeSeriesTable')
+        if root == None:
+            return None
+        
+        e = root.find('channels_num')
+        if e == None:
+            return None
+        chan_num = xmlStringParse(e.text, int)
+
+        e = root.find('channels_name')
+        if e == None:
+            return None
+        
+        chan_name = xmlStringParseList(e.text)
+        if (len(chan_name) != chan_num):
+            return None
+        
+        e = root.find('fs')
+        if e == None:
+            return None
+        fs = xmlStringParse(e.text, float)
+
+        e = root.find('N')
+        if e == None:
+            return None
+        N = xmlStringParse(e.text, int)
+
+        e = root.find('channels')
+        if e == None:
+            return None
+        
+        data = []
+        for el in e:
+            data.append([float(k) for k in xmlStringParseList(el.text)])
+
+        return timeSeriesTable(fs, chan_name, data)

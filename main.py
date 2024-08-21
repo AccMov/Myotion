@@ -21,7 +21,7 @@ import re
 import math
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QIcon, QPalette
 from PySide6.QtWidgets import (
     QApplication,
@@ -66,7 +66,7 @@ widgets = None
 class EMGAddWindow(QDialog):
     def __init__(self, workspace, home, width, height, parent=None):
         QDialog.__init__(self, parent)
-        self.ui = Ui_Form()
+        self.ui = Ui_EMGImport()
         self.ui.setupUi(self)
 
         self.resize(width, height)
@@ -381,8 +381,31 @@ class EMGAddWindow(QDialog):
         self.emg = None
         self.close()
 
+class ConfigWindow(QDialog):
+    def __init__(self, width, height, parent=None):
+        QDialog.__init__(self, parent)
+        self.ui = Ui_Configuration()
+        self.ui.setupUi(self)
+
+        self.resize(width, height)
+        self.setWindowTitle("Configuration")
+
+        self.widgets = self.ui
+
+    def run(self):
+        self.exec()
+        return self.person, self.emg, self.kinematic
+    
+    def confirmBtnClicked(self):
+        return
+    
+    def cancelBtnClicked(self):
+        self.close()
 
 class MainWindow(QMainWindow):
+    # SIGNALS
+    sigUpdateParticipants = Signal()
+
     def __init__(self):
         QMainWindow.__init__(self)
 
@@ -447,6 +470,12 @@ class MainWindow(QMainWindow):
 
         # Project
         widgets.btn_new.clicked.connect(self.newProjectButtonClick)
+        widgets.btn_share.clicked.connect(self.saveProjectButtonClick)
+        widgets.btn_adjustments.clicked.connect(self.loadProjectButtonClick)
+        self.sigUpdateParticipants.connect(self.updateEMGParticipantBox)
+
+        # General
+        widgets.settingsMenu.clicked.connect(self.configButtonClick)
 
         # EMG Page
         widgets.pushButton_10.clicked.connect(self.addEMGButtonClick)
@@ -625,23 +654,52 @@ class MainWindow(QMainWindow):
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
 
+    def configButtonClick(self):
+        rc = ConfigWindow(1200, 800).run()
+
+    def ifOldProjectOpened(self):
+        if self.workspace is not None:
+            relpy = QMessageBox.question(
+                None, "warning", "Current workspace not closed, do you want to save and continue?",
+                QMessageBox.Yes | QMessageBox.No
+            )
+
+            if relpy == QMessageBox.Yes:
+                self.saveWorkSpace()
+                self.reset()
+                return 0
+            else:
+                return -1
+        return 0
+
     def newProjectButtonClick(self):
-        dir = QFileDialog.getExistingDirectory(
+        if self.ifOldProjectOpened():
+            return -1
+
+        filename = QFileDialog.getSaveFileName(
             None,
             "New Project",
             self.home,
+            "Project files (*.myo)",
+            None,
             QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks,
         )
-        if dir == "":
+        if filename[0] == "":
             return
-
+        
+        proj_full_name = os.path.basename(filename[0])
+        dir = filename[0][:-len(proj_full_name)]
+        
+        proj_name = proj_full_name[:-len(PROJ_EXT)]
+        print('#############################', dir)
+        print('#############################', proj_name)
         if not checkValidPath(dir):
             QMessageBox.critical(
                 None, "error", "Selected path does not exist!", QMessageBox.Ok
             )
 
         p = Path(dir)
-        if self.newWorkSpace(p, p.name):
+        if self.newWorkSpace(p, proj_name):
             QMessageBox.critical(
                 None, "error", "Failed to create new Workspace!", QMessageBox.Ok
             )
@@ -649,6 +707,44 @@ class MainWindow(QMainWindow):
         logger.info("workspace path: {}".format(self.home))
         logger.info("workspace name: {}".format(self.workspace.name))
 
+        # Jump to EMG page
+        widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
+    
+    def saveProjectButtonClick(self):
+        if self.workspace is None:
+            logger.info("workspace is empty, nothing to save")
+            return
+
+        if self.saveWorkSpace():
+            QMessageBox.critical(
+                None, "error", "Failed to save Workspace!", QMessageBox.Ok
+            )
+            return
+        logger.info("workspace is saved")
+    
+    def loadProjectButtonClick(self):
+        if self.ifOldProjectOpened():
+            return -1
+        
+        filepath, extension = QFileDialog.getOpenFileNames(
+            None,
+            caption="open Project file",
+            dir=MyotionPath,
+            filter="Project Files (*.myo)",
+        )
+
+        if len(filepath) == 0:
+            return
+        
+        file = os.path.basename(filepath[0])
+        path = filepath[0][:-len(file)]
+        
+        if self.loadWorkSpace(path, file):
+            QMessageBox.critical(
+                None, "error", "Failed to load Workspace!", QMessageBox.Ok
+            )
+            return
+        
         # Jump to EMG page
         widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
 
@@ -936,6 +1032,7 @@ class MainWindow(QMainWindow):
         self.startBatchEMGProcess(listofpeople, config)
 
     def EMGParticipantSelectAllClicked(self, state):
+        self.selectedParticipants.clear()
         participants = self.workspace.getFilteredParticipants(self.participant_filter)
         for p in participants:
             if state:
@@ -947,18 +1044,13 @@ class MainWindow(QMainWindow):
 
     def FFTPlotNextPageClicked(self):
         widgets.scrollArea_3.nextPage()
-        # widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
         self.updateFreqAnalysisFFTPanel()
 
     def FFTPlotPrevPageClicked(self):
         widgets.scrollArea_3.prevPage()
-        # widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
-        # widgets.scrollArea_3.show()
         self.updateFreqAnalysisFFTPanel()
 
     def FFTPlotPerPageSelected(self, index):
-        # widgets.scrollArea_3.setPlotsPerPage(self.plotsPerPage_list[index])
-        # widgets.scrollArea_3.show()
         self.updateFreqAnalysisFFTPanel()
 
     def FFTPlotPageIndexSelected(self, index):
@@ -1000,9 +1092,15 @@ class MainWindow(QMainWindow):
         # pv.show()
         pv.line(freq, v, channel, title=title, xlabel="Frequency", ylabel="dB")
         return pv
-
-    # UPDATE UI EVENTS
+    
+    # Signals
     # //////////////////////////////////////////////////////////////
+    def emitPariticipantUpdate(self):
+        self.sigUpdateParticipants.emit()
+
+    # UPDATE UI EVENTS/Slots
+    # //////////////////////////////////////////////////////////////
+    @Slot()
     def updateEMGParticipantBox(self):
         participants = self.workspace.getFilteredParticipants(self.participant_filter)
         n = len(participants)
@@ -1022,7 +1120,7 @@ class MainWindow(QMainWindow):
             h = widgets.tableWidget_2.rowHeight(i)
             col2w = widgets.tableWidget_2.columnWidth(2)
             col3w = widgets.tableWidget_2.columnWidth(3)
-            ready = statusLED(col2w, h, self.workspace[p].isEMGReady())
+            ready = statusLED(col2w, h, not self.workspace[p].isLoading())
             report = statusLED(col3w, h, self.workspace[p].isReportReady())
             widgets.tableWidget_2.setCellWidget(i, 2, ready)
             widgets.tableWidget_2.setCellWidget(i, 3, report)
@@ -1148,6 +1246,8 @@ class MainWindow(QMainWindow):
     def updateWorkProjectTreeWidget(self):
         widgets.treeView.setForegroundRole(QPalette.Base)
         if self.home is not None:
+            # load workspace file exploer
+            self.filesystemTree.setRootPath(self.home)
             widgets.treeView.setModel(self.filesystemTree)
             widgets.treeView.setRootIndex(self.filesystemTree.index(self.home))
         else:
@@ -1180,8 +1280,12 @@ class MainWindow(QMainWindow):
         except re.error:
             logger.error("regex not valid")
             return
-
+        
+        if filter_str == self.participant_filter:
+            return
+        
         self.participant_filter = filter_str
+        self.selectedParticipants.clear()
         self.updateEMGParticipantBox()
 
     def updateFreqAnalysisParticipantTree(self, participants):
@@ -1248,7 +1352,7 @@ class MainWindow(QMainWindow):
             )
         )
 
-    # Application Logic/Slots
+    # Application Logic
     # ///////////////////////////////////////////////////////////////
     def reset(self):
         self.singleEMG = (None, None, None)
@@ -1259,18 +1363,11 @@ class MainWindow(QMainWindow):
         self.filesystemTree = QFileSystemModel()
         self.selectedParticipants = []
 
-    def newWorkSpace(self, fpath, name=""):
-        if self.workspace is not None:
-            self.saveWorkSpace()
-            self.reset()
-
+    def newWorkSpace(self, fpath, name):
         # create new project
         # self.workspace = workspace(name)
-        self.workspace = workspace(name)
+        self.workspace = workspace(str(fpath), name)
         self.home = str(fpath)
-
-        # load workspace file exploer
-        self.filesystemTree.setRootPath(self.home)
 
         # clear GUI
         self.updateEMGSignalProcessPanel()
@@ -1285,7 +1382,27 @@ class MainWindow(QMainWindow):
         return 0
 
     def saveWorkSpace(self):
-        return
+        self.workspace.saveWorkSpace(self.home)
+        return 0
+    
+    def loadWorkSpace(self, path, file):
+        self.workspace = workspace.loadWorkSpace(path, file, self.emitPariticipantUpdate)
+        if self.workspace == None:
+            return -1
+        self.home = self.workspace.fpath
+
+        # load workspace file exploer
+        self.filesystemTree.setRootPath(self.home)
+
+        # clear and load GUI
+        self.updateEMGSignalProcessPanel()
+        self.updateEMGConfigureList()
+        self.updateEMGParticipantBox()
+        self.updateWorkSpaceParticipantBox()
+        self.updateWorkProjectTreeWidget()
+        self.updateEMGChannelSelectorContent()
+
+        return 0
 
     def populateKinematicTree(self, tree: QTreeWidget, participants):
         tree.clear()

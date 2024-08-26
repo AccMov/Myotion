@@ -1,7 +1,7 @@
 from thefuzz import fuzz
 from heapq import heappop, heappush, nlargest
 from collections import OrderedDict
-
+from .xml import *
 
 class record:
     def __init__(self, val, n, possiblity):
@@ -118,7 +118,6 @@ class heapMDict:
                 break
         return result_token
 
-
 # key : [ (val, number_of_selects, fuzzPossibility), ... ]
 class fuzzMatch:
     def __init__(self):
@@ -185,3 +184,10 @@ class fuzzMatch:
                 result_token.append([t.v, t.p])
 
         return result_token
+    
+    def toXML(self):
+        root = xmlElement("fuzzMatch")
+        e = xmlElement("dict")
+        for key, val in self.fuzzDict.items():
+            e.addSubTree("map", val.toXML(), {"name":xmlString(key)})
+        return root

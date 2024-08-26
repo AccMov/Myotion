@@ -17,6 +17,9 @@ class kinematic:
         if len(file):
             self.setFile(file)
 
+    def isValid(self):
+        return not self.data == None
+
     # VICON only
     def isrealmarker(self, label):
         """check if a marker is a real marker by replacing the last character with 'L' 'O' 'A' 'P'

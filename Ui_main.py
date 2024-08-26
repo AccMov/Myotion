@@ -1077,10 +1077,10 @@ class Ui_MainWindow(object):
         self.horizontalLayout_33.setSpacing(0)
         self.horizontalLayout_33.setObjectName("horizontalLayout_33")
         self.horizontalLayout_33.setContentsMargins(0, 0, 0, 0)
-        self.checkBox_3 = QCheckBox(self.frame_53)
-        self.checkBox_3.setObjectName("checkBox_3")
+        self.checkBox_33 = QCheckBox(self.frame_53)
+        self.checkBox_33.setObjectName("checkBox_33")
 
-        self.horizontalLayout_33.addWidget(self.checkBox_3)
+        self.horizontalLayout_33.addWidget(self.checkBox_33)
 
         self.horizontalSpacer_17 = QSpacerItem(
             93, 11, QSizePolicy.Expanding, QSizePolicy.Minimum
@@ -4347,7 +4347,7 @@ class Ui_MainWindow(object):
         self.label_38.setText(
             QCoreApplication.translate("MainWindow", "Participant List", None)
         )
-        self.checkBox_3.setText(
+        self.checkBox_33.setText(
             QCoreApplication.translate("MainWindow", "Select All", None)
         )
         self.pushButton_17.setText("")

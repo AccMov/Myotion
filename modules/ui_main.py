@@ -4926,70 +4926,7 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem3.setText(
             QCoreApplication.translate("MainWindow", "Report", None)
         )
-        ___qtablewidgetitem4 = self.tableWidget_2.verticalHeaderItem(0)
-        ___qtablewidgetitem4.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem5 = self.tableWidget_2.verticalHeaderItem(1)
-        ___qtablewidgetitem5.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem6 = self.tableWidget_2.verticalHeaderItem(2)
-        ___qtablewidgetitem6.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem7 = self.tableWidget_2.verticalHeaderItem(3)
-        ___qtablewidgetitem7.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem8 = self.tableWidget_2.verticalHeaderItem(4)
-        ___qtablewidgetitem8.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem9 = self.tableWidget_2.verticalHeaderItem(5)
-        ___qtablewidgetitem9.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem10 = self.tableWidget_2.verticalHeaderItem(6)
-        ___qtablewidgetitem10.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem11 = self.tableWidget_2.verticalHeaderItem(7)
-        ___qtablewidgetitem11.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem12 = self.tableWidget_2.verticalHeaderItem(8)
-        ___qtablewidgetitem12.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem13 = self.tableWidget_2.verticalHeaderItem(9)
-        ___qtablewidgetitem13.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem14 = self.tableWidget_2.verticalHeaderItem(10)
-        ___qtablewidgetitem14.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem15 = self.tableWidget_2.verticalHeaderItem(11)
-        ___qtablewidgetitem15.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem16 = self.tableWidget_2.verticalHeaderItem(12)
-        ___qtablewidgetitem16.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem17 = self.tableWidget_2.verticalHeaderItem(13)
-        ___qtablewidgetitem17.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem18 = self.tableWidget_2.verticalHeaderItem(14)
-        ___qtablewidgetitem18.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
-        ___qtablewidgetitem19 = self.tableWidget_2.verticalHeaderItem(15)
-        ___qtablewidgetitem19.setText(
-            QCoreApplication.translate("MainWindow", "New Row", None)
-        )
+        self.tableWidget_2.verticalHeader().hide()
 
         __sortingEnabled1 = self.tableWidget_2.isSortingEnabled()
         self.tableWidget_2.setSortingEnabled(False)

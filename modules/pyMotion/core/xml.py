@@ -1,14 +1,12 @@
 import xml.etree.ElementTree as ET
 import os
-
+import numpy as np
 
 # helper function to convert e to a XML value
 # this add pair of "" on strings
 def xmlString(e):
-    if isinstance(e, list):
+    if isinstance(e, list) or isinstance(e, set) or isinstance(e, np.ndarray):
         return " ".join(xmlString(p) for p in e)
-    if isinstance(e, set):
-        return xmlString(list(e))
     elif isinstance(e, float):
         return xmlString(str(format(e, ".6f")))
     elif isinstance(e, int) or isinstance(e, bool):
@@ -17,7 +15,7 @@ def xmlString(e):
         if e.startswith('"') and e.endswith('"'):
             return e
         else:
-            return '"' + str(e) + '"'
+            return '"' + e + '"'
     else:
         assert 0, "xmlString type:" + type(e) + " not supported"
 
@@ -29,11 +27,11 @@ def xmlStringParse(s, t=str):
     elif t is float:
         return float(xmlStringParse(s, str))
     elif t is str:
-        return s.strip('"').rstrip('"')
+        return s[1:-1] # remove double quotes
 
 
 def xmlStringParseList(s):
-    return [xmlStringParse(a, str) for a in s.split()]
+    return [a for a in [a.strip() for a in s.split("\"")] if a]
 
 
 """
@@ -68,11 +66,26 @@ class xmlElement(ET.Element):
         self.append(e)
 
     # add a dict as a subtree
+    # please note that "key" string has to be a valid xml token
+    # (i.e. cannot have space)
     def addDict(self, name, e, attrib={}):
         root = xmlElement(name, attrib)
         for a, b in e.items():
             root.addNode(xmlString(a), xmlString(b))
         self.addSubTree(root)
+
+    # add a dict as a special subtree with format:
+    # i.e  <name>
+    #      <map name="old"> new </map>
+    #      ...
+    #      </name>
+    # this is for mapping while the name could be
+    # an invalid xml token
+    def addMap(self, name, map):
+        root = xmlElement(name)
+        for old, new in map.items():
+            root.addNode("map", xmlString(new), {"name": xmlString(old)})
+        self.addSubTree(root) 
 
     # return ET.subElement
     # tag: Node tag,
@@ -104,13 +117,12 @@ class xmlWriter:
         self.tree._setroot(self.root)
         # pretty print
         ET.indent(self.tree)
-        self.tree.write(self.path, encoding="utf-8")
+        self.tree.write(self.path, encoding="utf-8", xml_declaration=True)
 
 
 class xmlReader:
     def __init__(self, path):
         self.path = path
-
         self.tree = ET.parse(path)
         self.root = self.tree.getroot()
 

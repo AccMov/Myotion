@@ -76,6 +76,7 @@ class EMGAddWindow(QDialog):
         self.workspace = workspace
         self.root = home
         self.emg = None
+        self.kinematic = None
         self.person = None
         self.channels = []
         self.mvcfiles = []
@@ -312,11 +313,16 @@ class EMGAddWindow(QDialog):
                 None, "error", "MVC file not complete!", QMessageBox.Ok
             )
             return False
-        # check pariticipant name is complete
+        # check pariticipant name is complete and no duplicates
         name = self.widgets.lineEdit_3.text()
         if name == "":
             QMessageBox.critical(
                 None, "error", "Name of pariticipant not set!", QMessageBox.Ok
+            )
+            return False
+        if self.workspace.findParticipant(name) != None:
+            QMessageBox.critical(
+                None, "error", "Name of pariticipant already exists!", QMessageBox.Ok
             )
             return False
         # check all joint names are selected
@@ -503,7 +509,7 @@ class MainWindow(QMainWindow):
         widgets.pushButton_27.clicked.connect(self.EMGSaveConfigurationButtonClicked)
         widgets.pushButton_12.clicked.connect(self.EMGBatchProcessButtonClicked)
         widgets.lineEdit_3.textChanged.connect(self.updateFilterText)
-        widgets.checkBox_3.stateChanged.connect(self.EMGParticipantSelectAllClicked)
+        widgets.checkBox_2.stateChanged.connect(self.EMGParticipantSelectAllClicked)
 
         # Freqency Page
         widgets.pushButton_29.clicked.connect(self.addNewFFTtoFreqAnalysisFFTPanel)
@@ -695,8 +701,6 @@ class MainWindow(QMainWindow):
         dir = filename[0][: -len(proj_full_name)]
 
         proj_name = proj_full_name[: -len(PROJ_EXT)]
-        print("#############################", dir)
-        print("#############################", proj_name)
         if not checkValidPath(dir):
             QMessageBox.critical(
                 None, "error", "Selected path does not exist!", QMessageBox.Ok
@@ -1037,15 +1041,14 @@ class MainWindow(QMainWindow):
 
     def EMGParticipantSelectAllClicked(self, state):
         self.selectedParticipants.clear()
-        participants = self.workspace.getFilteredParticipants(self.participant_filter)
-        for p in participants:
-            if state:
-                self.selectedParticipants.append(p)
-            else:
-                self.selectedParticipants.remove(p)
-
+        state = not not state
+        if state:
+            participants = self.workspace.getFilteredParticipants(self.participant_filter)
+            for p in participants:
+                name = p.name
+                self.selectedParticipants.append(name)
         self.updateEMGParticipantBox()
-
+    
     def FFTPlotNextPageClicked(self):
         widgets.scrollArea_3.nextPage()
         self.updateFreqAnalysisFFTPanel()
@@ -1078,8 +1081,10 @@ class MainWindow(QMainWindow):
     def EMGCreateHBox(self, w, parent=None):
         container = QWidget()
         layout = QHBoxLayout(container)
-        layout.addWidget(w, alignment=Qt.AlignHCenter)
-        w.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Maximum)
+        layout.addWidget(w)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setContentsMargins(0, 0, 0, 0)
+        #w.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         return container
 
     # draw FFT
@@ -1115,7 +1120,7 @@ class MainWindow(QMainWindow):
             name = p.name
             # checkbox
             chb = self.EMGCreateParticipantCheckBox(p.name)
-            widgets.tableWidget_2.setCellWidget(i, 0, chb)
+            widgets.tableWidget_2.setCellWidget(i, 0, self.EMGCreateHBox(chb))
             # name
             q = QTableWidgetItem(name)
             q.setTextAlignment(Qt.AlignCenter)
@@ -1124,10 +1129,10 @@ class MainWindow(QMainWindow):
             h = widgets.tableWidget_2.rowHeight(i)
             col2w = widgets.tableWidget_2.columnWidth(2)
             col3w = widgets.tableWidget_2.columnWidth(3)
-            ready = statusLED(col2w, h, not self.workspace[p].isLoading())
-            report = statusLED(col3w, h, self.workspace[p].isReportReady())
-            widgets.tableWidget_2.setCellWidget(i, 2, ready)
-            widgets.tableWidget_2.setCellWidget(i, 3, report)
+            ready = statusLED(col2w*0.8, h*0.8, STATUS.Loading if self.workspace[p].isLoading() else STATUS.Passed)
+            report = statusLED(col3w*0.8, h*0.8, STATUS.Passed if self.workspace[p].isReportReady() else STATUS.Failed)
+            widgets.tableWidget_2.setCellWidget(i, 2, self.EMGCreateHBox(ready))
+            widgets.tableWidget_2.setCellWidget(i, 3, self.EMGCreateHBox(report))
 
     def updateWorkSpaceParticipantBox(self):
         # listwidget_3
@@ -1138,7 +1143,6 @@ class MainWindow(QMainWindow):
             p = participants[i]
             name = p.name
             # name
-
             item = QListWidgetItem(name)
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
             item.setCheckState(Qt.Unchecked)
@@ -1408,6 +1412,8 @@ class MainWindow(QMainWindow):
         self.updateWorkProjectTreeWidget()
         self.updateEMGChannelSelectorContent()
 
+        # notify rserver
+        self.rserver.UpdateProjectPath(self.home)
         return 0
 
     def populateKinematicTree(self, tree: QTreeWidget, participants):
@@ -1423,6 +1429,8 @@ class MainWindow(QMainWindow):
             person = self.workspace[p]
             emg = person.emg
             k = person.kinematic
+            if not k.isValid():
+                continue
             for point in k.reallabels:
                 tr = QTreeWidgetItem(treeItem)
                 tr.setFlags(tr.flags() | Qt.ItemIsDragEnabled | Qt.ItemIsSelectable)

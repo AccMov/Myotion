@@ -292,18 +292,21 @@ class workspace:
                         name, profile.emg.emgFile
                     )
                 )
+                # load data from emg
                 profile.emg.async_load()
-                logger.info("emg async loader: done")
             else:
                 logger.info(
                     "emg async loader: loading profile {} from {}".format(
                         name, profile.report.fpath
                     )
                 )
+                # load data from report
                 tst = profile.report.async_load()
                 # construct emg from tst
                 profile.emg.load_from_report(tst)
-                logger.info("emg async loader: done")
+            # load kinematics data
+            profile.kinematic = kinematic(profile.emg.emgFile)
+            logger.info("emg async loader: done")
             profile.loading = False
             doneCallback()
             if self.emgloaderstop:
@@ -320,7 +323,7 @@ class workspace:
         )
 
     def addChanToJointMap(self, channel, joint):
-        self.fuzzs["mvc_file_to_channel"].addPair(channel, joint)
+        self.fuzzs["chan_to_joint"].addPair(channel, joint)
 
     def matchChanToJoint(self, channel, joints, lower_bound=0):
-        return self.fuzzs["mvc_file_to_channel"].match(channel, joints, lower_bound)
+        return self.fuzzs["chan_to_joint"].match(channel, joints, lower_bound)

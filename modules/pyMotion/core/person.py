@@ -54,7 +54,7 @@ class person:
             return None
 
         e = root.find("name")
-        if e is None:
+        if e is None or e.text is None:
             return None
 
         p = person(xmlStringParse(e.text, str))

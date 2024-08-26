@@ -503,7 +503,8 @@ class timeSeriesTable:
         c = xmlElement("channels")
         e.addSubTree(c)
         for k in self.labels:
-            c.addNode(k, " ".join(format(x, ".6f") for x in self.data[k]))
+            #c.addNode(k, " ".join(format(x, ".6f") for x in self.data[k]))
+            c.addNode(k, self.data[k])
         return e
 
     @staticmethod
@@ -513,12 +514,12 @@ class timeSeriesTable:
             return None
 
         e = root.find("channels_num")
-        if e == None:
+        if e == None or e.text == None:
             return None
         chan_num = xmlStringParse(e.text, int)
 
         e = root.find("channels_name")
-        if e == None:
+        if e == None or e.text == None:
             return None
 
         chan_name = xmlStringParseList(e.text)
@@ -526,12 +527,12 @@ class timeSeriesTable:
             return None
 
         e = root.find("fs")
-        if e == None:
+        if e == None or e.text == None:
             return None
         fs = xmlStringParse(e.text, float)
 
         e = root.find("N")
-        if e == None:
+        if e == None or e.text == None:
             return None
         N = xmlStringParse(e.text, int)
 

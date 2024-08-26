@@ -429,13 +429,16 @@ class emg:
     def toXML(self):
         root = xmlElement("emg")
         root.addNode("path", self.emgFile)
-        root.addDict("mvcPath", self.mvcFilesMap)
+        t = xmlElement("mvcPath")
+        for chan, f in self.mvcFilesMap.items():
+            t.addNode("chan", [xmlString(chan), xmlString(f)])
+        root.addSubTree(t)
         root.addNode("controlSignals", self.controlSignals)
         # channel name migh have spaces or invalid chars,
         # so addDict is not applicable here
         t = xmlElement("chanMap")
         for old, new in self.chanMap.items():
-            t.addNode("chan", new, {"name": xmlString(old)})
+            t.addNode("chan", [xmlString(old), xmlString(new)])
         root.addSubTree(t)
         return root
 
@@ -452,16 +455,16 @@ class emg:
         e = root.find("mvcPath")
         if e != None:
             for el in e:
-                emg_obj.mvcFilesMap[el.tag] = xmlStringParse(el.text)
+                l = xmlStringParseList(el.text)
+                emg_obj.mvcFilesMap[l[0]] = l[1]
         e = root.find("controlSignals")
-        if e != None:
+        if e != None and e.text != None:
             emg_obj.controlSignals = xmlStringParseList(e.text)
         e = root.find("chanMap")
         if e != None:
             for el in e:
-                emg_obj.chanMap[xmlStringParse(el.attrib["name"])] = xmlStringParse(
-                    el.text
-                )
+                l = xmlStringParseList(el.text)
+                emg_obj.chanMap[l[0]] = l[1]
         return emg_obj
 
     def isProcessDone(self):

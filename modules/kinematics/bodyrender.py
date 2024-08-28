@@ -1,5 +1,6 @@
 from math import pi
 
+from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import QWidget
 from OpenGL.GL import *
 

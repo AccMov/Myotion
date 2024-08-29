@@ -2,17 +2,47 @@ import plotly
 import plotly.express as px
 from plotly.subplots import make_subplots
 from plotly.graph_objects import Figure, Scatter, FigureWidget
-from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-    QMetaObject, QObject, QPoint, QRect, QByteArray, QBuffer, QIODevice,
-    QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QBrush, QColor, QCursor,QFont,QIcon,QPalette)
+from PySide6.QtCore import (
+    QCoreApplication,
+    QDate,
+    QDateTime,
+    QLocale,
+    QMetaObject,
+    QObject,
+    QPoint,
+    QRect,
+    QByteArray,
+    QBuffer,
+    QIODevice,
+    QSize,
+    QTime,
+    QUrl,
+    Qt,
+)
+from PySide6.QtGui import QBrush, QColor, QCursor, QFont, QIcon, QPalette
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtWebEngineCore import (QWebEngineUrlScheme, 
-                                     QWebEngineUrlSchemeHandler, QWebEngineUrlRequestJob,
-                                     QWebEngineProfile, QWebEnginePage)
+from PySide6.QtWebEngineCore import (
+    QWebEngineUrlScheme,
+    QWebEngineUrlSchemeHandler,
+    QWebEngineUrlRequestJob,
+    QWebEngineProfile,
+    QWebEnginePage,
+)
 from PySide6.QtWidgets import (
-    QStackedWidget, QTableWidget, QTableWidgetItem, QToolBox,
-    QTreeWidget, QVBoxLayout, QWidget, QTreeView)
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolBox,
+    QSizePolicy,
+    QHBoxLayout,
+    QTreeWidget,
+    QVBoxLayout,
+    QWidget,
+    QTreeView,
+    QScrollArea,
+    QPushButton,
+    QLabel,
+)
 import math
 
 from PySide6.QtWidgets import QVBoxLayout, QWidget, QStackedWidget

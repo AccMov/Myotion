@@ -23,19 +23,20 @@ from multimethod import multimethod
 all returned vector remain same dimension
 """
 
+
 class timeSeriesTable:
-    '''
+    """
     expect input to be a len(labels) x N matrix
     input can be None, but fs and labels must be defined
-    '''
+    """
+
     def __init__(self, fs, labels, input=None):
         self.data = {}
         self.name = ""
 
-
         if len(labels) == 0:
             raise ValueError("at least one label required!")
-        
+
         if type(input) is dict:
             self.data = input.copy()
         else:
@@ -44,18 +45,17 @@ class timeSeriesTable:
                     self.data[labels[i]] = np.array([])
                 else:
                     self.data[labels[i]] = np.array(input[i].copy())
-        
 
         self.metadata = {
-            "fs" : fs,
-            "ts" : 1.0/fs,
-            "labels":  labels.copy(),
-            "n" :  len(self.data[labels[0]]),
-            "time" : len(self.data[labels[0]]) / fs
+            "fs": fs,
+            "ts": 1.0 / fs,
+            "labels": labels.copy(),
+            "n": len(self.data[labels[0]]),
+            "time": len(self.data[labels[0]]) / fs,
         }
 
         self.iter = 0
-    
+
     # accessor of object
     def __getitem__(self, key):
         return self.data[key]
@@ -63,7 +63,7 @@ class timeSeriesTable:
     def __setitem__(self, key, value):
         # check dimension
         if self.n != 0 and len(value) != self.n:
-            raise ValueError("all rows need to have same dimension!")    
+            raise ValueError("all rows need to have same dimension!")
         if key not in self.labels:
             self.__missing__(key)
             # update time if first row added
@@ -76,14 +76,16 @@ class timeSeriesTable:
             return
         del self.data[key]
         self.labels.remove(key)
+
     def __missing__(self, key):
         self.labels.append(key)
         self.data[key] = np.array([])
+
     def __getattr__(self, key):
         if key in self.metadata:
             return self.metadata[key]
-        elif key == 'channels':
-            return self.metadata['labels']
+        elif key == "channels":
+            return self.metadata["labels"]
 
     # iterator
     # for c in timeSeriesTable:
@@ -91,6 +93,7 @@ class timeSeriesTable:
     def __iter__(self):
         self.iter = 0
         return self
+
     def __next__(self):
         if self.iter < self.size():
             return self.data[self.labels[self.iter]]
@@ -103,11 +106,11 @@ class timeSeriesTable:
     # number of points
     def size(self):
         return self.n
-    
+
     # number of channels
     def chanSize(self):
         return len(self.labels)
-    
+
     def clear(self):
         for i in range(0, len(self.labels)):
             self.data[self.labels[i]] = np.array([])
@@ -129,17 +132,17 @@ class timeSeriesTable:
         if chan in self.labels:
             self.data.pop(chan)
             del self.labels[self.labels.index(chan)]
-            
+
     # check if has channel
     def hasChannel(self, chan):
         if chan in self.labels:
             return True
         else:
             return False
-        
+
     # convert to pandas using panda series
     def toPandasFrame(self):
-        return pd.DataFrame({ key:pd.Series(value) for key, value in self.data.items() })
+        return pd.DataFrame({key: pd.Series(value) for key, value in self.data.items()})
 
     # get time step in linspace format
     def getLinspace(self):
@@ -173,119 +176,135 @@ class timeSeriesTable:
     #              time domain            #
     # =================================== #
     @multimethod
-    def max(self, key : str):
+    def max(self, key: str):
         return self.data[key].max()
+
     @multimethod
     def max(self):
         return [self.max(key) for key in self.labels]
 
     @multimethod
-    def min(self, key : str):
+    def min(self, key: str):
         return self.data[key].min()
+
     @multimethod
     def min(self):
         return [self.min(key) for key in self.labels]
 
     @multimethod
-    def mean(self, key : str):
+    def mean(self, key: str):
         return self.data[key].mean()
+
     @multimethod
     def mean(self):
         return [self.mean(key) for key in self.labels]
 
     @multimethod
-    def median(self, key : str):
+    def median(self, key: str):
         return np.median(self.data[key])
+
     @multimethod
     def median(self):
         return [self.median(key) for key in self.labels]
 
     @multimethod
-    def std(self, key : str):
+    def std(self, key: str):
         return np.std(self.data[key])
+
     @multimethod
     def std(self):
         return [self.std(key) for key in self.labels]
 
     # variance
     @multimethod
-    def var(self, key : str):
+    def var(self, key: str):
         return np.var(self.data[key])
+
     @multimethod
     def var(self):
         return [self.var(key) for key in self.labels]
 
     @multimethod
-    def rms(self, key : str):
-        return np.sqrt(np.mean(self.data[key]**2))
+    def rms(self, key: str):
+        return np.sqrt(np.mean(self.data[key] ** 2))
+
     @multimethod
     def rms(self):
         return [self.rms(key) for key in self.labels]
-    
+
     # peak to peak
     @multimethod
-    def ptp(self, key : str):
+    def ptp(self, key: str):
         return np.ptp(self.data[key])
+
     @multimethod
     def ptp(self):
         return [self.ptp(key) for key in self.labels]
 
     # remove dc offset
     @multimethod
-    def removeDC(self, key : str):
+    def removeDC(self, key: str):
         return self.data[key] - self.mean(key)
+
     @multimethod
     def removeDC(self):
         return [self.removeDC(key) for key in self.labels]
 
     @multimethod
-    def rectification(self, key : str):
+    def rectification(self, key: str):
         return np.absolute(self.data[key])
+
     @multimethod
     def rectification(self):
         return [self.rectification(key) for key in self.labels]
 
     @multimethod
-    def normalization(self, key : str, val):
+    def normalization(self, key: str, val):
         if val <= 0:
             raise ValueError("normalization val has be bigger than zero")
         return np.divide(self.data[key], float(val))
+
     @multimethod
     def normalization(self, val):
         return [self.normalization(key, val) for key in self.labels]
 
     # intergation along time
     @multimethod
-    def trapz(self, key : str):
+    def trapz(self, key: str):
         return np.trapz(self.data[key])
+
     @multimethod
     def trapz(self):
         return [self.trapz(key) for key in self.labels]
 
     @multimethod
-    def countZeros(self, key : str):
+    def countZeros(self, key: str):
         return len(self.data[key]) - np.count_nonzero(self.data[key])
+
     @multimethod
     def countZeros(self):
         return [self.countZeros(key) for key in self.labels]
-    
+
     @multimethod
-    def meanAbsoluate(self, key : str):
+    def meanAbsoluate(self, key: str):
         return np.absolute(self.data[key]).mean()
+
     @multimethod
     def meanAbsoluate(self):
         return [self.meanAbsoluate(key) for key in self.labels]
-    
+
     @multimethod
-    def skew(self, key : str):
+    def skew(self, key: str):
         return sst.skew(self.data[key])
+
     @multimethod
     def skew(self):
         return [self.skew(key) for key in self.labels]
-    
+
     @multimethod
-    def kurtosis(self, key : str):
+    def kurtosis(self, key: str):
         return sst.kurtosis(self.data[key])
+
     @multimethod
     def kurtosis(self):
         return [self.kurtosis(key) for key in self.labels]
@@ -293,10 +312,10 @@ class timeSeriesTable:
     # co-contraction
     def cocontraction(self, key1, key2):
         return np.trapz(self.data[key1]) / np.trapz(self.data[key2])
-    
+
     def entropy(self, key):
         return
-    
+
     # threhold detection
     # https://github.com/BMClab/BMC/blob/master/notebooks/DetectOnset.ipynb
     # slow impl
@@ -344,7 +363,7 @@ class timeSeriesTable:
             activated.append([seg[0], len(self.data[key])])
 
         return activated
-    
+
     # digital butterWorth filter
     def __butterWorth(self, N, Wn, btype):
         return sig.butter(N, Wn, btype, False, "sos", self.fs)
@@ -366,79 +385,93 @@ class timeSeriesTable:
         # create band pass filter
         sos = self.__butterWorth(N, [Wlow, Whigh], "bp")
         return sig.sosfilt(sos, self.data[key])
-    
+
     # =================================== #
     #          frequency domain           #
     # =================================== #
     # return (frequency, abs(Intensity))
     @multimethod
     def fft(self, key):
-        return sif.fftfreq(self.n, d=self.ts)[:self.n//2], np.abs(sif.fft(self.data[key])[0:self.n//2])
-    
+        return sif.fftfreq(self.n, d=self.ts)[: self.n // 2], np.abs(
+            sif.fft(self.data[key])[0 : self.n // 2]
+        )
+
     @multimethod
-    def fft(self, key, l_t:float, r_t:float):
+    def fft(self, key, l_t: float, r_t: float):
         left = min(self.n, int(l_t / self.time * self.n))
         right = min(self.n, int(left + (r_t - l_t) / self.time * self.n))
         totaln = right - left + 1
-        return sif.fftfreq(right - left, d=self.ts)[:totaln//2], np.abs(sif.fft(self.data[key][left:right])[0:totaln//2])
-    
+        return sif.fftfreq(right - left, d=self.ts)[: totaln // 2], np.abs(
+            sif.fft(self.data[key][left:right])[0 : totaln // 2]
+        )
+
     @multimethod
     def fft_db(self, key):
         x, y = self.fft(key)
-        return x, 20*np.log10(y)
+        return x, 20 * np.log10(y)
+
     @multimethod
-    def fft_db(self, key, l_t:float, r_t:float):
+    def fft_db(self, key, l_t: float, r_t: float):
         x, y = self.fft(key, l_t, r_t)
-        return x, 20*np.log10(y)
-    
+        return x, 20 * np.log10(y)
+
     @multimethod
-    def meanFreq(self, key : str):
-        #https://luscinia.sourceforge.net/page26/page35/page35.html
+    def meanFreq(self, key: str):
+        # https://luscinia.sourceforge.net/page26/page35/page35.html
         freq, val = self.fft(key)
         return np.dot(freq, val) / np.sum(val)
+
     @multimethod
     def meanFreq(self):
         return [self.meanFreq(key) for key in self.labels]
-    
+
     @multimethod
-    def medFreq(self, key : str):
-        #https://luscinia.sourceforge.net/page26/page36/page36.html
+    def medFreq(self, key: str):
+        # https://luscinia.sourceforge.net/page26/page36/page36.html
         freq, val = self.fft(key)
-        return freq[min(len(freq)-1, np.searchsorted(np.cumsum(val), np.sum(val)/2, side='right'))]
+        return freq[
+            min(
+                len(freq) - 1,
+                np.searchsorted(np.cumsum(val), np.sum(val) / 2, side="right"),
+            )
+        ]
+
     @multimethod
     def medFreq(self):
         return [self.medFreq(key) for key in self.labels]
-    '''
+
+    """
     @multimethod
     def spectralCentriod(self, key : str):
         freq, val = self.fft(key)
         return np.dot(freq, val) / np.sum(val)
-    '''
+    """
 
-    # band power in format 
+    # band power in format
     # return: { delta : val0 , theta : val1, alpha : val2 , beta : val3 , gamma : val4 }
     @multimethod
-    def BandPower(self, key : str):
+    def BandPower(self, key: str):
         powerrange = {
-            'delta' : (0.5, 4),
-            'theta' : (4, 8),
-            'alpha' : (8, 13),
-            'beta' :  (13, 30),
-            'gamma' : (30, float('inf')),
+            "delta": (0.5, 4),
+            "theta": (4, 8),
+            "alpha": (8, 13),
+            "beta": (13, 30),
+            "gamma": (30, float("inf")),
         }
         ans = {}
         for name, range in powerrange.items():
             freq, val = self.fft(key)
             l = np.searchsorted(freq, range[0])
             r = np.searchsorted(freq, range[1])
-            ans[name] = np.trapz(freq[l : r], val[l : r])
+            ans[name] = np.trapz(freq[l:r], val[l:r])
         return ans
+
     # band power for all channels
     # format [ {result of chan0}, {result of chan1}, ... ]
     @multimethod
     def BandPower(self):
         return [self.BandPower(key) for key in self.labels]
-    
+
     def loadFile(self, file):
         # load from file
         return 0
@@ -447,7 +480,7 @@ class timeSeriesTable:
         # write to file
         return 0
 
-    '''
+    """
     <timeSeriesTable>
         <channels_num></channels_num>
         <channels_name> </channels_name>
@@ -458,16 +491,57 @@ class timeSeriesTable:
             ...
         </channels>
     </timeSeriesTable>
-    '''
-    def toXML(self):
-        e = xmlElement('timeSeriesTable', {"name":self.name})
-        e.addNode('channels_num', str(len(self.labels)))
-        e.addNode('channels_name','"' + '" "'.join(self.labels) + '"')
-        e.addNode('fs', str(self.fs))
-        e.addNode('N', str(self.n))
+    """
 
-        c = xmlElement('channels')
+    def toXML(self):
+        e = xmlElement("timeSeriesTable", {"name": self.name})
+        e.addNode("channels_num", xmlString(len(self.labels)))
+        e.addNode("channels_name", xmlString(self.labels))
+        e.addNode("fs", xmlString(self.fs))
+        e.addNode("N", xmlString(self.n))
+
+        c = xmlElement("channels")
         e.addSubTree(c)
         for k in self.labels:
-            c.addNode(k, ' '.join(format(x, '.6f') for x in self.data[k]))
+            #c.addNode(k, " ".join(format(x, ".6f") for x in self.data[k]))
+            c.addNode(k, self.data[k])
         return e
+
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find("timeSeriesTable")
+        if root == None:
+            return None
+
+        e = root.find("channels_num")
+        if e == None or e.text == None:
+            return None
+        chan_num = xmlStringParse(e.text, int)
+
+        e = root.find("channels_name")
+        if e == None or e.text == None:
+            return None
+
+        chan_name = xmlStringParseList(e.text)
+        if len(chan_name) != chan_num:
+            return None
+
+        e = root.find("fs")
+        if e == None or e.text == None:
+            return None
+        fs = xmlStringParse(e.text, float)
+
+        e = root.find("N")
+        if e == None or e.text == None:
+            return None
+        N = xmlStringParse(e.text, int)
+
+        e = root.find("channels")
+        if e == None:
+            return None
+
+        data = []
+        for el in e:
+            data.append([float(k) for k in xmlStringParseList(el.text)])
+
+        return timeSeriesTable(fs, chan_name, data)

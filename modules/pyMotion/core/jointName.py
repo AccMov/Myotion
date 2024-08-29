@@ -89,7 +89,7 @@ class jointName:
         "GL-L",
         "GL-R",
         "SOL-L",
-        "SOL-R"
+        "SOL-R",
     ]
     long = [
         "Trapezius (upper)-L",
@@ -183,18 +183,19 @@ class jointName:
         "Soleus-L",
         "Soleus-R",
     ]
+
     def __getattr__(self, name):
-        if name == 'short':
+        if name == "short":
             return self.short
-        elif name == 'long':
+        elif name == "long":
             return self.long
-        
+
     def __getitem__(self, name):
-        if name == 'short':
+        if name == "short":
             return self.short
-        elif name == 'long':
+        elif name == "long":
             return self.long
-    
+
     @staticmethod
     def getLongName(n):
         if n in jointName.short:
@@ -203,7 +204,7 @@ class jointName:
             return n
         else:
             return ""
-    
+
     @staticmethod
     def getShortName(n):
         if n in jointName.long:
@@ -212,11 +213,11 @@ class jointName:
             return n
         else:
             return ""
-    
+
     @staticmethod
     def getConcatName(n):
         if n in jointName.long:
-            return "{} / {}".format(jointName.short[jointName.long.index(n)],n)
+            return "{} / {}".format(jointName.short[jointName.long.index(n)], n)
         elif n in jointName.short:
             return "{} / {}".format(n, jointName.long[jointName.short.index(n)])
         else:

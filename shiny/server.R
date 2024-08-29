@@ -15,9 +15,9 @@ process_group <- function(group_data, group_select, para_bar, para_bar2, group_l
   
   for (id in group_select) {
     ppi <- group_data[which(names(group_data) == id)]
-    domain_ppi = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar)]]
-    domain_ppi = as.numeric(base::strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
-    muscles <- names(ppi[[1]]$emg$timeSeriesTable$channels)
+    domain_ppi = ppi[[1]]$statistic[[which(names(ppi[[1]]$statistic)==para_bar)]]
+    domain_ppi <- as.numeric(gsub("\"", "", strsplit(domain_ppi, split = " ", fixed = TRUE)[[1]]))
+    muscles <- names(ppi[[1]]$timeSeriesTable$channels)
 
     df_temp <- data.frame(
       id = rep(id, length(domain_ppi)),
@@ -29,8 +29,8 @@ process_group <- function(group_data, group_select, para_bar, para_bar2, group_l
     )
     
     if (para_bar2 != "Non") {
-      domain_ppi2 = ppi[[1]]$emg$statistic[[which(names(ppi[[1]]$emg$statistic)==para_bar2)]]
-      domain_ppi2 = as.numeric(strsplit(domain_ppi2,split=" ",fixed=TRUE)[[1]])
+      domain_ppi2 = ppi[[1]]$statistic[[which(names(ppi[[1]]$statistic)==para_bar2)]]
+      domain_ppi2 = as.numeric(gsub("\"", "", strsplit(domain_ppi2, split = " ", fixed = TRUE)[[1]]))
       df_temp$value2 <- domain_ppi2
     }
  
@@ -49,10 +49,10 @@ process_group_test <- function(group_data, group_select, para_bar, group_label) 
    
     ppi <- group_data[which(names(group_data) == id)]
     if (!is.null(ppi)) {
-      domain_ppi_str <- ppi[[1]]$emg$statistic[[para_bar]]
+      domain_ppi_str <- ppi[[1]]$statistic[[para_bar]]
       if (is.character(domain_ppi_str)) {
-        domain_ppi <- as.numeric(strsplit(domain_ppi_str, split = " ", fixed = TRUE)[[1]])
-        muscles <- names(ppi[[1]]$emg$timeSeriesTable$channels)
+        domain_ppi <- as.numeric(gsub("\"", "", strsplit(domain_ppi_str, split = " ", fixed = TRUE)[[1]]))
+        muscles <- names(ppi[[1]]$timeSeriesTable$channels)
         
         df_temp <- data.frame(
           id = rep(id, length(domain_ppi)),
@@ -104,19 +104,19 @@ server <- function(input, output) {
   groupA <- lapply(groupA_names, xmlToList)
   
   for(i in 1:length(groupA)){
-    names(groupA)[i] = groupA[[i]]$Person$name
+    names(groupA)[i] = groupA[[i]]$person$name
   }
   
   # read data
-  muscle_name = c(names(groupA[[1]]$emg$timeSeriesTable$channels))
+  muscle_name = c(names(groupA[[1]]$timeSeriesTable$channels))
   
   # Time domain parameters names
-  time_domain_para = names(groupA[[1]]$emg$statistic)[1:13]
-  freq_domain_para = names(groupA[[1]]$emg$statistic)[14:20]
-  advanced = names(groupA[[1]]$emg$timeSeriesTable$channels)
+  time_domain_para = names(groupA[[1]]$statistic)[1:13]
+  freq_domain_para = names(groupA[[1]]$statistic)[14:20]
+  advanced = names(groupA[[1]]$timeSeriesTable$channels)
   domain_list = list(time_domain_para,freq_domain_para)
   
-  domain = c("time_domain_para","freq_domain_para","advanced")
+  domain = c("time_domain_para","freq_domain_para","Time series")
 
   # Initial
   
@@ -140,16 +140,16 @@ server <- function(input, output) {
     groupA <- lapply(groupA_names, xmlToList)
     
     for(i in 1:length(groupA)){
-      names(groupA)[i] = groupA[[i]]$Person$name
+      names(groupA)[i] = groupA[[i]]$person$name
     }
     
     # read data
-    muscle_name = c(names(groupA[[1]]$emg$timeSeriesTable$channels))
+    muscle_name = c(names(groupA[[1]]$timeSeriesTable$channels))
     
     # Time domain parameters names
-    time_domain_para = names(groupA[[1]]$emg$statistic)[1:13]
-    freq_domain_para = names(groupA[[1]]$emg$statistic)[14:20]
-    advanced = names(groupA[[1]]$emg$timeSeriesTable$channels)
+    time_domain_para = names(groupA[[1]]$statistic)[1:13]
+    freq_domain_para = names(groupA[[1]]$statistic)[14:20]
+    advanced = names(groupA[[1]]$timeSeriesTable$channels)
     domain_list = list(time_domain_para,freq_domain_para)
     
     
@@ -174,12 +174,12 @@ server <- function(input, output) {
     }
     
     # read data
-    muscle_name = c(names(groupA[[1]]$emg$timeSeriesTable$channels))
+    muscle_name = c(names(groupA[[1]]$timeSeriesTable$channels))
     
     # Time domain parameters names
-    time_domain_para = names(groupA[[1]]$emg$statistic)[1:13]
-    freq_domain_para = names(groupA[[1]]$emg$statistic)[14:20]
-    advanced = names(groupA[[1]]$emg$timeSeriesTable$channels)
+    time_domain_para = names(groupA[[1]]$statistic)[1:13]
+    freq_domain_para = names(groupA[[1]]$statistic)[14:20]
+    advanced = names(groupA[[1]]$timeSeriesTable$channels)
     domain_list = list(time_domain_para,freq_domain_para)
     
     groupA_data(groupA)
@@ -294,7 +294,7 @@ server <- function(input, output) {
       choice_select2 = time_domain_para
     } else if(input$select1 == "freq_domain_para"){
       choice_select2 = freq_domain_para
-    } else if(input$select1 == "advanced"){
+    } else if(input$select1 == "Time series"){
       choice_select2 = advanced
     }
     selectInput('select2', 'Select Metrics 1', choice = choice_select2, selected = choice_select2[3])
@@ -305,18 +305,18 @@ server <- function(input, output) {
       choice_select2 = time_domain_para
     } else if(input$select1 == "freq_domain_para"){
       choice_select2 = freq_domain_para
-    } else if(input$select1 == "advanced"){
+    } else if(input$select1 == "Time series"){
       choice_select2 = advanced
     }
     selectInput('select22', 'Select Metrics 2', choice = c("Non",choice_select2), selected = "Non")
   })
   
   output$uiselect3 = renderUI({
-    if(input$select22 == "Non" & input$select1 != "advanced"){
-      choice_select3 = c("Bar chart","Density plot","Boxplot")
-    } else if(input$select22 != "Non" & input$select1 != "advanced"){
+    if(input$select22 == "Non" & input$select1 != "Time series"){
+      choice_select3 = c("Bar chart","Histogram","Boxplot")
+    } else if(input$select22 != "Non" & input$select1 != "Time series"){
       choice_select3 = c("Scatter plot")
-    }  else if(input$select1 == "advanced"){
+    }  else if(input$select1 == "Time series"){
       choice_select3 = c("Functional curve")
     } 
     selectInput("select3", "Select plot type", choices = choice_select3,
@@ -328,7 +328,7 @@ server <- function(input, output) {
       tchoice_select2 = time_domain_para
     } else if(input$testselect2 == "freq_domain_para"){
       tchoice_select2 = freq_domain_para
-    } else if(input$testselect2 == "advanced"){
+    } else if(input$testselect2 == "Time series"){
       tchoice_select2 = advanced
     }
     selectInput('testselect3', 'Select Metrics', choice = tchoice_select2,
@@ -342,7 +342,7 @@ server <- function(input, output) {
   
   output$plotoption = renderUI({
 
-    if(input$select3 %in% c("Bar chart","Boxplot","Scatter plot", "Density plot")){
+    if(input$select3 %in% c("Bar chart","Boxplot","Scatter plot")){
       figure_option_ui = list(
         checkboxInput("singleplot","Single plot", FALSE),
         textInput("title_input", "Title", value = ""),
@@ -353,7 +353,20 @@ server <- function(input, output) {
         sliderInput("xytextsize", "xy-axis text size", value = 10, min = 1, max = 50),
         selectInput("plotcolor","Color palettes", choices = c("Regular","Black & White","Color blind friendly"), selected = "Regular")
       )
-    } 
+    } else if(input$select3 %in% c("Histogram")){
+      figure_option_ui = list(
+        checkboxInput("singleplot","Single plot", FALSE),
+        checkboxInput("density","Density plot", FALSE),
+        textInput("title_input", "Title", value = ""),
+        textInput("y_input", "Y label", value = ""),
+        textInput("x_input", "X label", value = ""),
+        sliderInput("titlesize", "Title font size", value = 20, min = 1, max = 80),
+        sliderInput("xylabelsize", "x & y label size", value = 15, min = 1, max = 80),
+        sliderInput("xytextsize", "xy-axis text size", value = 10, min = 1, max = 50),
+        selectInput("plotcolor","Color palettes", choices = c("Regular","Black & White","Color blind friendly"), selected = "Regular")
+      )
+    }
+      
     return(figure_option_ui)
   })
   
@@ -421,7 +434,7 @@ server <- function(input, output) {
     df_draw_f = data.frame(id = c(), FS = c(), Time_index = c(), value = c(), group = c())
     for (i in 1:length(group_A_select)){
       ppi = groupA[which(names(groupA) == group_A_select[i])]
-      domain_ppi = ppi[[1]]$emg$timeSeriesTable$channels
+      domain_ppi = ppi[[1]]$timeSeriesTable$channels
       domain_ppi = as.data.frame(domain_ppi)
       as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
       domain_ppi[,1] = as.numeric(strsplit(domain_ppi,split=" ",fixed=TRUE)[[1]])
@@ -635,10 +648,17 @@ server <- function(input, output) {
           orientation = "h", xanchor = "center", x = 0.5, y= 1
         ))
     } 
-    else if(input$select3 == "Density plot"){
+    else if(input$select3 == "Histogram"){
       df_dens = df_draw()
-      dens_plot = ggplot(df_dens, aes(x = value, fill = group,color = group)) + 
-        geom_density( alpha = 0.5) + 
+      if(input$density){
+        dens_plot = ggplot(df_dens, aes(x = value, fill = group,color = group)) + 
+          geom_density( alpha = 0.5) 
+      }else{
+        dens_plot = ggplot(df_dens, aes(x = value, fill = group,color = group)) + 
+          geom_histogram(position = "identity", alpha = 0.5)      
+        }
+      
+      dens_plot = dens_plot + 
         facet_wrap(~ muscle, scales = "free_x")+
         theme(panel.spacing.x = unit(0, "mm")) + theme_tufte()+
         theme(axis.title = element_text(size = input$xylabelsize),
@@ -715,7 +735,7 @@ server <- function(input, output) {
       loc_value = which(names(dt_table) == "value")
       
     } 
-    else if(input$select3 == "Density plot"){
+    else if(input$select3 == "Histogram"){
       dt_table = df_draw()
       rg = range(dt_table$value)
       loc_value = which(names(dt_table) == "value")

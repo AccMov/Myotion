@@ -155,7 +155,14 @@ server <- function(input, output) {
     
   })
   
+  groupA_data <- reactiveVal()
+  muscle_name_data <- reactiveVal()
+  time_domain_para_data <- reactiveVal()
+  freq_domain_para_data <- reactiveVal()
+  advanced_data <- reactiveVal()  
+  
   observeEvent(input$goButton, {
+
     oldpath <<- path
     #a =while (TRUE) {}
     groupA_names <- list.files(normalizePath(path, "/", mustWork = FALSE),
@@ -174,6 +181,13 @@ server <- function(input, output) {
     freq_domain_para = names(groupA[[1]]$emg$statistic)[14:20]
     advanced = names(groupA[[1]]$emg$timeSeriesTable$channels)
     domain_list = list(time_domain_para,freq_domain_para)
+    
+    groupA_data(groupA)
+    muscle_name_data(muscle_name)
+    time_domain_para_data(time_domain_para)
+    freq_domain_para_data(freq_domain_para)
+    advanced_data(advanced)
+    
   })
 
   
@@ -227,7 +241,9 @@ server <- function(input, output) {
                                    selected = "time_domain_para"),
                        uiOutput('testuiselect1'),
                        pickerInput("testselect4", "Select muscles", choices = muscle_name,
-                                     selected = muscle_name[1], multiple = F))      
+                                     selected = muscle_name[1], multiple = F),
+                       actionButton("goButton_test", "Perform test")
+        )      
     } 
     if (input$tab == "groups") {
       
@@ -237,7 +253,7 @@ server <- function(input, output) {
                        uiOutput('uiselect2'),
                        uiOutput('uiselect3'),
                        actionButton("goButton", "Generate figure"),
-                       tabsetPanel(id = "tabset_id1", selected = "t1", 
+                       tabsetPanel(id = "tabset_id1", selected = "t3", 
                                    tabPanel("Advanced options",  value = "t3",
                                             uiOutput("plotoption")))                 
       )
@@ -250,19 +266,20 @@ server <- function(input, output) {
     if (input$tab == "tests") {
       if(length(unique(dt_test$group))==2){
         return(list(selectInput("testselect1", "Select test ", choices = c("Two sample t test"),
-                           selected = "Two sample t test"),
-                    tabsetPanel(id = "tabset_id2", selected = "tt1", 
-                                tabPanel("Advanced options",  value = "tt3",
-                                         selectInput("somethinghere", "Some useful options", choices = c("1","2","3"),
-                                                     selected = "1")))))
+                           selected = "Two sample t test")#,
+                    #tabsetPanel(id = "tabset_id2", selected = "tt1", 
+                    #          tabPanel("Advanced options",  value = "tt3",
+                    #                selectInput("somethinghere", "Some useful options", choices = c("1","2","3"),
+                    #                           selected = "1")))
+                    ))
         
       } else if(length(unique(dt_test$group))>2){
         return(list(selectInput("testselect1", "Select test ", choices = c("One-way ANOVA","Tukey's HSD"),
-                           selected = "One-way ANOVA"),
-                    tabsetPanel(id = "tabset_id2", selected = "tt1", 
-                                tabPanel("Advanced options",  value = "tt3",
-                                         selectInput("somethinghere", "Some useful options", choices = c("1","2","3"),
-                                                     selected = "1")))
+                           selected = "One-way ANOVA")#,
+                    #tabsetPanel(id = "tabset_id2", selected = "tt1", 
+                    #           tabPanel("Advanced options",  value = "tt3",
+                    #                    selectInput("somethinghere", "Some useful options", choices = c("1","2","3"),
+                    #                               selected = "1")))
                     ))
       }
 
@@ -674,6 +691,8 @@ server <- function(input, output) {
   })
  
   output$DTtable1 <- DT::renderDataTable({
+    input$goButton
+    isolate({
     ## Draw plot
     if(input$select3 == "Bar chart"){
       dt_table = df_draw() %>% dplyr::group_by(group, muscle) %>%
@@ -727,8 +746,11 @@ server <- function(input, output) {
                   backgroundPosition = 'center')
     
   })
+  })
   
   output$DTtabletest1 <- DT::renderDataTable({
+    input$goButton_test
+    isolate({
     dt_table = df_draw_test()
     if(dim(dt_table)[1]>0){
       dt_table = pivot_wider(dt_table, names_from = para)
@@ -747,8 +769,11 @@ server <- function(input, output) {
                     lengthMenu=list(c(10, -1), c('10', 'All'))), rownames= FALSE) 
     
   })
+  })
   
   output$html1 <- renderUI({
+    input$goButton_test
+    isolate({
     dt_test = df_draw_test()
     if(length(unique(dt_test$group))>=2){
     if (input$testselect1 == "Two sample t test"){
@@ -782,6 +807,7 @@ server <- function(input, output) {
           "<font size= 50> Please fill in at least two groups to perform statistical tests </font>"
         )    
     }
+  })
   })
 }
 

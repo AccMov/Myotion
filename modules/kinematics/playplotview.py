@@ -12,7 +12,6 @@ class PlayPlotWidget(QWidget):
 
     def add_line(self, x, y, name):
         plt = pg.plot(x, y, name=name, pen=self.pen, clear=True, autoDownsample=True)
-        plt.addLegend()
         self.playline.append(plt.addLine(x=5, pen=pg.mkPen(color="r", width=2)))
         plt.setBackground("#e5ecf6")
         plt.setRange(xRange=[0, len(x)])

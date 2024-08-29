@@ -16,10 +16,9 @@
 
 import sys
 import os
-import platform
 import re
-import math
 from pathlib import Path
+import webbrowser
 
 from PySide6.QtCore import Qt, Signal, Slot
 from PySide6.QtGui import QIcon, QPalette
@@ -37,14 +36,13 @@ from PySide6.QtWidgets import (
     QFileSystemModel,
     QTreeWidget,
     QTreeWidgetItem,
-    QFrame,
-    QSpacerItem,
     QHBoxLayout,
 )
 from PySide6.QtWebEngineCore import QWebEngineUrlScheme
 
 from modules.kinematics.controller import Controller
 from modules.kinematics.model import Model
+from modules.login import LoginDialog
 from rserver import RServer
 from miscWidgets import *
 from path import *
@@ -519,6 +517,12 @@ class MainWindow(QMainWindow):
         widgets.comboBox_19.currentIndexChanged.connect(self.FFTPlotPerPageSelected)
         widgets.comboBox_20.currentIndexChanged.connect(self.FFTPlotPageIndexSelected)
 
+        # start page
+        widgets.signInButton.clicked.connect(self.login_click)
+        widgets.signUpButton.clicked.connect(
+            lambda x: webbrowser.open("http://www.accmov.com")
+        )
+
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
 
@@ -629,6 +633,13 @@ class MainWindow(QMainWindow):
 
         # PRINT BTN NAME
         print(f'Button "{btnName}" pressed!')
+
+    def login_click(self):
+        dlg = LoginDialog()
+        ret = dlg.exec()
+        if ret == 1:
+            widgets.label_3.setText("Welcome, " + dlg.ui.lineEdit.text())
+            widgets.frame_64.layout().addWidget(widgets.logoutButton)
 
     # RESIZE EVENTS
     # ///////////////////////////////////////////////////////////////

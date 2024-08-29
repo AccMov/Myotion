@@ -1401,19 +1401,48 @@ class Ui_MainWindow(object):
         self.middle.setFrameShape(QFrame.StyledPanel)
         self.middle.setFrameShadow(QFrame.Raised)
         self.verticalLayout_23 = QVBoxLayout(self.middle)
-        self.verticalLayout_23.setObjectName("verticalLayout_23")
-        self.label_4 = QLabel(self.middle)
-        self.label_4.setObjectName("label_4")
-        self.label_4.setStyleSheet("font-size:16px;\n" "font-weight:bold;")
+        self.verticalLayout_23.setObjectName(u"verticalLayout_23")
+        self.frame_64 = QFrame(self.middle)
+        self.frame_64.setObjectName(u"frame_64")
+        self.frame_64.setFrameShape(QFrame.StyledPanel)
+        self.frame_64.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout_48 = QHBoxLayout(self.frame_64)
+        self.horizontalLayout_48.setObjectName(u"horizontalLayout_48")
+        self.horizontalLayout_48.setContentsMargins(0, 0, 0, 0)
+        self.signInButton = QPushButton(self.frame_64)
+        self.signInButton.setObjectName(u"signInButton")
+        self.signInButton.setMinimumSize(QSize(150, 60))
+        self.signInButton.setFont(font)
+        self.signInButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.signInButton.setStyleSheet(u"background-color: rgb(52, 59, 72);")
+        icon6 = QIcon()
+        icon6.addFile(u":/icons/images/icons/cil-home.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.signInButton.setIcon(icon6)
 
-        self.verticalLayout_23.addWidget(self.label_4)
+        self.horizontalLayout_48.addWidget(self.signInButton)
 
-        self.lineEdit_2 = QLineEdit(self.middle)
-        self.lineEdit_2.setObjectName("lineEdit_2")
-        self.lineEdit_2.setMinimumSize(QSize(0, 30))
-        self.lineEdit_2.setStyleSheet("background-color: rgb(33, 37, 43);\n" "")
+        self.signUpButton = QPushButton(self.frame_64)
+        self.signUpButton.setObjectName(u"signUpButton")
+        self.signUpButton.setMinimumSize(QSize(150, 60))
+        self.signUpButton.setFont(font)
+        self.signUpButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.signUpButton.setStyleSheet(u"background-color: rgb(52, 59, 72);")
+        icon7 = QIcon()
+        icon7.addFile(u":/icons/images/icons/cil-user-follow.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.signUpButton.setIcon(icon7)
 
-        self.verticalLayout_23.addWidget(self.lineEdit_2)
+        self.horizontalLayout_48.addWidget(self.signUpButton)
+
+
+        self.verticalLayout_23.addWidget(self.frame_64)
+        
+        
+        # self.logoutButton = QPushButton(self.frame_64)
+        # self.logoutButton.setObjectName(u"signUpButton")
+        # self.logoutButton.setMinimumSize(QSize(150, 60))
+        # self.logoutButton.setFont(font)
+        # self.logoutButton.setCursor(QCursor(Qt.PointingHandCursor))
+        # self.logoutButton.setStyleSheet(u"background-color: rgb(52, 59, 72);")
 
         self.verticalLayout_21.addWidget(self.middle)
 
@@ -4601,91 +4630,30 @@ class Ui_MainWindow(object):
         )
         # endif // QT_CONFIG(tooltip)
         self.closeAppBtn.setText("")
-        self.label_2.setText(
-            QCoreApplication.translate("MainWindow", "Hello, Member", None)
-        )
-        self.label_3.setText(
-            QCoreApplication.translate(
-                "MainWindow", "Welcome to MSK workplace, let's get started!", None
-            )
-        )
-        self.label_4.setText(
-            QCoreApplication.translate("MainWindow", "Quick Search", None)
-        )
-        self.lineEdit_2.setText("")
-        self.lineEdit_2.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", "Type here", None)
-        )
-        self.label_5.setText(
-            QCoreApplication.translate("MainWindow", "Quick Start", None)
-        )
-        self.pushButton_2.setText(
-            QCoreApplication.translate("MainWindow", "  Batch processing", None)
-        )
-        self.pushButton_3.setText(
-            QCoreApplication.translate("MainWindow", " Data visualization", None)
-        )
-        self.pushButton_4.setText(
-            QCoreApplication.translate("MainWindow", " Tutorial ", None)
-        )
-        self.pushButton_5.setText(
-            QCoreApplication.translate("MainWindow", "CTO Photos", None)
-        )
-        self.label_6.setText(
-            QCoreApplication.translate("MainWindow", "How to use Myotion ...", None)
-        )
-        self.plainTextEdit_2.setPlainText(
-            QCoreApplication.translate(
-                "MainWindow",
-                "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                None,
-            )
-        )
-        self.pushButton_6.setText(
-            QCoreApplication.translate("MainWindow", "Learn More", None)
-        )
-        self.label_7.setText(
-            QCoreApplication.translate("MainWindow", "How to use Myotion ...", None)
-        )
-        self.plainTextEdit_3.setPlainText(
-            QCoreApplication.translate(
-                "MainWindow",
-                "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                None,
-            )
-        )
-        self.pushButton_7.setText(
-            QCoreApplication.translate("MainWindow", "Learn More", None)
-        )
-        self.label_8.setText(
-            QCoreApplication.translate("MainWindow", "How to use Myotion ...", None)
-        )
-        self.plainTextEdit_4.setPlainText(
-            QCoreApplication.translate(
-                "MainWindow",
-                "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                None,
-            )
-        )
-        self.pushButton_8.setText(
-            QCoreApplication.translate("MainWindow", "Learn More", None)
-        )
-        self.label_9.setText(
-            QCoreApplication.translate("MainWindow", "How to use Myotion ...", None)
-        )
-        self.plainTextEdit_5.setPlainText(
-            QCoreApplication.translate(
-                "MainWindow",
-                "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-                None,
-            )
-        )
-        self.pushButton_9.setText(
-            QCoreApplication.translate("MainWindow", "Learn More", None)
-        )
-        self.label_11.setText(
-            QCoreApplication.translate("MainWindow", "Previous Process", None)
-        )
+        
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Let's get started</p></body></html>", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:11pt;\">Welcome to MSK workplace, sign in to start using.</span></p></body></html>", None))
+        self.signInButton.setText(QCoreApplication.translate("MainWindow", u"Sign In", None))
+        self.signUpButton.setText(QCoreApplication.translate("MainWindow", u"Sign Up", None))
+        # self.logoutButton.setText(QCoreApplication.translate("MainWindow", u"Log Out", None))
+        self.label_5.setText(QCoreApplication.translate("MainWindow", u"Quick Start", None))
+        self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"  Batch processing", None))
+        self.pushButton_3.setText(QCoreApplication.translate("MainWindow", u" Data visualization", None))
+        self.pushButton_4.setText(QCoreApplication.translate("MainWindow", u" Tutorial ", None))
+        self.pushButton_5.setText(QCoreApplication.translate("MainWindow", u"CTO Photos", None))
+        self.label_6.setText(QCoreApplication.translate("MainWindow", u"How to use Myotion ...", None))
+        self.plainTextEdit_2.setPlainText(QCoreApplication.translate("MainWindow", u"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", None))
+        self.pushButton_6.setText(QCoreApplication.translate("MainWindow", u"Learn More", None))
+        self.label_7.setText(QCoreApplication.translate("MainWindow", u"How to use Myotion ...", None))
+        self.plainTextEdit_3.setPlainText(QCoreApplication.translate("MainWindow", u"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", None))
+        self.pushButton_7.setText(QCoreApplication.translate("MainWindow", u"Learn More", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"How to use Myotion ...", None))
+        self.plainTextEdit_4.setPlainText(QCoreApplication.translate("MainWindow", u"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", None))
+        self.pushButton_8.setText(QCoreApplication.translate("MainWindow", u"Learn More", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"How to use Myotion ...", None))
+        self.plainTextEdit_5.setPlainText(QCoreApplication.translate("MainWindow", u"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", None))
+        self.pushButton_9.setText(QCoreApplication.translate("MainWindow", u"Learn More", None))
+        self.label_11.setText(QCoreApplication.translate("MainWindow", u"Previous Process", None))
 
         self.label_12.setText(
             QCoreApplication.translate("MainWindow", "Current Process", None)

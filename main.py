@@ -269,12 +269,13 @@ class EMGAddWindow(QDialog):
 
     def applyFuzzMatchOnMVC(self):
         filenames = [os.path.basename(f) for f in self.mvcfiles]
+        print(filenames)
         for c in self.channels:
-            # set only when possiblity bigger than 50%
             candidate_list = self.workspace.matchChanToMVCFile(
                 c, filenames, lower_bound=50
             )
             if len(candidate_list) == 0:
+                logger.info("EMG ADD MVC: no candidate found")
                 continue
             else:
                 file, possibility = candidate_list[0]
@@ -1043,12 +1044,14 @@ class MainWindow(QMainWindow):
         self.selectedParticipants.clear()
         state = not not state
         if state:
-            participants = self.workspace.getFilteredParticipants(self.participant_filter)
+            participants = self.workspace.getFilteredParticipants(
+                self.participant_filter
+            )
             for p in participants:
                 name = p.name
                 self.selectedParticipants.append(name)
         self.updateEMGParticipantBox()
-    
+
     def FFTPlotNextPageClicked(self):
         widgets.scrollArea_3.nextPage()
         self.updateFreqAnalysisFFTPanel()
@@ -1084,7 +1087,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(w)
         layout.setAlignment(Qt.AlignCenter)
         layout.setContentsMargins(0, 0, 0, 0)
-        #w.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # w.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         return container
 
     # draw FFT
@@ -1129,8 +1132,16 @@ class MainWindow(QMainWindow):
             h = widgets.tableWidget_2.rowHeight(i)
             col2w = widgets.tableWidget_2.columnWidth(2)
             col3w = widgets.tableWidget_2.columnWidth(3)
-            ready = statusLED(col2w*0.8, h*0.8, STATUS.Loading if self.workspace[p].isLoading() else STATUS.Passed)
-            report = statusLED(col3w*0.8, h*0.8, STATUS.Passed if self.workspace[p].isReportReady() else STATUS.Failed)
+            ready = statusLED(
+                col2w * 0.8,
+                h * 0.8,
+                STATUS.Loading if self.workspace[p].isLoading() else STATUS.Passed,
+            )
+            report = statusLED(
+                col3w * 0.8,
+                h * 0.8,
+                STATUS.Passed if self.workspace[p].isReportReady() else STATUS.Failed,
+            )
             widgets.tableWidget_2.setCellWidget(i, 2, self.EMGCreateHBox(ready))
             widgets.tableWidget_2.setCellWidget(i, 3, self.EMGCreateHBox(report))
 

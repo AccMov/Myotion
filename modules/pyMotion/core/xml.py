@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 import os
 import numpy as np
 
+
 # helper function to convert e to a XML value
 # this add pair of "" on strings
 def xmlString(e):
@@ -27,11 +28,11 @@ def xmlStringParse(s, t=str):
     elif t is float:
         return float(xmlStringParse(s, str))
     elif t is str:
-        return s[1:-1] # remove double quotes
+        return s[1:-1]  # remove double quotes
 
 
 def xmlStringParseList(s):
-    return [a for a in [a.strip() for a in s.split("\"")] if a]
+    return [a for a in [a.strip() for a in s.split('"')] if a]
 
 
 """
@@ -85,7 +86,7 @@ class xmlElement(ET.Element):
         root = xmlElement(name)
         for old, new in map.items():
             root.addNode("map", xmlString(new), {"name": xmlString(old)})
-        self.addSubTree(root) 
+        self.addSubTree(root)
 
     # return ET.subElement
     # tag: Node tag,
@@ -117,7 +118,7 @@ class xmlWriter:
         self.tree._setroot(self.root)
         # pretty print
         ET.indent(self.tree)
-        self.tree.write(self.path, encoding="utf-8", xml_declaration=True)
+        self.tree.write(self.path, encoding="utf-8", xml_declaration=False)
 
 
 class xmlReader:

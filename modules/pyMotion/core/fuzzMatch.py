@@ -3,8 +3,9 @@ from heapq import heappop, heappush, nlargest
 from collections import OrderedDict
 from .xml import *
 
+
 class record:
-    def __init__(self, val, n, possiblity):
+    def __init__(self, val: str, n: int, possiblity: float):
         self.v = val
         self.n = n
         self.p = possiblity
@@ -25,21 +26,21 @@ class heapMDict:
         self.heaplist = []
 
     # max heap
-    def __bubbleup(self, i):
+    def __bubbleup(self, i: int):
         while i > 0:
-            if self.heaplist[i] > self.heaplist[(i - 1) / 2]:
-                self.heaplist[i], self.heaplist[(i - 1) / 2] = (
-                    self.heaplist[(i - 1) / 2],
+            if self.heaplist[i] > self.heaplist[int((i - 1) / 2)]:
+                self.heaplist[i], self.heaplist[int((i - 1) / 2)] = (
+                    self.heaplist[int((i - 1) / 2)],
                     self.heaplist[i],
                 )
-                self.dict[self.heaplist[i].v]["index"] = (i - 1) / 2
-                self.dict[self.heaplist[(i - 1) / 2].v]["index"] = i
-                i = (i - 1) / 2
+                self.dict[self.heaplist[i].v]["index"] = int((i - 1) / 2)
+                self.dict[self.heaplist[int((i - 1) / 2)].v]["index"] = i
+                i = int((i - 1) / 2)
             else:
                 break
 
     # max heap
-    def __bubbledown(self, i):
+    def __bubbledown(self, i: int):
         while i < len(self.heaplist):
             if self.heaplist[i] < self.heaplist[2 * i + 1]:
                 self.heaplist[i], self.heaplist[2 * i + 1] = (
@@ -95,6 +96,7 @@ class heapMDict:
     def getP(self, key):
         return self.heaplist[self.dict[key]].p
 
+    # get max with in filtering of candidates
     def getMax(self, filter=set()):
         if self.size() == 0:
             return []
@@ -118,10 +120,48 @@ class heapMDict:
                 break
         return result_token
 
+    def toXML(self):
+        root = xmlElement("MDict")
+        for key, index in self.dict.items():
+            r = xmlElement("record")
+            r.addNode("key", xmlString(key))
+            rec = self.heaplist[index]
+            r.addNode("v", xmlString(rec.v))
+            r.addNode("n", xmlString(int(rec.n)))
+            r.addNode("p", xmlString(float(rec.p)))
+            root.addSubTree(r)
+        return root
+
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find("MDict")
+        if root == None:
+            return None
+
+        h = heapMDict()
+        index = 0
+        for el in root.iter("record"):
+            k = el.find("key").text
+            v = el.find("v").text
+            n = el.find("n").text
+            p = el.find("p").text
+            if k and v and n and p:
+                h.dict[xmlStringParse(k, str)] = index
+                h.heaplist.append(
+                    record(
+                        xmlStringParse(v, str),
+                        xmlStringParse(n, int),
+                        xmlStringParse(p, float),
+                    )
+                )
+                index += 1
+        return h
+
+
 # key : [ (val, number_of_selects, fuzzPossibility), ... ]
 class fuzzMatch:
     def __init__(self):
-        # key : heapMDict(record1, record2, ...)
+        # {key : heapMDict(record1, record2, ...), ...}
         self.fuzzDict = {}
         # store all existed values
         self.previousValues = set()
@@ -130,7 +170,10 @@ class fuzzMatch:
         self.previousValues.add(val)
 
         if key in self.fuzzDict:
-            p = self.fuzzDict[key].getP(val)
+            if val in self.fuzzDict[key].keys():
+                p = self.fuzzDict[key].getP(val)
+            else:
+                p = fuzz.partial_ratio(key, val)
             self.fuzzDict[key].push(val, p)
         else:
             self.fuzzDict[key] = heapMDict()
@@ -156,38 +199,72 @@ class fuzzMatch:
     # # look for match in key and targeted_values
     # lower_bound is the lowest possbility between [0,100] indicating a match
     def match(self, key, targeted_values, lower_bound=0):
+        # key never used, use key-targetedv raw match
+        if key not in self.fuzzDict:
+            return self.__matchRawString(key, targeted_values, lower_bound)
+
         # get intersection of previousValue and candidates as we
         # priortize user selection
         candidate_set = set(targeted_values) & self.previousValues
 
-        # no candidate, use raw string match
-        if len(candidate_set) == 0:
-            return self.__matchRawString(key, targeted_values, lower_bound)
+        # previous value for this key
+        previous_uses = set(self.fuzzDict[key].keys())
 
-        # check preivous record and find the possible match
-        if key not in self.fuzzDict:
-            # if not in dict, use raw string match
-            return self.__matchRawString(key, targeted_values, lower_bound)
+        # key used, but no old value in targeted-values
+        # search closest between previous-uses and target-value
+        if len(candidate_set & previous_uses) == 0:
+            # previous top pick for this key
+            previous_pick = self.fuzzDict[key].getMax()[0].v
+            return self.__matchRawString(previous_pick, targeted_values, lower_bound)
         else:
-            previous_uses = set(self.fuzzDict[key].keys())
+            # check previous record and find the possible match
             candidate_set = candidate_set & previous_uses
 
-            if len(candidate_set) == 0:
-                # if prev selection not found, use raw string match
-                return self.__matchRawString(key, targeted_values, lower_bound)
-
-            # user selected these before, so we are loosing the restriction on bound
-            # pick the most selected item
+            # user selected some of the targeted-value before
+            # we are loosing the restriction on bound
+            # and pick the most selected item
             result_token = []
             token = self.fuzzDict[key].getMax(candidate_set)
             for t in token:
                 result_token.append([t.v, t.p])
 
         return result_token
-    
+
     def toXML(self):
         root = xmlElement("fuzzMatch")
-        e = xmlElement("dict")
-        for key, val in self.fuzzDict.items():
-            e.addSubTree("map", val.toXML(), {"name":xmlString(key)})
+        for key, mdictheap in self.fuzzDict.items():
+            e = xmlElement("fuzzDict")
+            e.addNode("key", xmlString(key))
+            e.addSubTree(mdictheap.toXML())
+            root.addSubTree(e)
+        root.addNode("previousValues", xmlString(self.previousValues))
         return root
+
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find("fuzzMatch")
+        if root == None:
+            return None
+
+        f = fuzzMatch()
+        for el in root.iter("fuzzDict"):
+            key, mdictheap = None, None
+            k = el.find("key")
+            if k == None or k.text == None:
+                continue
+
+            key = xmlStringParse(k.text)
+
+            mdictheap = heapMDict.fromXML(el)
+            if mdictheap == None:
+                continue
+
+            f.fuzzDict[key] = mdictheap
+
+        e = root.find("previousValues")
+        if e == None or e.text == None:
+            return None
+
+        f.previousValues = set(xmlStringParseList(e.text))
+
+        return f

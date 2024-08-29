@@ -7,6 +7,7 @@ from .fuzzMatch import *
 from .logger import *
 import os
 import threading
+from ctypes import c_int, addressof
 
 
 PROJ_EXT = ".myo"
@@ -237,6 +238,14 @@ class workspace:
             p.addSubTree(self.profileList[person.name].toXML())
             root.addSubTree(p)
 
+        # save fuzz match
+        mvc_file_to_channel = xmlElement("mvc_file_to_channel")
+        mvc_file_to_channel.addSubTree(self.fuzzs["mvc_file_to_channel"].toXML())
+        root.addSubTree(mvc_file_to_channel)
+        chan_to_joint = xmlElement("chan_to_joint")
+        chan_to_joint.addSubTree(self.fuzzs["chan_to_joint"].toXML())
+        root.addSubTree(chan_to_joint)
+
         writer = xmlWriter(filename, root)
         writer.write()
 
@@ -275,6 +284,15 @@ class workspace:
             workspace_obj.participants.append(person_obj)
             workspace_obj.profileList[person_obj.name] = profile_obj
             pending_load[person_obj.name] = profile_obj
+
+        # fuzz match
+        e = root.find("mvc_file_to_channel")
+        if e:
+            workspace_obj.fuzzs["mvc_file_to_channel"] = fuzzMatch.fromXML(e)
+
+        e = root.find("chan_to_joint")
+        if e:
+            workspace_obj.fuzzs["chan_to_joint"] = fuzzMatch.fromXML(e)
 
         # spawn a loading thread to load emg
         if len(pending_load):

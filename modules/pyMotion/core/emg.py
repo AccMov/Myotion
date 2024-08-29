@@ -5,33 +5,79 @@ from .xml import *
 from enum import Enum
 from .logger import *
 import re
+from ctypes import c_int, addressof
 
 
 class emgDCOffset:
     def __init__(self):
         self.enable = False
 
-    def toXML(self, e):
-        e.addNode("enable", self.enable)
+    def toXML(self):
+        e = xmlElement("emgDCOffset")
+        e.addNode("enable", xmlString(self.enable))
         return e
+
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find("emgDCOffset")
+        if root == None:
+            return None
+
+        obj = emgDCOffset
+        e = root.find("enable")
+        if e and e.text:
+            obj.enable = xmlStringParse(e.text, bool)
+        else:
+            obj.enable = False
+        return obj
 
 
 class emgRectification:
     def __init__(self):
         self.enable = False
 
-    def toXML(self, e):
-        e.addNode("enable", self.enable)
+    def toXML(self):
+        e = xmlElement("emgRectification")
+        e.addNode("enable", xmlString(self.enable))
         return e
+
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find("emgRectification")
+        if root == None:
+            return None
+
+        obj = emgRectification
+        e = root.find("enable")
+        if e and e.text:
+            obj.enable = xmlStringParse(e.text, bool)
+        else:
+            obj.enable = False
+        return obj
 
 
 class emgNormalization:
     def __init__(self):
         self.enable = False
 
-    def toXML(self, e):
-        e.addNode("enable", self.enable)
+    def toXML(self):
+        e = xmlElement("emgNormalization")
+        e.addNode("enable", xmlString(self.enable))
         return e
+
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find("emgNormalization")
+        if root == None:
+            return None
+
+        obj = emgNormalization
+        e = root.find("enable")
+        if e and e.text:
+            obj.enable = xmlStringParse(e.text, bool)
+        else:
+            obj.enable = False
+        return obj
 
 
 class emgSummary:
@@ -60,7 +106,7 @@ class emgFilter:
         self.type = emgFilterEnum.LOW_PASS
         self.cutoff_l = 0
         self.cutoff_h = 0
-        self.order = 2
+        self.order = int(2)
 
         self.nameMap = {
             emgFilterEnum.LOW_PASS: "low pass filter",
@@ -68,32 +114,58 @@ class emgFilter:
             emgFilterEnum.MAX: "N/A",
         }
 
-    def setType(self, t):
+    def setType(self, t: int):
         if t >= emgFilter.MAX or t < 0:
             logger.error("invalid filter type!")
             return -1
 
         self.type = t
 
-    def setCutOff_L(self, freq):
+    def setCutOff_L(self, freq: float):
         self.cutoff_l = freq
 
-    def setCutOff_H(self, freq):
+    def setCutOff_H(self, freq: float):
         self.cutoff_h = freq
 
-    def setOrder(self, index):
+    def setOrder(self, index: int):
         self.order = index
 
-    # add nodes to xml tree
-    def toXML(self, e):
-        e.addNode("type", self.nameMap[self.type])
-        e.addNode("order", str(self.order))
-        e.addNode("cutoff_l", str(self.cutoff_l))
-        e.addNode("cutoff_h", str(self.cutoff_h))
+    def toXML(self):
+        e = xmlElement("emgFilter")
+        e.addNode("type", xmlString(self.type))
+        e.addNode("order", xmlString(self.order))
+        e.addNode("cutoff_l", xmlString(self.cutoff_l))
+        e.addNode("cutoff_h", xmlString(self.cutoff_h))
         return e
 
-    def fromXML(self, xml):
-        return
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find("emgFilter")
+        if root == None:
+            return None
+
+        obj = emgFilter
+        e = root.find("type")
+        if e and e.text:
+            obj.type = xmlStringParse(e.text, int)
+        else:
+            obj.type = emgFilterEnum.LOW_PASS
+        e = root.find("order")
+        if e and e.text:
+            obj.order = xmlStringParse(e.text, int)
+        else:
+            obj.order = 2
+        e = root.find("cutoff_l")
+        if e and e.text:
+            obj.cutoff_l = xmlStringParse(e.text, float)
+        else:
+            obj.cutoff_l = 0
+        e = root.find("cutoff_h")
+        if e and e.text:
+            obj.cutoff_h = xmlStringParse(e.text, float)
+        else:
+            obj.cutoff_h = 0
+        return obj
 
 
 class emgActivation:
@@ -102,23 +174,45 @@ class emgActivation:
         self.n_above = 5
         self.n_below = 5
 
-    def setThreHold(self, t):
+    def setThreHold(self, t: float):
         self.threhold = t
 
-    def setCutOff_L(self, freq):
-        self.cutoff_l = freq
+    def set_L(self, l):
+        self.n_below = l
 
-    def setCutOff_H(self, freq):
-        self.cutoff_h = freq
+    def set_H(self, h):
+        self.n_above = h
 
-    def toXML(self, e):
-        e.addNode("threhold", str(self.threhold))
-        e.addNode("n_above", str(self.n_above))
-        e.addNode("n_below", str(self.n_below))
+    def toXML(self):
+        e = xmlElement("emgActivation")
+        e.addNode("threhold", xmlString(self.threhold))
+        e.addNode("n_above", xmlString(self.n_above))
+        e.addNode("n_below", xmlString(self.n_below))
         return e
 
-    def fromXML(self, xml_element):
-        return
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find("emgActivation")
+        if root == None:
+            return None
+
+        obj = emgActivation
+        e = root.find("threhold")
+        if e and e.text:
+            obj.threhold = xmlStringParse(e.text, float)
+        else:
+            obj.type = 0
+        e = root.find("n_above")
+        if e and e.text:
+            obj.n_above = xmlStringParse(e.text, int)
+        else:
+            obj.n_above = 5
+        e = root.find("n_below")
+        if e and e.text:
+            obj.n_below = xmlStringParse(e.text, int)
+        else:
+            obj.n_below = 5
+        return obj
 
 
 class emgConfigureEnum(Enum):
@@ -222,16 +316,23 @@ class emgConfigure:
     def toXML(self):
         # top tree
         e = xmlElement("emgConfigure")
+        """
         for i in range(0, len(self.step)):
             # subtree for each step
             subElement = xmlElement(self.nameMap[self.step[i]])
             config = self.stepConfig[i]
             if config is not None:
                 config.toXML(subElement)
+        """
         return e
 
-    def fromXML(self, xml_element):
-        return
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find("emgConfigure")
+        if root == None:
+            return None
+
+        emgc = emgConfigure()
 
 
 class emg:
@@ -300,7 +401,6 @@ class emg:
         self.emgTST = None
         self.emgMVCTST = None
         self.Channels.clear()
-        self.mvcFilesMap.clear()
 
     # return channels
     def getChannels(self):

@@ -32,3 +32,5 @@ from .ui_functions import *
 from .app_functions import *
 
 from .pyMotion import *
+
+from .permission import permission

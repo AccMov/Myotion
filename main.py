@@ -57,7 +57,7 @@ os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100
 # SET AS GLOBAL WIDGETS
 # ///////////////////////////////////////////////////////////////
 widgets = None
-
+perm = None
 
 # Global Constant
 # ///////////////////////////////////////////////////////////////
@@ -573,6 +573,12 @@ class MainWindow(QMainWindow):
 
         # self.test()
 
+        # Permission widget setup
+        perm.register(widgets.topMenu, permission.BASIC)  # menu page
+        perm.register(widgets.extraTopMenu, permission.BASIC)  # workspace page
+        perm.setPermLevel(permission.LOGOUT)
+
+
     def test(self):
         self.newWorkSpace(os.getcwd(), "test")
         f = os.getcwd() + "/ERRPT.c3d"
@@ -639,6 +645,12 @@ class MainWindow(QMainWindow):
         ret = dlg.exec()
         if ret == 1:
             widgets.label_3.setText("Welcome, " + dlg.ui.lineEdit.text())
+
+            logger.info("User loggined!")
+            # enable UI, for now just BASIC
+            # without more user plan available, could setup different value here
+            perm.setPermLevel(permission.BASIC)
+
             widgets.frame_64.layout().addWidget(widgets.logoutButton)
 
     # RESIZE EVENTS
@@ -1626,6 +1638,7 @@ if __name__ == "__main__":
     QPlotViewSetup()
 
     qApp = QApplication(sys.argv)
+    perm = permission()
     qApp.setWindowIcon(QIcon("Myotion_logo.png"))
     window = MainWindow()
     qApp.exec()

@@ -17,15 +17,24 @@ class LoginDialog(QDialog):
     def login(self):
         username = self.ui.lineEdit.text()
         password = self.ui.lineEdit_2.text()
-        ret = bm.login(username, password)
+        ret = bm.get_tenant(username, password)
+        mb = QMessageBox()
+        mb.setIcon(QMessageBox.Icon.Warning)
+        mb.setWindowTitle("Error")
+        mb.setStyleSheet("QMessagebox{background-color: black;}"
+                         "QPushButton{background-color: #333; color: white;}")
         if ret.status_code == 200:
+            self.user = ret.json()
             self.accept()
-        else:
-            QMessageBox.warning(self, "Error", "Invalid username or password")
+            return
+        elif ret.status_code == 401:
+            mb.setText("Invalid username or password")
+        elif ret.status_code == 500:
+            if "can not find tenant for key" in ret.json()["message"]:
+                mb.setText("User is not registered, please contact admin")
+            mb.setText("Unknown error, please contact support")
+        mb.exec()
+            
 
     def register(self):
         webbrowser.open("https://www.accmov.com")
-
-    def accept(self):
-        super().accept()
-        return "Accepted"

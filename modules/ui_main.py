@@ -1252,9 +1252,7 @@ class Ui_MainWindow(object):
 
         self.rightButtons = QFrame(self.contentTopBg)
         self.rightButtons.setObjectName("rightButtons")
-        sizePolicy2.setHeightForWidth(
-            self.rightButtons.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy2.setHeightForWidth(self.rightButtons.sizePolicy().hasHeightForWidth())
         self.rightButtons.setSizePolicy(sizePolicy2)
         self.rightButtons.setMinimumSize(QSize(0, 28))
         self.rightButtons.setFrameShape(QFrame.NoFrame)
@@ -1266,12 +1264,9 @@ class Ui_MainWindow(object):
         self.settingsTopBtn = QPushButton(self.rightButtons)
         self.settingsTopBtn.setObjectName("settingsTopBtn")
         self.settingsTopBtn.setMinimumSize(QSize(28, 28))
-        self.settingsTopBtn.setMaximumSize(QSize(28, 28))
-        self.settingsTopBtn.setCursor(QCursor(Qt.PointingHandCursor))
+        self.settingsTopBtn.setMaximumSize(QSize(150, 28))
         icon3 = QIcon()
-        icon3.addFile(
-            ":/icons/images/icons/icon_settings.png", QSize(), QIcon.Normal, QIcon.Off
-        )
+        icon3.addFile(":/icons/images/icons/icon_settings.png", QSize(), QIcon.Normal, QIcon.Off)
         self.settingsTopBtn.setIcon(icon3)
         self.settingsTopBtn.setIconSize(QSize(20, 20))
 
@@ -1380,17 +1375,17 @@ class Ui_MainWindow(object):
         self.top.setFrameShadow(QFrame.Raised)
         self.verticalLayout_22 = QVBoxLayout(self.top)
         self.verticalLayout_22.setObjectName("verticalLayout_22")
-        self.label_2 = QLabel(self.top)
-        self.label_2.setObjectName("label_2")
-        self.label_2.setStyleSheet("font-size:26px;\n" "font-weight:bold;")
+        self.title_label = QLabel(self.top)
+        self.title_label.setObjectName("label_2")
+        self.title_label.setStyleSheet("font-size:26px;\n" "font-weight:bold;")
 
-        self.verticalLayout_22.addWidget(self.label_2)
+        self.verticalLayout_22.addWidget(self.title_label)
 
-        self.label_3 = QLabel(self.top)
-        self.label_3.setObjectName("label_3")
-        self.label_3.setStyleSheet("font-size:11px")
+        self.subtitle_label = QLabel(self.top)
+        self.subtitle_label.setObjectName("label_3")
+        self.subtitle_label.setStyleSheet("font-size:14px")
 
-        self.verticalLayout_22.addWidget(self.label_3)
+        self.verticalLayout_22.addWidget(self.subtitle_label)
 
         self.verticalLayout_21.addWidget(self.top)
 
@@ -1401,6 +1396,25 @@ class Ui_MainWindow(object):
         self.middle.setFrameShape(QFrame.StyledPanel)
         self.middle.setFrameShadow(QFrame.Raised)
         self.verticalLayout_23 = QVBoxLayout(self.middle)
+        self.verticalLayout_23.setObjectName(u"verticalLayout_23")
+        self.frame_64 = QFrame(self.middle)
+        self.frame_64.setObjectName(u"frame_64")
+        self.frame_64.setFrameShape(QFrame.StyledPanel)
+        self.frame_64.setFrameShadow(QFrame.Raised)
+        self.horizontalLayout_48 = QHBoxLayout(self.frame_64)
+        self.horizontalLayout_48.setObjectName(u"horizontalLayout_48")
+        self.horizontalLayout_48.setContentsMargins(0, 0, 0, 0)
+        self.signInButton = QPushButton(self.frame_64)
+        self.signInButton.setObjectName(u"signInButton")
+        self.signInButton.setMinimumSize(QSize(150, 60))
+        self.signInButton.setFont(font)
+        self.signInButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.signInButton.setStyleSheet(u"background-color: rgb(52, 59, 72);")
+        icon6 = QIcon()
+        icon6.addFile(u":/icons/images/icons/cil-home.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.signInButton.setIcon(icon6)
+
+        self.horizontalLayout_48.addWidget(self.signInButton)
         self.verticalLayout_23.setObjectName(u"verticalLayout_23")
         self.frame_64 = QFrame(self.middle)
         self.frame_64.setObjectName(u"frame_64")
@@ -1432,17 +1446,22 @@ class Ui_MainWindow(object):
         self.signUpButton.setIcon(icon7)
 
         self.horizontalLayout_48.addWidget(self.signUpButton)
+        self.signUpButton = QPushButton(self.frame_64)
+        self.signUpButton.setObjectName(u"signUpButton")
+        self.signUpButton.setMinimumSize(QSize(150, 60))
+        self.signUpButton.setFont(font)
+        self.signUpButton.setCursor(QCursor(Qt.PointingHandCursor))
+        self.signUpButton.setStyleSheet(u"background-color: rgb(52, 59, 72);")
+        icon7 = QIcon()
+        icon7.addFile(u":/icons/images/icons/cil-user-follow.png", QSize(), QIcon.Normal, QIcon.Off)
+        self.signUpButton.setIcon(icon7)
 
+        self.horizontalLayout_48.addWidget(self.signUpButton)
 
         self.verticalLayout_23.addWidget(self.frame_64)
         
-        
-        # self.logoutButton = QPushButton(self.frame_64)
-        # self.logoutButton.setObjectName(u"signUpButton")
-        # self.logoutButton.setMinimumSize(QSize(150, 60))
-        # self.logoutButton.setFont(font)
-        # self.logoutButton.setCursor(QCursor(Qt.PointingHandCursor))
-        # self.logoutButton.setStyleSheet(u"background-color: rgb(52, 59, 72);")
+        self.statusLabel = QLabel(self.middle)
+        self.verticalLayout_23.addWidget(self.statusLabel)
 
         self.verticalLayout_21.addWidget(self.middle)
 
@@ -4631,8 +4650,8 @@ class Ui_MainWindow(object):
         # endif // QT_CONFIG(tooltip)
         self.closeAppBtn.setText("")
         
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Let's get started</p></body></html>", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:11pt;\">Welcome to MSK workplace, sign in to start using.</span></p></body></html>", None))
+        self.title_label.setText(QCoreApplication.translate("MainWindow", u"Let's get started", None))
+        self.subtitle_label.setText(QCoreApplication.translate("MainWindow", u"Welcome to MSK workplace, sign in to start using.", None))
         self.signInButton.setText(QCoreApplication.translate("MainWindow", u"Sign In", None))
         self.signUpButton.setText(QCoreApplication.translate("MainWindow", u"Sign Up", None))
         # self.logoutButton.setText(QCoreApplication.translate("MainWindow", u"Log Out", None))

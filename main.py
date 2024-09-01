@@ -40,9 +40,6 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtWebEngineCore import QWebEngineUrlScheme
 
-from modules.kinematics.controller import Controller
-from modules.kinematics.model import Model
-from modules.login import LoginDialog
 from rserver import RServer
 from miscWidgets import *
 from path import *
@@ -474,6 +471,7 @@ class MainWindow(QMainWindow):
             UIFunctions.toggleRightBox(self, True)
 
         widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
+        widgets.btn_logout.clicked.connect(openCloseRightBox)
 
         # Project
         widgets.btn_new.clicked.connect(self.newProjectButtonClick)
@@ -518,10 +516,12 @@ class MainWindow(QMainWindow):
         widgets.comboBox_20.currentIndexChanged.connect(self.FFTPlotPageIndexSelected)
 
         # start page
+        widgets.settingsTopBtn.hide()
         widgets.signInButton.clicked.connect(self.login_click)
         widgets.signUpButton.clicked.connect(
             lambda x: webbrowser.open("http://www.accmov.com")
         )
+        widgets.btn_logout.clicked.connect(self.logout_click)
 
         # SHOW APP
         # ///////////////////////////////////////////////////////////////
@@ -532,7 +532,7 @@ class MainWindow(QMainWindow):
         # SET CUSTOM THEME
         # ///////////////////////////////////////////////////////////////
         useCustomTheme = False
-        themeFile = "D:/Myotion/themes/py_dracula_test.qss"
+        themeFile = "D:/Myotion/themes/py_dracula_dark.qss"
 
         # SET THEME AND HACKS
         if useCustomTheme:
@@ -552,6 +552,7 @@ class MainWindow(QMainWindow):
         # APPLICATION LOGICS
         self.workspace = None
         self.home = None
+        self.account = None
 
         self.participant_filter = ""
         self.filesystemTree = (
@@ -641,16 +642,25 @@ class MainWindow(QMainWindow):
 
     def login_click(self):
         dlg = LoginDialog()
-        ret = dlg.exec()
-        if ret == 1:
-            widgets.label_3.setText("Welcome, " + dlg.ui.lineEdit.text())
-
-            logger.info("User loggined!")
-            # enable UI, for now just BASIC
-            # without more user plan available, could setup different value here
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            self.account = Account(dlg.ui.lineEdit.text(), dlg.ui.lineEdit_2.text())
+            self.account.key_from_json(dlg.user)
+            widgets.subtitle_label.setText(
+                "Welcome to MSK workplace, " + dlg.ui.lineEdit.text()
+            )
+            widgets.settingsTopBtn.setText(dlg.ui.lineEdit.text())
+            widgets.settingsTopBtn.show()
+            widgets.frame_64.hide()
             perm.setPermLevel(permission.BASIC)
 
-            widgets.frame_64.layout().addWidget(widgets.logoutButton)
+    def logout_click(self):
+        widgets.title_label.setText("Let's get started!")
+        widgets.subtitle_label.setText(
+            "Welcome to MSK workplace, sign in to start using"
+        )
+        widgets.settingsTopBtn.hide()
+        widgets.frame_64.show()
+        perm.setPermLevel(permission.LOGOUT)
 
     # RESIZE EVENTS
     # ///////////////////////////////////////////////////////////////

@@ -155,6 +155,7 @@ class Ui_Form(object):
         self.lineEdit_2.setMinimumSize(QSize(260, 30))
         self.lineEdit_2.setMaximumSize(QSize(260, 16777215))
         self.lineEdit_2.setLayoutDirection(Qt.LeftToRight)
+        self.lineEdit_2.setEchoMode(QLineEdit.Password)
         self.lineEdit_2.setStyleSheet(u"background-color: rgba(255, 255, 255,0.9);\n"
 "border-radius:2px;\n"
 "padding:0 6px;")

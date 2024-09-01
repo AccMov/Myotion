@@ -246,6 +246,15 @@ class workspace:
         chan_to_joint.addSubTree(self.fuzzs["chan_to_joint"].toXML())
         root.addSubTree(chan_to_joint)
 
+        # saved emg configuration
+        p = xmlElement("savedEMGConfig")
+        for name, cfg in self.saved_emgconfig.items():
+            e = xmlElement("config")
+            e.addNode("name", xmlString(name))
+            e.addSubTree(cfg.toXML())
+            p.addSubTree(e)
+        root.addSubTree(p)
+
         writer = xmlWriter(filename, root)
         writer.write()
 
@@ -293,6 +302,17 @@ class workspace:
         e = root.find("chan_to_joint")
         if e:
             workspace_obj.fuzzs["chan_to_joint"] = fuzzMatch.fromXML(e)
+
+        # saved emg configuration
+        e = root.find("savedEMGConfig")
+        if e:
+            for el in e:
+                n = el.find("name")
+                if n == None or n.text == None:
+                    continue
+                workspace_obj.saved_emgconfig[
+                    xmlStringParse(n.text)
+                ] = emgConfigure.fromXML(el)
 
         # spawn a loading thread to load emg
         if len(pending_load):

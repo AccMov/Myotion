@@ -59,6 +59,7 @@ os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100
 widgets = None
 perm = None
 
+
 # Global Constant
 # ///////////////////////////////////////////////////////////////
 class EMGAddWindow(QDialog):
@@ -267,7 +268,6 @@ class EMGAddWindow(QDialog):
 
     def applyFuzzMatchOnMVC(self):
         filenames = [os.path.basename(f) for f in self.mvcfiles]
-        print(filenames)
         for c in self.channels:
             candidate_list = self.workspace.matchChanToMVCFile(
                 c, filenames, lower_bound=50
@@ -578,7 +578,6 @@ class MainWindow(QMainWindow):
         perm.register(widgets.extraTopMenu, permission.BASIC)  # workspace page
         perm.setPermLevel(permission.LOGOUT)
 
-
     def test(self):
         self.newWorkSpace(os.getcwd(), "test")
         f = os.getcwd() + "/ERRPT.c3d"
@@ -752,6 +751,8 @@ class MainWindow(QMainWindow):
                 None, "error", "Failed to save Workspace!", QMessageBox.Ok
             )
             return
+
+        QMessageBox.information(None, "save", "Workspace saved!", QMessageBox.Ok)
         logger.info("workspace is saved")
 
     def loadProjectButtonClick(self):
@@ -1224,12 +1225,12 @@ class MainWindow(QMainWindow):
 
     def updateEMGToolBox(self, type):
         type2toolbox = {
-            emgConfigureEnum.DC_OFFSET: 0,
-            emgConfigureEnum.FULL_W_RECT: 1,
-            emgConfigureEnum.FILTER: 2,
-            emgConfigureEnum.NORMALIZATION: 3,
-            emgConfigureEnum.ACTIVATION: 4,
-            emgConfigureEnum.SUMMARY: 5,
+            emgConfigEnum.DC_OFFSET: 0,
+            emgConfigEnum.FULL_W_RECT: 1,
+            emgConfigEnum.FILTER: 2,
+            emgConfigEnum.NORMALIZATION: 3,
+            emgConfigEnum.ACTIVATION: 4,
+            emgConfigEnum.SUMMARY: 5,
         }
         idx = type2toolbox[type]
         widgets.toolBox.setCurrentIndex(idx)
@@ -1240,15 +1241,15 @@ class MainWindow(QMainWindow):
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
             return
-        if type == emgConfigureEnum.DC_OFFSET:
+        if type == emgConfigEnum.DC_OFFSET:
             widgets.checkBox_4.setCheckState(
                 Qt.Checked if cfg[step].enable else Qt.Unchecked
             )
-        elif type == emgConfigureEnum.FULL_W_RECT:
+        elif type == emgConfigEnum.FULL_W_RECT:
             widgets.checkBox_11.setCheckState(
                 Qt.Checked if cfg[step].enable else Qt.Unchecked
             )
-        elif type == emgConfigureEnum.FILTER:
+        elif type == emgConfigEnum.FILTER:
             widgets.checkBox_13.setCheckState(
                 Qt.Checked if cfg[step].enable else Qt.Unchecked
             )
@@ -1262,11 +1263,11 @@ class MainWindow(QMainWindow):
                 widgets.lineEdit_12.setText(str(cfg[step].cutoff_l))
                 widgets.lineEdit_10.setText("")
                 widgets.lineEdit_11.setText("")
-        elif type == emgConfigureEnum.NORMALIZATION:
+        elif type == emgConfigEnum.NORMALIZATION:
             widgets.checkBox_12.setCheckState(
                 Qt.Checked if cfg[step].enable else Qt.Unchecked
             )
-        elif type == emgConfigureEnum.SUMMARY:
+        elif type == emgConfigEnum.SUMMARY:
             widgets.label_23.setText("{:.4f}".format(cfg[step].max))
             widgets.label_25.setText("{:.4f}".format(cfg[step].min))
             widgets.label_27.setText("{:.4f}".format(cfg[step].med))
@@ -1298,14 +1299,7 @@ class MainWindow(QMainWindow):
     def updateEMGSavedConfigureList(self):
         if self.workspace is None:
             return
-        p, step, chan = self.singleEMG
-        if p is None:
-            return
-        cfg = self.workspace[p].emg.getProcessConfig()
-        if cfg is None:
-            return
         # update configuration list
-        n = len(self.workspace.getEMGConfigures())
         widgets.listWidget_2.clear()
         widgets.listWidget_2.setSortingEnabled(False)
         i = 0
@@ -1445,6 +1439,7 @@ class MainWindow(QMainWindow):
         self.updateWorkSpaceParticipantBox()
         self.updateWorkProjectTreeWidget()
         self.updateEMGChannelSelectorContent()
+        self.updateEMGSavedConfigureList()
 
         # notify rserver
         self.rserver.UpdateProjectPath(self.home)

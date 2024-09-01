@@ -5,10 +5,41 @@ from .xml import *
 from enum import Enum
 from .logger import *
 import re
-from ctypes import c_int, addressof
+from enum import IntEnum
+
+
+class emgConfigEnum(IntEnum):
+    FILTER = 0
+    FULL_W_RECT = 1
+    DC_OFFSET = 2
+    ACTIVATION = 3
+    NORMALIZATION = 4
+    SUMMARY = 5
+    MAX = 6
+
+
+class emgConfigInfo:
+    classical_steps = [
+        emgConfigEnum.DC_OFFSET,
+        emgConfigEnum.FILTER,
+        emgConfigEnum.FULL_W_RECT,
+        emgConfigEnum.FILTER,
+        emgConfigEnum.NORMALIZATION,
+        emgConfigEnum.SUMMARY,
+    ]
+    nameMap = {
+        emgConfigEnum.DC_OFFSET: "remove_dc_offset",
+        emgConfigEnum.FULL_W_RECT: "full_wave_rectification",
+        emgConfigEnum.FILTER: "filter",
+        emgConfigEnum.NORMALIZATION: "normalization",
+        emgConfigEnum.ACTIVATION: "activation",
+        emgConfigEnum.SUMMARY: "summary",
+    }
 
 
 class emgDCOffset:
+    id = emgConfigEnum.DC_OFFSET
+
     def __init__(self):
         self.enable = False
 
@@ -33,6 +64,8 @@ class emgDCOffset:
 
 
 class emgRectification:
+    id = emgConfigEnum.FULL_W_RECT
+
     def __init__(self):
         self.enable = False
 
@@ -57,6 +90,8 @@ class emgRectification:
 
 
 class emgNormalization:
+    id = emgConfigEnum.NORMALIZATION
+
     def __init__(self):
         self.enable = False
 
@@ -81,6 +116,8 @@ class emgNormalization:
 
 
 class emgSummary:
+    id = emgConfigEnum.SUMMARY
+
     def __init__(self):
         self.max = 0
         self.min = 0
@@ -89,18 +126,21 @@ class emgSummary:
         self.ptp = 0
         self.zeros = 0
 
-    def toXML(self, e):
+    def toXML(self):
+        e = xmlElement("emgSummary")
         # we don't save temp calculation to config file
         return e
 
 
-class emgFilterEnum(Enum):
+class emgFilterEnum(IntEnum):
     LOW_PASS = 0
     BAND_PASS = 1
     MAX = 2
 
 
 class emgFilter:
+    id = emgConfigEnum.FILTER
+
     def __init__(self):
         self.enable = False
         self.type = emgFilterEnum.LOW_PASS
@@ -132,7 +172,7 @@ class emgFilter:
 
     def toXML(self):
         e = xmlElement("emgFilter")
-        e.addNode("type", xmlString(self.type))
+        e.addNode("type", xmlString(int(self.type)))
         e.addNode("order", xmlString(self.order))
         e.addNode("cutoff_l", xmlString(self.cutoff_l))
         e.addNode("cutoff_h", xmlString(self.cutoff_h))
@@ -169,6 +209,8 @@ class emgFilter:
 
 
 class emgActivation:
+    id = emgConfigEnum.ACTIVATION
+
     def __init__(self):
         self.threhold = 0
         self.n_above = 5
@@ -215,44 +257,11 @@ class emgActivation:
         return obj
 
 
-class emgConfigureEnum(Enum):
-    # name of steps
-    FILTER = 0
-    FULL_W_RECT = 1
-    DC_OFFSET = 2
-    ACTIVATION = 3
-    NORMALIZATION = 4
-    SUMMARY = 5
-    MAX = 6
-
-
 class emgConfigure:
     def __init__(self):
-        # pre-loaded steps
-        self.classical_steps = [
-            emgConfigureEnum.DC_OFFSET,
-            emgConfigureEnum.FILTER,
-            emgConfigureEnum.FULL_W_RECT,
-            emgConfigureEnum.FILTER,
-            emgConfigureEnum.NORMALIZATION,
-            emgConfigureEnum.SUMMARY,
-        ]
-
-        self.nameMap = {
-            emgConfigureEnum.DC_OFFSET: "remove_dc_offset",
-            emgConfigureEnum.FULL_W_RECT: "full_wave_rectification",
-            emgConfigureEnum.FILTER: "filter",
-            emgConfigureEnum.NORMALIZATION: "normalization",
-            emgConfigureEnum.ACTIVATION: "activation",
-            emgConfigureEnum.SUMMARY: "summary",
-        }
-
-        # set default
-        self.step = self.classical_steps
-
         # default config for each step
         self.stepConfig = []
-        for s in self.step:
+        for s in emgConfigInfo.classical_steps:
             self.stepConfig.append(self.initConfig(s))
 
     # use step id as key to access config file
@@ -264,6 +273,7 @@ class emgConfigure:
         t.stepConfig = self.stepConfig.copy()
         return t
 
+    """
     # add new step
     def addStep(self, idx, pos):
         if idx >= emgConfigure.MAX or idx < 0:
@@ -275,30 +285,31 @@ class emgConfigure:
     # remove step
     def removeStep(self, pos):
         self.step.remove(pos)
+    """
 
     def getTypeInfo(self, idx):
-        type_id = self.step[idx]
-        return type_id, self.nameMap[type_id]
+        type_id = self.stepConfig[idx].id
+        return type_id, emgConfigInfo.nameMap[type_id]
 
     def getStepStringList(self):
-        return [self.nameMap[s] for s in self.step]
+        return [emgConfigInfo.nameMap[s.id] for s in self.stepConfig]
 
     def size(self):
-        return len(self.step)
+        return len(self.stepConfig)
 
     # create a config for one step
     def initConfig(self, type):
-        if type == emgConfigureEnum.FILTER:
+        if type == emgConfigEnum.FILTER:
             return emgFilter()
-        elif type == emgConfigureEnum.ACTIVATION:
+        elif type == emgConfigEnum.ACTIVATION:
             return emgActivation()
-        elif type == emgConfigureEnum.DC_OFFSET:
+        elif type == emgConfigEnum.DC_OFFSET:
             return emgDCOffset()
-        elif type == emgConfigureEnum.FULL_W_RECT:
+        elif type == emgConfigEnum.FULL_W_RECT:
             return emgRectification()
-        elif type == emgConfigureEnum.NORMALIZATION:
+        elif type == emgConfigEnum.NORMALIZATION:
             return emgNormalization()
-        elif type == emgConfigureEnum.SUMMARY:
+        elif type == emgConfigEnum.SUMMARY:
             return emgSummary()
         else:
             return None
@@ -316,14 +327,8 @@ class emgConfigure:
     def toXML(self):
         # top tree
         e = xmlElement("emgConfigure")
-        """
-        for i in range(0, len(self.step)):
-            # subtree for each step
-            subElement = xmlElement(self.nameMap[self.step[i]])
-            config = self.stepConfig[i]
-            if config is not None:
-                config.toXML(subElement)
-        """
+        for s in self.stepConfig:
+            e.addSubTree(s.toXML())
         return e
 
     @staticmethod
@@ -332,7 +337,29 @@ class emgConfigure:
         if root == None:
             return None
 
-        emgc = emgConfigure()
+        obj = emgConfigure()
+        for el in root:
+            cfg = emgFilter.fromXML(el)
+            if cfg:
+                obj.stepConfig.append(cfg)
+                continue
+            cfg = emgActivation.fromXML(el)
+            if cfg:
+                obj.stepConfig.append(cfg)
+                continue
+            cfg = emgDCOffset.fromXML(el)
+            if cfg:
+                obj.stepConfig.append(cfg)
+                continue
+            cfg = emgRectification.fromXML(el)
+            if cfg:
+                obj.stepConfig.append(cfg)
+                continue
+            cfg = emgNormalization.fromXML(el)
+            if cfg:
+                obj.stepConfig.append(cfg)
+                continue
+        return obj
 
 
 class emg:
@@ -598,7 +625,7 @@ class emg:
         cfg = self.processCFG[step]
         output = tst[chan]
         try:
-            if type == emgConfigureEnum.FILTER:
+            if type == emgConfigEnum.FILTER:
                 if cfg.enable:
                     if cfg.type == emgFilterEnum.LOW_PASS:
                         output = tst.lowpass(chan, cfg.cutoff_l, cfg.order)
@@ -608,22 +635,22 @@ class emg:
                         )
                     else:
                         output = None
-            elif type == emgConfigureEnum.FULL_W_RECT:
+            elif type == emgConfigEnum.FULL_W_RECT:
                 if cfg.enable:
                     output = tst.rectification(chan)
-            elif type == emgConfigureEnum.DC_OFFSET:
+            elif type == emgConfigEnum.DC_OFFSET:
                 if cfg.enable:
                     output = tst.removeDC(chan)
-            elif type == emgConfigureEnum.ACTIVATION:
+            elif type == emgConfigEnum.ACTIVATION:
                 output = tst.threholdDetection(
                     chan, cfg.threhold, cfg.n_above, cfg.n_below
                 )
-            elif type == emgConfigureEnum.NORMALIZATION:
+            elif type == emgConfigEnum.NORMALIZATION:
                 if cfg.enable:
                     # get max from MVCTST
                     max_v = self.emgMVCTST.max(chan)
                     output = tst.normalization(chan, max_v)
-            elif type == emgConfigureEnum.SUMMARY:
+            elif type == emgConfigEnum.SUMMARY:
                 # output remain the same
                 cfg.max = tst.max(chan)
                 cfg.min = tst.min(chan)

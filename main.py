@@ -1469,15 +1469,27 @@ class MainWindow(QMainWindow):
                 treeItem2 = QTreeWidgetItem(treeItem)
                 treeItem2.setText(0, c)
                 treeItem.addChild(treeItem2)
+
+        tree.itemDoubleClicked.connect(self.loadKinemtic)
         tree.setHeaderItem(QTreeWidgetItem(["Participant"]))
         tree.addTopLevelItem(treeItem)
 
     def preloadKinematicPage(self):
         ps = self.workspace.getParticipants()
         self.populateKinematicTree(widgets.kinematics_label_tree, ps)
-        p = ps[0]
 
-        if p is None:
+    def loadKinemtic(self, item, column):
+        # if item is not top level, return
+        if item.parent() != None:
+            return
+
+        p_name = item.text(column)
+        p = self.workspace.findParticipant(p_name)
+
+        if not self.workspace[p].kinematic.isValid():
+            QMessageBox.critical(
+                None, "error", "No kinematic data available!", QMessageBox.Ok
+            )
             return
 
         self.model = Model(self.workspace[p])

@@ -1413,28 +1413,8 @@ class Ui_MainWindow(object):
         icon6 = QIcon()
         icon6.addFile(u":/icons/images/icons/cil-home.png", QSize(), QIcon.Normal, QIcon.Off)
         self.signInButton.setIcon(icon6)
-
         self.horizontalLayout_48.addWidget(self.signInButton)
-        self.verticalLayout_23.setObjectName(u"verticalLayout_23")
-        self.frame_64 = QFrame(self.middle)
-        self.frame_64.setObjectName(u"frame_64")
-        self.frame_64.setFrameShape(QFrame.StyledPanel)
-        self.frame_64.setFrameShadow(QFrame.Raised)
-        self.horizontalLayout_48 = QHBoxLayout(self.frame_64)
-        self.horizontalLayout_48.setObjectName(u"horizontalLayout_48")
-        self.horizontalLayout_48.setContentsMargins(0, 0, 0, 0)
-        self.signInButton = QPushButton(self.frame_64)
-        self.signInButton.setObjectName(u"signInButton")
-        self.signInButton.setMinimumSize(QSize(150, 60))
-        self.signInButton.setFont(font)
-        self.signInButton.setCursor(QCursor(Qt.PointingHandCursor))
-        self.signInButton.setStyleSheet(u"background-color: rgb(52, 59, 72);")
-        icon6 = QIcon()
-        icon6.addFile(u":/icons/images/icons/cil-home.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.signInButton.setIcon(icon6)
-
-        self.horizontalLayout_48.addWidget(self.signInButton)
-
+        
         self.signUpButton = QPushButton(self.frame_64)
         self.signUpButton.setObjectName(u"signUpButton")
         self.signUpButton.setMinimumSize(QSize(150, 60))
@@ -1444,18 +1424,6 @@ class Ui_MainWindow(object):
         icon7 = QIcon()
         icon7.addFile(u":/icons/images/icons/cil-user-follow.png", QSize(), QIcon.Normal, QIcon.Off)
         self.signUpButton.setIcon(icon7)
-
-        self.horizontalLayout_48.addWidget(self.signUpButton)
-        self.signUpButton = QPushButton(self.frame_64)
-        self.signUpButton.setObjectName(u"signUpButton")
-        self.signUpButton.setMinimumSize(QSize(150, 60))
-        self.signUpButton.setFont(font)
-        self.signUpButton.setCursor(QCursor(Qt.PointingHandCursor))
-        self.signUpButton.setStyleSheet(u"background-color: rgb(52, 59, 72);")
-        icon7 = QIcon()
-        icon7.addFile(u":/icons/images/icons/cil-user-follow.png", QSize(), QIcon.Normal, QIcon.Off)
-        self.signUpButton.setIcon(icon7)
-
         self.horizontalLayout_48.addWidget(self.signUpButton)
 
         self.verticalLayout_23.addWidget(self.frame_64)

@@ -512,6 +512,7 @@ class MainWindow(QMainWindow):
         widgets.pushButton_29.clicked.connect(self.addNewFFTtoFreqAnalysisFFTPanel)
         widgets.pushButton_28.clicked.connect(self.FFTPlotPrevPageClicked)
         widgets.pushButton_30.clicked.connect(self.FFTPlotNextPageClicked)
+        widgets.pushButton_32.clicked.connect(self.FFTPlotClearAllClicked)
         widgets.comboBox_19.currentIndexChanged.connect(self.FFTPlotPerPageSelected)
         widgets.comboBox_20.currentIndexChanged.connect(self.FFTPlotPageIndexSelected)
 
@@ -1086,6 +1087,10 @@ class MainWindow(QMainWindow):
                 self.selectedParticipants.append(name)
         self.updateEMGParticipantBox()
 
+    def FFTPlotClearAllClicked(self):
+        widgets.scrollArea_3.deleteAllPages()
+        self.updateFreqAnalysisFFTPanel()
+
     def FFTPlotNextPageClicked(self):
         widgets.scrollArea_3.nextPage()
         self.updateFreqAnalysisFFTPanel()
@@ -1130,10 +1135,16 @@ class MainWindow(QMainWindow):
         # calcuate FFT
         tst = self.workspace[p].emg.getTST()
         freq, v = tst.fft_db(channel, l, r)
+
         # delete negliable value
         to_del = np.argwhere(v <= 1e-3)
         freq = np.delete(freq, to_del)
         v = np.delete(v, to_del)
+
+        # mean frequency with filtered value
+        medFreq = np.dot(freq, v) / np.sum(v)
+        title = title + ', Median Frequency {}'.format(medFreq)
+
         # pv.bar(freq, v, channel, title=title,xlabel='Frequency', ylabel='dB')
         # pv.show()
         pv.line(freq, v, channel, title=title, xlabel="Frequency", ylabel="dB")
@@ -1517,6 +1528,8 @@ class MainWindow(QMainWindow):
         )
 
     def preloadFreqAnalysisPage(self):
+        if self.workspace == None:
+            return -1
         self.updateFreqAnalysisParticipantTree(self.workspace.getParticipants())
         self.freqAnalysisPlots.clear()
 

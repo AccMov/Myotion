@@ -471,7 +471,6 @@ class MainWindow(QMainWindow):
             UIFunctions.toggleRightBox(self, True)
 
         widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
-        widgets.btn_logout.clicked.connect(openCloseRightBox)
 
         # Project
         widgets.btn_new.clicked.connect(self.newProjectButtonClick)
@@ -655,6 +654,13 @@ class MainWindow(QMainWindow):
             perm.setPermLevel(permission.BASIC)
 
     def logout_click(self):
+        # check old project saved
+        if self.ifOldProjectOpened():
+            return -1
+
+        # switch to home page
+        widgets.stackedWidget.setCurrentWidget(widgets.start_page)
+
         widgets.title_label.setText("Let's get started!")
         widgets.subtitle_label.setText(
             "Welcome to MSK workplace, sign in to start using"
@@ -1143,7 +1149,7 @@ class MainWindow(QMainWindow):
 
         # mean frequency with filtered value
         medFreq = np.dot(freq, v) / np.sum(v)
-        title = title + ', Median Frequency {}'.format(medFreq)
+        title = title + ", Median Frequency {}".format(medFreq)
 
         # pv.bar(freq, v, channel, title=title,xlabel='Frequency', ylabel='dB')
         # pv.show()

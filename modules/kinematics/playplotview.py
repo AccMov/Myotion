@@ -19,9 +19,10 @@ class PlayPlotWidget(QWidget):
         # self.update()
 
     def update(self, frame):
-        for i in range(len(self.playline)):
-            self.playline[i].setValue(frame)
+        for line in self.playline:
+            line.setValue(frame)
 
     def clear(self):
         for i in reversed(range(self.lo.count())):
             self.lo.itemAt(i).widget().close()
+            self.playline.remove(self.playline[i])

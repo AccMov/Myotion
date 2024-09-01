@@ -35,7 +35,7 @@ class Controller:
         self.render.setController(self)
 
         self.playbar.setController(self)
-        self.playbar.slider.setRange(0, model.kinematic_frames()-1)
+        self.playbar.slider.setRange(0, model.kinematic_frames() - 1)
 
         self.playbar.slider.valueChanged.connect(self.slider_valuechange)
         self.playbar.playbutton.clicked.connect(self.on_play_button_clicked)
@@ -95,6 +95,9 @@ class Controller:
         # self.bottom.notify(self.frame)
 
     def tree_item_select(self, index):
+        # skip if its a parent item
+        if index.parent() == None:
+            return
         self.top.clear()
         name = index.text(0)
         if name in self.model.kinematic.data.data:

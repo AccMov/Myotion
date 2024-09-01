@@ -497,7 +497,7 @@ class timeSeriesTable:
         e = xmlElement("timeSeriesTable", {"name": self.name})
         e.addNode("channels_num", xmlString(len(self.labels)))
         e.addNode("channels_name", xmlString(self.labels))
-        e.addNode("fs", xmlString(self.fs))
+        e.addNode("fs", xmlString(float(self.fs)))
         e.addNode("N", xmlString(self.n))
 
         c = xmlElement("channels")

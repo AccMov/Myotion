@@ -422,6 +422,11 @@ class timeSeriesTable:
         return np.dot(freq, val) / np.sum(val)
 
     @multimethod
+    def meanFreq(self, key: str, l_t: float, r_t: float):
+        freq, val = self.fft(key, l_t, r_t)
+        return np.dot(freq, val) / np.sum(val)
+
+    @multimethod
     def meanFreq(self):
         return [self.meanFreq(key) for key in self.labels]
 
@@ -503,7 +508,7 @@ class timeSeriesTable:
         c = xmlElement("channels")
         e.addSubTree(c)
         for k in self.labels:
-            #c.addNode(k, " ".join(format(x, ".6f") for x in self.data[k]))
+            # c.addNode(k, " ".join(format(x, ".6f") for x in self.data[k]))
             c.addNode(k, self.data[k])
         return e
 

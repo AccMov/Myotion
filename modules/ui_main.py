@@ -4236,6 +4236,15 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_45.addItem(self.horizontalSpacer_21)
 
+        self.pushButton_32 = QPushButton(self.frame_63)
+        self.pushButton_32.setObjectName("pushButton_32")
+        self.pushButton_32.setMinimumSize(QSize(75, 30))
+        self.pushButton_32.setFont(font)
+        self.pushButton_32.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pushButton_32.setStyleSheet("background-color: rgb(52, 59, 72);")
+
+        self.horizontalLayout_45.addWidget(self.pushButton_32)
+
         self.label_16 = QLabel(self.frame_63)
         self.label_16.setObjectName("label_16")
         self.label_16.setStyleSheet(
@@ -4364,21 +4373,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_40.addWidget(self.frequency_right)
 
         self.stackedWidget.addWidget(self.frequency_page)
-
-        """
-        self.new_page = QWidget()
-        self.new_page.setObjectName(u"new_page")
-        self.verticalLayout_20 = QVBoxLayout(self.new_page)
-        self.verticalLayout_20.setObjectName(u"verticalLayout_20")
-        
-        self.label = QLabel(self.new_page)
-        self.label.setObjectName(u"label")
-        self.label.setAlignment(Qt.AlignCenter)
-
-        self.verticalLayout_20.addWidget(self.label)
-
-        self.stackedWidget.addWidget(self.new_page)
-        """
 
         self.verticalLayout_15.addWidget(self.stackedWidget)
 
@@ -4689,6 +4683,9 @@ class Ui_MainWindow(object):
         )
         self.pushButton_29.setText(
             QCoreApplication.translate("MainWindow", "Confirm", None)
+        )
+        self.pushButton_32.setText(
+            QCoreApplication.translate("MainWindow", "Clear all", None)
         )
         self.toolBox.setItemText(
             self.toolBox.indexOf(self.page_2_full_wave),

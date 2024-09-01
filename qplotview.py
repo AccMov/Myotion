@@ -399,3 +399,10 @@ class QPlotMultiViewSubPages(QStackedWidget):
         del self.plots[index]
         self.repaint = True
         self.__updatePageSetting()
+
+    def deleteAllPages(self):
+        if self.size() == 0:
+            return
+        self.plots.clear()
+        self.repaint = True
+        self.__updatePageSetting()

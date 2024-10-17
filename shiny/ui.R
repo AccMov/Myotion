@@ -60,13 +60,13 @@ ui <- dashboardPage(
               fluidRow(
                 box(
                   title = "Group A",
-                  pickerInput("filterA1", "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Male"),
+                  #pickerInput("filterA1", "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Male"),
                   uiOutput("filteruiA"),
                   collapsible = TRUE
                 ),
                 box(
                   title = "Group B",
-                  pickerInput("filterB1", "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Female"),
+                  #pickerInput("filterB1", "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Female"),
                   uiOutput("filteruiB"),
                   collapsible = TRUE
                 ),

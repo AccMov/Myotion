@@ -104,7 +104,7 @@ server <- function(input, output) {
   groupA <- lapply(groupA_names, xmlToList)
   
   for(i in 1:length(groupA)){
-    names(groupA)[i] = groupA[[i]]$person$name
+    names(groupA)[i] = gsub("\"", "", strsplit(groupA[[i]]$person$name, split = " ", fixed = TRUE))
   }
   
   # read data
@@ -140,7 +140,7 @@ server <- function(input, output) {
     groupA <- lapply(groupA_names, xmlToList)
     
     for(i in 1:length(groupA)){
-      names(groupA)[i] = groupA[[i]]$person$name
+      names(groupA)[i] = gsub("\"", "", strsplit(groupA[[i]]$person$name, split = " ", fixed = TRUE))
     }
     
     # read data
@@ -170,7 +170,7 @@ server <- function(input, output) {
     groupA <- lapply(groupA_names, xmlToList)
     
     for(i in 1:length(groupA)){
-      names(groupA)[i] = groupA[[i]]$Person$name
+      names(groupA)[i] = gsub("\"", "", strsplit(groupA[[i]]$person$name, split = " ", fixed = TRUE))
     }
     
     # read data

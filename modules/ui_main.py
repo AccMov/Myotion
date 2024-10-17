@@ -1505,13 +1505,6 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_27.addWidget(self.pushButton_4)
 
-        self.pushButton_5 = QPushButton(self.frame_7)
-        self.pushButton_5.setObjectName("pushButton_5")
-        self.pushButton_5.setMinimumSize(QSize(0, 60))
-        self.pushButton_5.setStyleSheet("font-size:11px;")
-
-        self.verticalLayout_27.addWidget(self.pushButton_5)
-
         self.verticalLayout_26.addWidget(self.frame_7)
 
         self.verticalSpacer_2 = QSpacerItem(
@@ -4621,7 +4614,6 @@ class Ui_MainWindow(object):
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"  Batch processing", None))
         self.pushButton_3.setText(QCoreApplication.translate("MainWindow", u" Data visualization", None))
         self.pushButton_4.setText(QCoreApplication.translate("MainWindow", u" Tutorial ", None))
-        self.pushButton_5.setText(QCoreApplication.translate("MainWindow", u"CTO Photos", None))
         self.label_6.setText(QCoreApplication.translate("MainWindow", u"How to use Myotion ...", None))
         self.plainTextEdit_2.setPlainText(QCoreApplication.translate("MainWindow", u"Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", None))
         self.pushButton_6.setText(QCoreApplication.translate("MainWindow", u"Learn More", None))

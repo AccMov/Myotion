@@ -232,32 +232,32 @@ class PlayBarWidget(QWidget):
         vboxlayout = QVBoxLayout()
         self.setLayout(vboxlayout)
         self.slider = SliderWidget(parent)
-        self.current_frame_label = QLabel("Current Frame:", parent)
+        self.current_frame_label = QLabel(self.tr("Current Frame:"), parent)
         self.current_frame_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.slider.valueChanged.connect(
-            lambda x: self.current_frame_label.setText("Current Frame: " + str(x))
+            lambda x: self.current_frame_label.setText(self.tr("Current Frame: ") + str(x))
         )
         self.button_group = QFrame(parent)
-        self.playbutton = QPushButton("Play", self.button_group)
+        self.playbutton = QPushButton(self.tr("Play"), self.button_group)
         self.playbutton.clicked.connect(self.on_play_button_clicked)
         self.state = State.STOP
         self.playbutton.setIcon(QIcon(PlayIcon))
         self.playbutton.setCheckable(True)
         self.playbutton.setStyleSheet(buttonStyle)
 
-        self.prevFrameButton = QPushButton("Prev", self.button_group)
+        self.prevFrameButton = QPushButton(self.tr("Prev"), self.button_group)
         self.prevFrameButton.clicked.connect(self.on_frame_button_clicked)
         self.prevFrameButton.setStyleSheet(buttonStyle)
 
         self.prevFrameButton.setIcon(QIcon(BackwardIcon))
 
-        self.nextFrameButton = QPushButton("Next", self.button_group)
+        self.nextFrameButton = QPushButton(self.tr("Next"), self.button_group)
         self.nextFrameButton.clicked.connect(self.on_frame_button_clicked)
         self.nextFrameButton.setIcon(QIcon(ForwardIcon))
         self.nextFrameButton.setStyleSheet(buttonStyle)
 
         self.step = QComboBox(self.button_group)
-        self.step.addItems(["Increment", "5", "10", "20", "50", "100"])
+        self.step.addItems([self.tr("Increment"), "5", "10", "20", "50", "100"])
 
         hboxlayout = QHBoxLayout(self.button_group)
         hboxlayout.addStretch()
@@ -278,11 +278,11 @@ class PlayBarWidget(QWidget):
         if self.state == State.STOP or self.state == State.PAUSE:
             self.state = State.PLAY
             self.playbutton.setIcon(QIcon(PauseIcon))
-            self.playbutton.setText("Pause")
+            self.playbutton.setText(self.tr("Pause"))
         elif self.state == State.PLAY:
             self.state = State.PAUSE
             self.playbutton.setIcon(QIcon(PlayIcon))
-            self.playbutton.setText("Play")
+            self.playbutton.setText(self.tr("Play"))
 
     def is_playing(self):
         return self.state == State.PLAY

@@ -1,0 +1,10 @@
+The step to update language pack:
+
+1. ./lupdate.bat
+update ts file from source file and ui
+
+2. ./pyside6-linguist.exe
+run linguist app to update the translation
+
+3. ./lrelease.bat
+update qm file

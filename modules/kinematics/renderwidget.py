@@ -13,7 +13,7 @@ class RenderWidget(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.bodyrender = BodyRender()
-        self.placeholder = QLabel("No model to render")
+        self.placeholder = QLabel(self.tr("No model to render"))
         self.vblayout = QVBoxLayout()
         self.vblayout.addWidget(
             self.placeholder, alignment=Qt.AlignmentFlag.AlignCenter

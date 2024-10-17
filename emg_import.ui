@@ -169,6 +169,27 @@ border-radius:8px;</string>
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QPushButton" name="import_MVCbtn">
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">color:#f4f4f4;
+background-color: #333b46;
+padding:8px 8px;
+marging:2px 2px;
+border-radius:8px;</string>
+           </property>
+           <property name="text">
+            <string>Import MVC Files</string>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>images/icons/cil-file.png</normaloff>images/icons/cil-file.png</iconset>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -377,6 +398,11 @@ margin:2px 2px;</string>
         <column>
          <property name="text">
           <string>Channels</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>IsControlSignal</string>
          </property>
         </column>
         <column>

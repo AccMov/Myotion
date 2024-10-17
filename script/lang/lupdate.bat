@@ -1,0 +1,1 @@
+pyside6-lupdate.exe .\main.py .\modules\login.py .\configuration.ui .\emg_import.ui .\login.ui .\main.ui .\modules\kinematics\playbarwidget.py .\modules\kinematics\renderwidget.py  -ts .\CN.ts

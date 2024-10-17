@@ -20,7 +20,7 @@ class LoginDialog(QDialog):
         ret = bm.get_tenant(username, password)
         mb = QMessageBox()
         mb.setIcon(QMessageBox.Icon.Warning)
-        mb.setWindowTitle("Error")
+        mb.setWindowTitle(self.tr("Error"))
         mb.setStyleSheet("QMessagebox{background-color: black;}"
                          "QPushButton{background-color: #333; color: white;}")
         if ret.status_code == 200:
@@ -28,11 +28,11 @@ class LoginDialog(QDialog):
             self.accept()
             return
         elif ret.status_code == 401:
-            mb.setText("Invalid username or password")
+            mb.setText(self.tr("Invalid username or password"))
         elif ret.status_code == 500:
             if "can not find tenant for key" in ret.json()["message"]:
-                mb.setText("User is not registered, please contact admin")
-            mb.setText("Unknown error, please contact support")
+                mb.setText(self.tr("User is not registered, please contact admin"))
+            mb.setText(self.tr("Unknown error, please contact support"))
         mb.exec()
             
 

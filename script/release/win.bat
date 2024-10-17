@@ -1,4 +1,3 @@
-cd ../../
 :: pack python package
 pyinstaller main.py --noconfirm
 
@@ -6,7 +5,7 @@ pyinstaller main.py --noconfirm
 mkdir "dist/main/shiny"
 xcopy /s "shiny\*.R" "dist\main\shiny\*.R"
 
-:: copy logo
+:: copy logo 
 xcopy /s "Myotion_logo.ico" "dist\main\Myotion_logo.ico"
 
 :: should be removed

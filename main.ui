@@ -1343,6 +1343,42 @@ font-size:10px;
                 <property name="bottomMargin">
                  <number>0</number>
                 </property>
+                 <item>
+                 <widget class="QPushButton" name="btn_share">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>45</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <family>Segoe UI</family>
+                    <pointsize>10</pointsize>
+                    <italic>false</italic>
+                    <bold>false</bold>
+                   </font>
+                  </property>
+                  <property name="cursor">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="layoutDirection">
+                   <enum>Qt::LeftToRight</enum>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">background-image: url(:/icons/images/icons/cil-share-boxed.png);</string>
+                  </property>
+                  <property name="text">
+                   <string>New Workspace</string>
+                  </property>
+                 </widget>
+                </item>
                 <item>
                  <widget class="QPushButton" name="btn_share">
                   <property name="sizePolicy">
@@ -2679,22 +2715,6 @@ font-weight:bold;</string>
                                   <property name="icon">
                                    <iconset resource="resources.qrc">
                                     <normaloff>:/icons/images/icons/cil-magnifying-glass.png</normaloff>:/icons/images/icons/cil-magnifying-glass.png</iconset>
-                                  </property>
-                                 </widget>
-                                </item>
-                                <item>
-                                 <widget class="QPushButton" name="cto_button">
-                                  <property name="minimumSize">
-                                   <size>
-                                    <width>0</width>
-                                    <height>60</height>
-                                   </size>
-                                  </property>
-                                  <property name="styleSheet">
-                                   <string notr="true">font-size:11px;</string>
-                                  </property>
-                                  <property name="text">
-                                   <string>CTO Photos</string>
                                   </property>
                                  </widget>
                                 </item>
@@ -7095,7 +7115,7 @@ QSlider::sub-page:horizontal {
                                    <string notr="true">background-color: rgb(52, 59, 72);</string>
                                   </property>
                                   <property name="text">
-                                   <string>Previous</string>
+                                   <string>Prev</string>
                                   </property>
                                   <property name="icon">
                                    <iconset theme="media-seek-backward" resource="resources.qrc">
@@ -8378,7 +8398,7 @@ border:none;</string>
 font-weight:bold;</string>
                                         </property>
                                         <property name="text">
-                                         <string>Start Time</string>
+                                         <string>Start Time:</string>
                                         </property>
                                        </widget>
                                       </item>
@@ -8436,12 +8456,44 @@ color:rgba(0,0,0,0.4);</string>
 font-weight:bold;</string>
                                         </property>
                                         <property name="text">
-                                         <string>End Time</string>
+                                         <string>End Time:</string>
                                         </property>
                                        </widget>
                                       </item>
                                       <item>
                                        <widget class="QLineEdit" name="lineEdit_4">
+                                        <property name="minimumSize">
+                                         <size>
+                                          <width>0</width>
+                                          <height>30</height>
+                                         </size>
+                                        </property>
+                                        <property name="styleSheet">
+                                         <string notr="true">background-color: rgb(255, 255, 255);
+color:rgba(0,0,0,0.4);
+border:none;</string>
+                                        </property>
+                                        <property name="text">
+                                         <string/>
+                                        </property>
+                                        <property name="placeholderText">
+                                         <string>Type here</string>
+                                        </property>
+                                       </widget>
+                                      </item>
+                                                                            <item>
+                                       <widget class="QLabel" name="label">
+                                        <property name="styleSheet">
+                                         <string notr="true">color:rgba(0,0,0,0.8);
+font-weight:bold;</string>
+                                        </property>
+                                        <property name="text">
+                                         <string>Split in:</string>
+                                        </property>
+                                       </widget>
+                                      </item>
+                                      <item>
+                                       <widget class="QLineEdit" name="lineEdit_55">
                                         <property name="minimumSize">
                                          <size>
                                           <width>0</width>
@@ -8671,7 +8723,7 @@ padding:0px 6px;</string>
 margin:3px 2px;</string>
                                      </property>
                                      <property name="text">
-                                      <string/>
+                                      <string>Clear all</string>
                                      </property>
                                      <property name="icon">
                                       <iconset resource="resources.qrc">
@@ -8680,33 +8732,69 @@ margin:3px 2px;</string>
                                     </widget>
                                    </item>
                                    <item>
-                                    <widget class="QLineEdit" name="lineEdit_6">
-                                     <property name="minimumSize">
-                                      <size>
-                                       <width>60</width>
-                                       <height>30</height>
-                                      </size>
-                                     </property>
-                                     <property name="maximumSize">
-                                      <size>
-                                       <width>60</width>
-                                       <height>16777215</height>
-                                      </size>
-                                     </property>
-                                     <property name="styleSheet">
-                                      <string notr="true">background-color: rgb(255, 255, 255);
-color:rgba(0,0,0,0.4);
-margin:0px 6px;</string>
-                                     </property>
-                                     <property name="text">
-                                      <string/>
-                                     </property>
-                                     <property name="placeholderText">
-                                      <string>Type here</string>
-                                     </property>
+                                    <widget class="QLabel" name="plots_per_page">
+                                    <property name="styleSheet">
+                                    <string notr="true">font-weight: bold;
+        font-size:12px;</string>
+                                    </property>
+                                    <property name="text">
+                                    <string>Plots Per Page:</string>
+                                    </property>
                                     </widget>
-                                   </item>
-                                   <item>
+                                    </item>
+                                    <item>
+                                        <widget class="QComboBox" name="plots_per_page_combobox">
+                                        <property name="font">
+                                        <font>
+                                            <family>Segoe UI</family>
+                                            <pointsize>10</pointsize>
+                                            <italic>false</italic>
+                                            <bold>false</bold>
+                                        </font>
+                                        </property>
+                                        <property name="autoFillBackground">
+                                        <bool>false</bool>
+                                        </property>
+                                        <property name="styleSheet">
+                                        <string notr="true">background-color: rgb(33, 37, 43);</string>
+                                        </property>
+                                        <property name="iconSize">
+                                        <size>
+                                            <width>16</width>
+                                            <height>16</height>
+                                        </size>
+                                        </property>
+                                        <property name="frame">
+                                        <bool>true</bool>
+                                        </property>
+                                        <item>
+                                        <property name="text">
+                                            <string>All</string>
+                                        </property>
+                                        </item>
+                                        <item>
+                                        <property name="text">
+                                            <string>1</string>
+                                        </property>
+                                        </item>
+                                        <item>
+                                        <property name="text">
+                                            <string>3</string>
+                                        </property>
+                                        </item>
+                                        <item>
+                                        <property name="text">
+                                            <string>5</string>
+                                        </property>
+                                        </item>
+                                        <item>
+                                        <property name="text">
+                                            <string>10</string>
+                                        </property>
+                                        </item>
+                                        </widget>
+                                </item>
+                                <item>
                                     <widget class="QPushButton" name="pushButton_23">
                                      <property name="minimumSize">
                                       <size>
@@ -8724,9 +8812,7 @@ margin:0px 6px;</string>
                                       <cursorShape>PointingHandCursor</cursorShape>
                                      </property>
                                      <property name="styleSheet">
-                                      <string notr="true">background-color:rgba(0,0,0,0.8);
-margin:3px 2px;
-</string>
+                                      <string notr="true">background-color:rgba(0,0,0,0.8);margin:3px 2px;</string>
                                      </property>
                                      <property name="text">
                                       <string/>
@@ -8739,6 +8825,48 @@ margin:3px 2px;
                                    </item>
                                   </layout>
                                  </widget>
+                                </item>
+                                <item>
+                                    <widget class="QLabel" name="page_index">
+                                    <property name="styleSheet">
+                                    <string notr="true">font-weight: bold;font-size:12px;</string>
+                                    </property>
+                                    <property name="text">
+                                    <string>Page Index:</string>
+                                    </property>
+                                    </widget>
+                                </item>
+                                <item>
+                                        <widget class="QComboBox" name="page_index_combobox">
+                                        <property name="font">
+                                        <font>
+                                            <family>Segoe UI</family>
+                                            <pointsize>10</pointsize>
+                                            <italic>false</italic>
+                                            <bold>false</bold>
+                                        </font>
+                                        </property>
+                                        <property name="autoFillBackground">
+                                        <bool>false</bool>
+                                        </property>
+                                        <property name="styleSheet">
+                                        <string notr="true">background-color: rgb(33, 37, 43);</string>
+                                        </property>
+                                        <property name="iconSize">
+                                        <size>
+                                            <width>16</width>
+                                            <height>16</height>
+                                        </size>
+                                        </property>
+                                        <property name="frame">
+                                        <bool>true</bool>
+                                        </property>
+                                        <item>
+                                        <property name="text">
+                                            <string>1</string>
+                                        </property>
+                                        </item>
+                                        </widget>
                                 </item>
                                </layout>
                               </widget>

@@ -1,6 +1,7 @@
 pacs = c("R.matlab","stringr","ggplot2","plotly","shinycssloaders",
           "ggthemes","shinydashboardPlus","DT","shiny","shinydashboard",
-          "tidyverse","flextable","fresh","rempsyc","ggridges","shinyWidgets","XML")
+          "tidyverse","flextable","fresh","rempsyc","ggridges",
+         "shinyWidgets","XML","shiny.i18n")
 
 lapply(pacs, require, character.only = TRUE)
 
@@ -37,14 +38,15 @@ convertMenuItem <- function(mi, tabName) {
   mi
 }
 
+
 # UI definition
 ui <- dashboardPage(
   skin = "black",
-  header = dashboardHeader(title = "Grouping"),
+  header = dashboardHeader(title = i18n$t("Statistical Analysis")),
   sidebar = dashboardSidebar(
     sidebarMenu(id = "tab",
-                menuItem("Data Visualizations", tabName = "groups", icon = icon("chart-bar")),
-                menuItem("Statistical Tests", tabName = "tests", icon = icon("flask"))
+                menuItem(i18n$t("Data Visualizations"), tabName = "groups", icon = icon("chart-bar")),
+                menuItem(i18n$t("Statistical Tests"), tabName = "tests", icon = icon("flask"))
     ),
     uiOutput("out1"),
     uiOutput("testtype")
@@ -59,20 +61,20 @@ ui <- dashboardPage(
       tabItem(tabName = "groups",
               fluidRow(
                 box(
-                  title = "Group A",
+                  title = i18n$t("Group A"),
                   #pickerInput("filterA1", "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Male"),
                   uiOutput("filteruiA"),
                   collapsible = TRUE
                 ),
                 box(
-                  title = "Group B",
+                  title = i18n$t("Group B"),
                   #pickerInput("filterB1", "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Female"),
                   uiOutput("filteruiB"),
                   collapsible = TRUE
                 ),
                 tabBox(
                   height = 500, width = 12,
-                  tabPanel("Figures",
+                  tabPanel(i18n$t("Figures"),
                            uiOutput("uiplot1"),
                            DT::dataTableOutput("DTtable1") %>% withSpinner(color = "orange"))
                 )
@@ -82,8 +84,8 @@ ui <- dashboardPage(
               fluidRow(
                 lapply(1:6, function(i) {
                   box(
-                    title = paste("Group", i),
-                    pickerInput(paste0("filter", i, "1"), "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Female"),
+                    title = i18n$t(paste("Group", i)),
+                    #pickerInput(paste0("filter", i, "1"), "Filter 1 (demo only)", choices = c("Male", "Female"), selected = "Female"),
                     uiOutput(paste0("filterui", i)),
                     collapsible = TRUE,
                     collapsed = TRUE
@@ -91,7 +93,7 @@ ui <- dashboardPage(
                 }),
                 tabBox(
                   height = 500, width = 12,
-                  tabPanel("Statistical Tests",
+                  tabPanel(i18n$t("Statistical Tests"),
                            htmlOutput("html1"),
                            DT::dataTableOutput("DTtabletest1") %>% withSpinner(color = "orange"))
                 )

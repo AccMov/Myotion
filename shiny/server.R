@@ -1,7 +1,7 @@
 pacs = c("R.matlab","stringr","ggplot2","plotly","shinycssloaders",
           "ggthemes","shinydashboardPlus","DT","shiny","shinydashboard",
           "tidyverse","flextable","fresh","rempsyc","ggridges","shinyWidgets","shinyjs",
-         "xtable","kableExtra","car","XML","viridis","svSocket")
+         "xtable","kableExtra","car","XML","viridis","svSocket","shiny.i18n")
 
 lapply(pacs, require, character.only = TRUE)
 
@@ -74,6 +74,11 @@ process_group_test <- function(group_data, group_select, para_bar, group_label) 
 
 server <- function(input, output) {
 
+
+  #observeEvent(input$language, {
+  #  update_lang(input$language, session = shiny::getDefaultReactiveDomain())
+  #})
+
   handle_client <- function(msg, client, port) {
     #cat("Client:", client, ":", port, " connected.\n")
     # Read data from the client
@@ -81,6 +86,7 @@ server <- function(input, output) {
     # Close the connection
     cat("Client connection closed.\n")
     path <<- msg
+    #lan = "en"
     return(0)
   }
   
@@ -162,7 +168,7 @@ server <- function(input, output) {
   advanced_data <- reactiveVal()  
   
   observeEvent(input$goButton, {
-
+    
     oldpath <<- path
     #a =while (TRUE) {}
     groupA_names <- list.files(normalizePath(path, "/", mustWork = FALSE),
@@ -192,44 +198,44 @@ server <- function(input, output) {
 
   
   output$filteruiA <- renderUI({
-    pickerInput("filterA2", "Add by ID", choices = c(names(groupA)),
+    pickerInput("filterA2", i18n$t("Add by ID"), choices = c(names(groupA)),
                 selected = c(),
                 multiple = TRUE)
 })
   
   output$filteruiB <- renderUI({
-    pickerInput("filterB2", "Add by ID", choices = c(names(groupA)),
+    pickerInput("filterB2", i18n$t("Add by ID"), choices = c(names(groupA)),
                 selected = c(),
                 multiple = TRUE)
     })
   
   output$filterui1 <- renderUI({
-    pickerInput("filter12", "Add by ID", choices = c(names(groupA)),
+    pickerInput("filter12", i18n$t("Add by ID"), choices = c(names(groupA)),
                 selected = NULL,
                 multiple = TRUE)})
   
   output$filterui2 <- renderUI({
-    pickerInput("filter22", "Add by ID", choices = c(names(groupA)),
+    pickerInput("filter22", i18n$t("Add by ID"), choices = c(names(groupA)),
                 selected = NULL,
                 multiple = TRUE)})
   
   output$filterui3 <- renderUI({
-    pickerInput("filter32", "Add by ID", choices = c(names(groupA)),
+    pickerInput("filter32", i18n$t("Add by ID"), choices = c(names(groupA)),
                 selected = NULL,
                 multiple = TRUE)})
   
   output$filterui4 <- renderUI({
-    pickerInput("filter42", "Add by ID", choices = c(names(groupA)),
+    pickerInput("filter42", i18n$t("Add by ID"), choices = c(names(groupA)),
                 selected = NULL,
                 multiple = TRUE)})
   
   output$filterui5 <- renderUI({
-    pickerInput("filter52", "Add by ID", choices = c(names(groupA)),
+    pickerInput("filter52", i18n$t("Add by ID"), choices = c(names(groupA)),
                 selected = NULL,
                 multiple = TRUE)})
   
   output$filterui6 <- renderUI({
-    pickerInput("filter62", "Add by ID", choices = c(names(groupA)),
+    pickerInput("filter62", i18n$t("Add by ID"), choices = c(names(groupA)),
                 selected = NULL,
                 multiple = TRUE)})
     
@@ -237,22 +243,22 @@ server <- function(input, output) {
 
     if (input$tab == "tests") {
       
-        dyn_ui <- list(selectInput("testselect2", "Select domain ", choices = domain,
+        dyn_ui <- list(selectInput("testselect2", i18n$t("Select domain"), choices = domain,
                                    selected = "time_domain_para"),
                        uiOutput('testuiselect1'),
-                       pickerInput("testselect4", "Select muscles", choices = muscle_name,
+                       pickerInput("testselect4", i18n$t("Select muscles"), choices = muscle_name,
                                      selected = muscle_name[1], multiple = F),
-                       actionButton("goButton_test", "Perform test")
+                       actionButton("goButton_test", i18n$t("Perform test"))
         )      
     } 
     if (input$tab == "groups") {
       
-      dyn_ui <- list(  selectInput("select1", "Select domain ", choices = domain,
+      dyn_ui <- list(  selectInput("select1", i18n$t("Select domain"), choices = domain,
                                    selected = "time_domain_para"),
                        uiOutput('uiselect1'),
                        uiOutput('uiselect2'),
                        uiOutput('uiselect3'),
-                       actionButton("goButton", "Generate figure"),
+                       actionButton("goButton", i18n$t("Generate figure")),
                        tabsetPanel(id = "tabset_id1", selected = "t3", 
                                    tabPanel("Advanced options",  value = "t3",
                                             uiOutput("plotoption")))                 
@@ -265,8 +271,8 @@ server <- function(input, output) {
     dt_test = df_draw_test()
     if (input$tab == "tests") {
       if(length(unique(dt_test$group))==2){
-        return(list(selectInput("testselect1", "Select test ", choices = c("Two sample t test"),
-                           selected = "Two sample t test")#,
+        return(list(selectInput("testselect1", i18n$t("Select test"), choices = c(i18n$t("Two sample t test")),
+                           selected = i18n$t("Two sample t test"))#,
                     #tabsetPanel(id = "tabset_id2", selected = "tt1", 
                     #          tabPanel("Advanced options",  value = "tt3",
                     #                selectInput("somethinghere", "Some useful options", choices = c("1","2","3"),
@@ -274,8 +280,9 @@ server <- function(input, output) {
                     ))
         
       } else if(length(unique(dt_test$group))>2){
-        return(list(selectInput("testselect1", "Select test ", choices = c("One-way ANOVA","Tukey's HSD"),
-                           selected = "One-way ANOVA")#,
+        return(list(selectInput("testselect1", i18n$t("Select test"),
+                                choices = c(i18n$t("One-way ANOVA"),i18n$t("Tukey's HSD")),
+                           selected = i18n$t("One-way ANOVA"))#,
                     #tabsetPanel(id = "tabset_id2", selected = "tt1", 
                     #           tabPanel("Advanced options",  value = "tt3",
                     #                    selectInput("somethinghere", "Some useful options", choices = c("1","2","3"),
@@ -297,7 +304,7 @@ server <- function(input, output) {
     } else if(input$select1 == "Time series"){
       choice_select2 = advanced
     }
-    selectInput('select2', 'Select Metrics 1', choice = choice_select2, selected = choice_select2[3])
+    selectInput('select2', i18n$t('Select Metrics 1'), choice = choice_select2, selected = choice_select2[3])
   })
   
   output$uiselect2 = renderUI({
@@ -308,18 +315,18 @@ server <- function(input, output) {
     } else if(input$select1 == "Time series"){
       choice_select2 = advanced
     }
-    selectInput('select22', 'Select Metrics 2', choice = c("Non",choice_select2), selected = "Non")
+    selectInput('select22', i18n$t('Select Metrics 2'), choice = c("Non",choice_select2), selected = "Non")
   })
   
   output$uiselect3 = renderUI({
     if(input$select22 == "Non" & input$select1 != "Time series"){
-      choice_select3 = c("Bar chart","Histogram","Boxplot")
+      choice_select3 = c(i18n$t("Bar chart"),i18n$t("Histogram"),i18n$t("Boxplot"))
     } else if(input$select22 != "Non" & input$select1 != "Time series"){
-      choice_select3 = c("Scatter plot")
+      choice_select3 = c(i18n$t("Scatter plot"))
     }  else if(input$select1 == "Time series"){
       choice_select3 = c("Functional curve")
     } 
-    selectInput("select3", "Select plot type", choices = choice_select3,
+    selectInput("select3", i18n$t("Select plot type"), choices = choice_select3,
                 selected = choice_select3[1])
   })
   
@@ -331,7 +338,7 @@ server <- function(input, output) {
     } else if(input$testselect2 == "Time series"){
       tchoice_select2 = advanced
     }
-    selectInput('testselect3', 'Select Metrics', choice = tchoice_select2,
+    selectInput('testselect3', i18n$t('Select Metrics'), choice = tchoice_select2,
                 selected = tchoice_select2[3],multiple = T)
   })
   
@@ -342,28 +349,28 @@ server <- function(input, output) {
   
   output$plotoption = renderUI({
 
-    if(input$select3 %in% c("Bar chart","Boxplot","Scatter plot")){
+    if(input$select3 %in% c(i18n$t("Bar chart"),i18n$t("Boxplot"),i18n$t("Scatter plot"))){
       figure_option_ui = list(
-        checkboxInput("singleplot","Single plot", FALSE),
-        textInput("title_input", "Title", value = ""),
-        textInput("y_input", "Y label", value = ""),
-        textInput("x_input", "X label", value = ""),
-        sliderInput("titlesize", "Title font size", value = 20, min = 1, max = 80),
-        sliderInput("xylabelsize", "x & y label size", value = 15, min = 1, max = 80),
-        sliderInput("xytextsize", "xy-axis text size", value = 10, min = 1, max = 50),
-        selectInput("plotcolor","Color palettes", choices = c("Regular","Black & White","Color blind friendly"), selected = "Regular")
+        checkboxInput("singleplot",i18n$t("Single plot"), FALSE),
+        textInput("title_input", i18n$t("Title"), value = ""),
+        textInput("y_input", i18n$t("Y label"), value = ""),
+        textInput("x_input", i18n$t("X label"), value = ""),
+        sliderInput("titlesize", i18n$t("Title font size"), value = 20, min = 1, max = 80),
+        sliderInput("xylabelsize", i18n$t("x & y label size"), value = 15, min = 1, max = 80),
+        sliderInput("xytextsize", i18n$t("xy-axis text size"), value = 10, min = 1, max = 50),
+        selectInput("plotcolor",i18n$t("Color palettes"), choices = c("Regular","Black & White","Color blind friendly"), selected = "Regular")
       )
-    } else if(input$select3 %in% c("Histogram")){
+    } else if(input$select3 %in% c(i18n$t("Histogram"))){
       figure_option_ui = list(
-        checkboxInput("singleplot","Single plot", FALSE),
-        checkboxInput("density","Density plot", FALSE),
-        textInput("title_input", "Title", value = ""),
-        textInput("y_input", "Y label", value = ""),
-        textInput("x_input", "X label", value = ""),
-        sliderInput("titlesize", "Title font size", value = 20, min = 1, max = 80),
-        sliderInput("xylabelsize", "x & y label size", value = 15, min = 1, max = 80),
-        sliderInput("xytextsize", "xy-axis text size", value = 10, min = 1, max = 50),
-        selectInput("plotcolor","Color palettes", choices = c("Regular","Black & White","Color blind friendly"), selected = "Regular")
+        checkboxInput("singleplot",i18n$t("Single plot"), FALSE),
+        checkboxInput("density",i18n$t("Density plot"), FALSE),
+        textInput("title_input", i18n$t("Title"), value = ""),
+        textInput("y_input", i18n$t("Y label"), value = ""),
+        textInput("x_input", i18n$t("X label"), value = ""),
+        sliderInput("titlesize", i18n$t("Title font size"), value = 20, min = 1, max = 80),
+        sliderInput("xylabelsize", i18n$t("x & y label size"), value = 15, min = 1, max = 80),
+        sliderInput("xytextsize", i18n$t("xy-axis text size"), value = 10, min = 1, max = 50),
+        selectInput("plotcolor",i18n$t("Color palettes"), choices = c("Regular","Black & White","Color blind friendly"), selected = "Regular")
       )
     }
       
@@ -485,7 +492,7 @@ server <- function(input, output) {
     }
 
     ## Draw plot
-    if(input$select3 == "Bar chart"){
+    if(input$select3 == i18n$t("Bar chart")){
       df_bar = df_draw() %>% dplyr::group_by(group, muscle) %>%
         summarise(sd = sd(value),
                   Average = mean(value),
@@ -543,7 +550,7 @@ server <- function(input, output) {
           orientation = "h", xanchor = "center", x = 0.5, y= 1
         ))
 
-    } else if(input$select3 == "Boxplot"){
+    } else if(input$select3 == i18n$t("Boxplot")){
       df_box = df_draw()
       df_box$group = as.factor(df_box$group)
 
@@ -648,7 +655,7 @@ server <- function(input, output) {
           orientation = "h", xanchor = "center", x = 0.5, y= 1
         ))
     } 
-    else if(input$select3 == "Histogram"){
+    else if(input$select3 == i18n$t("Histogram")){
       df_dens = df_draw()
       if(input$density){
         dens_plot = ggplot(df_dens, aes(x = value, fill = group,color = group)) + 
@@ -714,7 +721,7 @@ server <- function(input, output) {
     input$goButton
     isolate({
     ## Draw plot
-    if(input$select3 == "Bar chart"){
+    if(input$select3 == i18n$t("Bar chart")){
       dt_table = df_draw() %>% dplyr::group_by(group, muscle) %>%
         summarise(sd = sd(value),
                   Average = mean(value),
@@ -724,18 +731,18 @@ server <- function(input, output) {
         )
       rg = range(dt_table$Average)
       loc_value = which(names(dt_table) == "Average")
-    } else if(input$select3 == "Boxplot"){
+    } else if(input$select3 == i18n$t("Boxplot")){
       dt_table = df_draw()
       rg = range(dt_table$value)
       loc_value = which(names(dt_table) == "value")
 
-    } else if(input$select3 == "Scatter plot"){
+    } else if(input$select3 == i18n$t("Scatter plot")){
       dt_table = df_draw()
       rg = range(dt_table$value)
       loc_value = which(names(dt_table) == "value")
       
     } 
-    else if(input$select3 == "Histogram"){
+    else if(input$select3 == i18n$t("Histogram")){
       dt_table = df_draw()
       rg = range(dt_table$value)
       loc_value = which(names(dt_table) == "value")
@@ -796,7 +803,7 @@ server <- function(input, output) {
     isolate({
     dt_test = df_draw_test()
     if(length(unique(dt_test$group))>=2){
-    if (input$testselect1 == "Two sample t test"){
+    if (input$testselect1 == i18n$t("Two sample t test")){
       dt_test = pivot_wider(dt_test, names_from = para)
       t.test.results <- nice_t_test(
       data = dt_test,
@@ -809,14 +816,14 @@ server <- function(input, output) {
     my_table <- nice_table(t.test.results)
     
     htmltools_value(my_table)
-    } else if(input$testselect1 == "One-way ANOVA"){
+    } else if(input$testselect1 == i18n$t("One-way ANOVA")){
       # anova one way
       res.aov = lm(value~group, dt_test)
       res.aov <- Anova(res.aov)
       HTML(kbl(res.aov)%>%
         kable_styling())
       
-    }else if(input$testselect1 == "Tukey's HSD"){
+    }else if(input$testselect1 == i18n$t("Tukey's HSD")){
       res.aov <- aov(value ~ group, data = dt_test)
       TK = TukeyHSD(res.aov)
       HTML(kbl((TK$group))%>%

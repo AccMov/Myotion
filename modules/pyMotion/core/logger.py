@@ -1,22 +1,28 @@
 import collections
-
+import sys
+from contextlib import redirect_stdout
 errBuffer = collections.deque(maxlen=1000)
 infoBuffer = collections.deque(maxlen=1000)
 
-
 class logger:
+    pipe = sys.stdout
+
     def __init__(self):
         self.dummy = None
 
     @staticmethod
     def error(str):
         errBuffer.append(str)
-        print("Myotion -- ERROR: {}".format(str))
+        logger.pipe.write("Myotion -- ERROR: {}\n".format(str))
 
     @staticmethod
     def info(str):
         infoBuffer.append(str)
-        print("Myotion -- INFO: {}".format(str))
+        logger.pipe.write("Myotion -- INFO: {}\n".format(str))
+
+    @staticmethod
+    def flush():
+        logger.pipe.flush()
 
     @staticmethod
     def errstr():

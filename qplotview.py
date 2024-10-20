@@ -269,7 +269,7 @@ class QPlotMultiViewSubPages(QStackedWidget):
     def show(self):
         if self.repaint:
             # pop out plots and delete old widget
-            print("stacked_page: {}".format(self.count()))
+            logger.info("stacked_page: {}".format(self.count()))
             for p in self.plots:
                 p.setParent(None)
             for w in self.stacked_widgets:

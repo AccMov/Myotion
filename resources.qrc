@@ -1,4 +1,7 @@
 <RCC>
+  <qresource prefix="qm">
+    <file>CN.qm</file>
+  </qresource>
   <qresource prefix="images">
     <file>Myotion_logo.png</file>
     <file>images/images/PyDracula.png</file>
@@ -260,5 +263,8 @@
     <file>images/icons/icon_minimize.png</file>
     <file>images/icons/icon_restore.png</file>
     <file>images/icons/icon_settings.png</file>
+    <file>images/icons/greencheckmark.png</file>
+    <file>images/icons/redcross.png</file>
+    <file>images/icons/loading.gif</file>
   </qresource>
 </RCC>

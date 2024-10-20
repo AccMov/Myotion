@@ -19,6 +19,7 @@ import os
 import re
 from pathlib import Path
 import webbrowser
+import argparse
 
 from PySide6.QtCore import Qt, Signal, Slot, QTranslator
 from PySide6.QtGui import QIcon, QPalette
@@ -181,7 +182,10 @@ class EMGAddWindow(QDialog):
             self.emg.setMVCFile(chan, self.mvcfiles[index])
         except Exception:
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Selected mvc file is invalid!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Selected mvc file is invalid!"),
+                QMessageBox.Ok,
             )
             return
 
@@ -226,7 +230,10 @@ class EMGAddWindow(QDialog):
             self.emg = emg(file)
         except Exception:
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Selected emg file is invalid!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Selected emg file is invalid!"),
+                QMessageBox.Ok,
             )
             return
 
@@ -241,7 +248,10 @@ class EMGAddWindow(QDialog):
     def importMVCBtnClicked(self):
         if len(self.channels) == 0:
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Please select emg file before MVC file!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Please select emg file before MVC file!"),
+                QMessageBox.Ok,
             )
             return
 
@@ -301,24 +311,35 @@ class EMGAddWindow(QDialog):
     def sanity(self):
         # check emg file is selected
         if self.emg is None:
-            QMessageBox.critical(None, self.tr("error"), self.tr("No EMG file selected!"), QMessageBox.Ok)
+            QMessageBox.critical(
+                None, self.tr("error"), self.tr("No EMG file selected!"), QMessageBox.Ok
+            )
             return False
         # check mvc file is complete
         if not self.emg.isMVCComplete():
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("MVC file not complete!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("MVC file not complete!"),
+                QMessageBox.Ok,
             )
             return False
         # check pariticipant name is complete and no duplicates
         name = self.widgets.lineEdit_3.text()
         if name == "":
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Name of pariticipant not set!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Name of pariticipant not set!"),
+                QMessageBox.Ok,
             )
             return False
         if self.workspace.findParticipant(name) != None:
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Name of pariticipant already exists!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Name of pariticipant already exists!"),
+                QMessageBox.Ok,
             )
             return False
         # check all joint names are selected
@@ -340,9 +361,9 @@ class EMGAddWindow(QDialog):
                 QMessageBox.critical(
                     None,
                     self.tr("error"),
-                    self.tr("Duplicated joint name founded, please check line {} and {}").format(
-                        line1, line2
-                    ),
+                    self.tr(
+                        "Duplicated joint name founded, please check line {} and {}"
+                    ).format(line1, line2),
                     QMessageBox.Ok,
                 )
                 return False
@@ -410,11 +431,12 @@ class MainWindow(QMainWindow):
     # SIGNALS
     sigUpdateParticipants = Signal()
 
-    def __init__(self):
+    def __init__(self, language, sys_log, r_log):
         QMainWindow.__init__(self)
 
+        self.language = language
         # Launch R server
-        self.rserver = RServer()
+        self.rserver = RServer(language, r_log)
         self.rserver.start()
 
         # SET AS GLOBAL WIDGETS
@@ -635,10 +657,10 @@ class MainWindow(QMainWindow):
             self.preloadFreqAnalysisPage()
 
         if btnName == "btn_save":
-            print("Save BTN clicked!")
+            logger.info("Save BTN clicked!")
 
         # PRINT BTN NAME
-        print(f'Button "{btnName}" pressed!')
+        logger.info(f'Button "{btnName}" pressed!')
 
     def login_click(self):
         dlg = LoginDialog()
@@ -683,9 +705,9 @@ class MainWindow(QMainWindow):
 
         # PRINT MOUSE EVENTS
         if event.buttons() == Qt.LeftButton:
-            print("Mouse click: LEFT CLICK")
+            logger.info("Mouse click: LEFT CLICK")
         if event.buttons() == Qt.RightButton:
-            print("Mouse click: RIGHT CLICK")
+            logger.info("Mouse click: RIGHT CLICK")
 
     def addEMGButtonClick(self):
         # create person
@@ -743,13 +765,19 @@ class MainWindow(QMainWindow):
         proj_name = proj_full_name[: -len(PROJ_EXT)]
         if not checkValidPath(dir):
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Selected path does not exist!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Selected path does not exist!"),
+                QMessageBox.Ok,
             )
 
         p = Path(dir)
         if self.newWorkSpace(p, proj_name):
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Failed to create new Workspace!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Failed to create new Workspace!"),
+                QMessageBox.Ok,
             )
 
         logger.info("workspace path: {}".format(self.home))
@@ -765,7 +793,10 @@ class MainWindow(QMainWindow):
 
         if self.saveWorkSpace():
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Failed to save Workspace!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Failed to save Workspace!"),
+                QMessageBox.Ok,
             )
             return
 
@@ -791,7 +822,10 @@ class MainWindow(QMainWindow):
 
         if self.loadWorkSpace(path, file):
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Failed to load Workspace!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Failed to load Workspace!"),
+                QMessageBox.Ok,
             )
             return
 
@@ -803,19 +837,28 @@ class MainWindow(QMainWindow):
 
         if len(self.selectedParticipants) == 0:
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("No participant selected!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("No participant selected!"),
+                QMessageBox.Ok,
             )
             return
 
         if len(self.selectedParticipants) > 1:
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Only one participant can be selected!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Only one participant can be selected!"),
+                QMessageBox.Ok,
             )
             return
 
         if p is not None:
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Current EMG process is not finished!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Current EMG process is not finished!"),
+                QMessageBox.Ok,
             )
             return
         p_name = self.selectedParticipants[0]
@@ -901,7 +944,10 @@ class MainWindow(QMainWindow):
         if filter_type == emgFilterEnum.BAND_PASS:
             if cutoff_b_h is None or cutoff_b_l is None:
                 QMessageBox.critical(
-                    None, self.tr("error"), self.tr("cut off frequency is not complete!"), QMessageBox.Ok
+                    None,
+                    self.tr("error"),
+                    self.tr("cut off frequency is not complete!"),
+                    QMessageBox.Ok,
                 )
                 return
             if (
@@ -913,7 +959,9 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(
                     None,
                     self.tr("error"),
-                    self.tr("cut off frequency has to be between 0 and {}!").format(fs / 2),
+                    self.tr("cut off frequency has to be between 0 and {}!").format(
+                        fs / 2
+                    ),
                     QMessageBox.Ok,
                 )
                 return
@@ -928,14 +976,19 @@ class MainWindow(QMainWindow):
         elif filter_type == emgFilterEnum.LOW_PASS:
             if cutoff_l_l is None:
                 QMessageBox.critical(
-                    None, self.tr("error"), self.tr("cut off frequency is not complete!"), QMessageBox.Ok
+                    None,
+                    self.tr("error"),
+                    self.tr("cut off frequency is not complete!"),
+                    QMessageBox.Ok,
                 )
                 return
             if cutoff_l_l >= fs / 2 or cutoff_l_l < 0:
                 QMessageBox.critical(
                     None,
                     self.tr("error"),
-                    self.tr("cut off frequency has to be between 0 and {}!").format(fs / 2),
+                    self.tr("cut off frequency has to be between 0 and {}!").format(
+                        fs / 2
+                    ),
                     QMessageBox.Ok,
                 )
                 return
@@ -988,7 +1041,9 @@ class MainWindow(QMainWindow):
             return
 
         if step + 1 >= cfg.size():
-            QMessageBox.critical(None, self.tr("error"), self.tr("end of emg process!"), QMessageBox.Ok)
+            QMessageBox.critical(
+                None, self.tr("error"), self.tr("end of emg process!"), QMessageBox.Ok
+            )
             return
 
         widgets.listWidget.setCurrentRow(step + 1)
@@ -1021,13 +1076,19 @@ class MainWindow(QMainWindow):
         p, step, chan = self.singleEMG
         if p is None:
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Single EMG not started!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Single EMG not started!"),
+                QMessageBox.Ok,
             )
             return
         cfg = self.workspace[p].emg.getProcessConfig()
         if cfg is None:
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("EMG process file not available!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("EMG process file not available!"),
+                QMessageBox.Ok,
             )
             return
 
@@ -1039,7 +1100,10 @@ class MainWindow(QMainWindow):
         # sanity for pariticpants
         if len(self.selectedParticipants) == 0:
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("Please select participants first!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("Please select participants first!"),
+                QMessageBox.Ok,
             )
             return
 
@@ -1063,7 +1127,9 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(
                 None,
                 self.tr("error"),
-                self.tr("No saved configuration file found, please use single EMG to generate configure file!"),
+                self.tr(
+                    "No saved configuration file found, please use single EMG to generate configure file!"
+                ),
                 QMessageBox.Ok,
             )
             return
@@ -1515,7 +1581,10 @@ class MainWindow(QMainWindow):
 
         if not self.workspace[p].kinematic.isValid():
             QMessageBox.critical(
-                None, self.tr("error"), self.tr("No kinematic data available!"), QMessageBox.Ok
+                None,
+                self.tr("error"),
+                self.tr("No kinematic data available!"),
+                QMessageBox.Ok,
             )
             return
 
@@ -1663,6 +1732,10 @@ def QPlotViewSetup():
     )
     QWebEngineUrlScheme.registerScheme(scheme)
 
+def parse_args(argv):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--lang', type=str, help='lanuage setting')
+    return parser.parse_args()
 
 if __name__ == "__main__":
     from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
@@ -1673,16 +1746,33 @@ if __name__ == "__main__":
     # Setup Url scheme handler for WebEngineView
     QPlotViewSetup()
 
+    # Setup appData path
+    AppDataPath, LogPath = initializeAppDataFolder()
+
+    # setup logfile
+    sys_log = open(getSyslogFilename(LogPath), 'w')
+    r_log = open(getRserverlogFilename(LogPath), 'w')
+    logger.pipe = sys_log
+
+    # argument parse
+    args = parse_args(sys.argv[1:])
+
     qApp = QApplication(sys.argv)
     perm = permission()
-    qApp.setWindowIcon(QIcon("Myotion_logo.png"))
+    qApp.setWindowIcon(QIcon(":/images/Myotion_logo.png"))
+
+    # get language, default en
+    language = args.lang
+    if language == "":
+        language = "en"
 
     # translator
-    translator = QTranslator(qApp)
-    if translator.load("CN.qm"):
-        qApp.installTranslator(translator)
+    if language == "cn":
+        translator = QTranslator(qApp)
+        if translator.load(":/qm/CN.qm"):
+            qApp.installTranslator(translator)
 
-    window = MainWindow()
+    window = MainWindow(language, sys_log, r_log)
     qApp.exec()
     window.rserver.join()
     sys.exit(0)

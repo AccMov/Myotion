@@ -1,20 +1,17 @@
 #!/bin/bash
-cd ../../
 # pack python package
-pyinstaller main.py --noconfirm
+pyinstaller main.py --noconfirm --noconsole --distpath "dist" --workpath "build" -n Myotion
 
 # copy R script to dist folder
-mkdir dist/main/shiny
-cp shiny/*.R dist/main/shiny/
+mkdir dist/Myotion/shiny
+cp shiny/*.R dist/Myotion/shiny/
 
 # copy logo
-cp Myotion_logo.ico dist/main/Myotion_logo.ico
-
-# should be removed
-cp -r shiny/data dist/main/shiny/data
+cp Myotion_logo.ico dist/Myotion/Myotion_logo.ico
 
 # install R from source, compatible with all dist
-cd dist/main
+# this is not tested
+cd dist/Myotion
 wget http://cran.rstudio.com/src/base/R-3/R-4.3.4.tar.gz
 tar xvf R-4.3.4.tar.gz
 cd R-4.3.4

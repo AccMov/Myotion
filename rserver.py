@@ -25,44 +25,40 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 
 # R server for statistic analysis
 class RServer(threading.Thread):
-    def __init__(self):
-        self.stdout = None
-        self.stderr = None
+    def __init__(self, language="en", log_file=sys.stdout):
+        self.log_file = log_file
         threading.Thread.__init__(self)
 
+        self.host = "localhost"
+        self.port = 7776
+        self.language = language
+
     def run(self):
-        print("launching R server...")
         app = Path(os.getcwd() + "/shiny/app.R")
         rscript = Path(os.getcwd() + "/R/bin/Rscript")
         envscript = 'set "R_LIBS={}"'.format(Path(os.getcwd() + "/R/library"))
-        cmd = '{} && "{}" "{}"'.format(envscript, rscript, app)
+        args = "--language={}".format(self.language)
+        cmd = '{} && "{}" "{}" {}'.format(envscript, rscript, app, args)
         print(cmd)
-        p = subprocess.Popen(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
+        p = subprocess.Popen(cmd, shell=True, stdout=self.log_file, stderr=self.log_file)
 
         self.stdout, self.stderr = p.communicate()
 
     def UpdateProjectPath(self, path):
-        host = "localhost"
-        port = 7776
-
         # Connect to the R server
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
-            client_socket.connect((host, port))
-            print("Connected to the server.")
+            client_socket.connect((self.host, self.port))
 
             # Send messages to the server
             message = str(Path(path))
             client_socket.sendall(message.encode())
-            print("Sent:", message)
 
             # Receive response from the server
             # response = client_socket.recv(1024)
             # print("Received:", response.decode())
 
             # Close the connection
-            print("Closing connection.")
             client_socket.close()
-
 
 class RServerBrowser(QWebEngineView):
     def __init__(self, parent=None):
@@ -85,7 +81,6 @@ class RServerBrowser(QWebEngineView):
             # self.parent.update()
             return
 
-        print("html loaded failed, retry in 5 secs")
         # delay 5 sec and try again
         self.timer.start(5000)
 

@@ -5,6 +5,7 @@ pyinstaller main.py --noconfirm --noconsole --distpath "dist" --workpath "build"
 # copy R script to dist folder
 mkdir dist/Myotion/shiny
 cp shiny/*.R dist/Myotion/shiny/
+cp shiny/translations_from_csv.json dist/Myotion/shiny/
 
 # copy logo
 cp Myotion_logo.ico dist/Myotion/Myotion_logo.ico

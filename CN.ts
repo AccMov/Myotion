@@ -84,7 +84,7 @@
     <message>
         <location filename="login.ui" line="250"/>
         <source>Please Input User ID</source>
-        <translation type="unfinished">请输入用户ID</translation>
+        <translation>请输入用户ID</translation>
     </message>
     <message>
         <location filename="login.ui" line="337"/>
@@ -99,7 +99,7 @@
     <message>
         <location filename="login.ui" line="461"/>
         <source>Sign Up</source>
-        <translation type="unfinished">登出</translation>
+        <translation>注册</translation>
     </message>
     <message>
         <location filename="login.ui" line="566"/>
@@ -188,7 +188,7 @@
     <message>
         <location filename="emg_import.ui" line="322"/>
         <source>Filter:</source>
-        <translation type="unfinished">检索</translation>
+        <translation>检索:</translation>
     </message>
     <message>
         <location filename="emg_import.ui" line="370"/>
@@ -428,7 +428,7 @@
     <message>
         <location filename="main.ui" line="2575"/>
         <source>Sign Up</source>
-        <translation>注销</translation>
+        <translation>注册</translation>
     </message>
     <message>
         <location filename="main.ui" line="2673"/>
@@ -949,17 +949,17 @@
     <message>
         <location filename="main.ui" line="9182"/>
         <source>Message</source>
-        <translation type="unfinished"></translation>
+        <translation>消息</translation>
     </message>
     <message>
         <location filename="main.ui" line="9218"/>
         <source>Print</source>
-        <translation type="unfinished"></translation>
+        <translation>打印</translation>
     </message>
     <message>
         <location filename="main.ui" line="9254"/>
         <source>Logout</source>
-        <translation type="unfinished"></translation>
+        <translation>登出</translation>
     </message>
     <message>
         <location filename="main.ui" line="9323"/>

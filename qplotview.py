@@ -120,7 +120,6 @@ class QPlotView(QWebEngineView):
 
         for c in chans:
             if not tst.hasChannel(c):
-                logger.error("channel {} not exist".format(c))
                 return -1
 
         df = tst.toPandasFrame()
@@ -142,7 +141,6 @@ class QPlotView(QWebEngineView):
         else:
             chans = channel
         if len(y_) == 0:
-            logger.error("data y is empty")
             return -1
         if type(y_[0]) is list:
             n = len(y_[0])
@@ -153,10 +151,8 @@ class QPlotView(QWebEngineView):
             m = 1
             data = [y_]
         if n != len(x_):
-            logger.error("x and y need to have same dimension")
             return -1
         if m != len(chans):
-            logger.error("row of data and channel labels should have same dimension")
             return -1
         table = {}
         for i in range(0, m):
@@ -176,7 +172,6 @@ class QPlotView(QWebEngineView):
 
         for c in chans:
             if not tst.hasChannel(c):
-                logger.error("channel {} not exist".format(c))
                 return -1
 
         df = tst.toPandasFrame()
@@ -198,7 +193,6 @@ class QPlotView(QWebEngineView):
         else:
             chans = channel
         if len(y_) == 0:
-            logger.error("data y is empty")
             return -1
         if type(y_[0]) is list:
             n = len(y_[0])
@@ -209,10 +203,8 @@ class QPlotView(QWebEngineView):
             m = 1
             data = [y_]
         if n != len(x_):
-            logger.error("x and y need to have same dimension")
             return -1
         if m != len(chans):
-            logger.error("row of data and channel labels should have same dimension")
             return -1
         table = {}
         for i in range(0, m):
@@ -269,7 +261,6 @@ class QPlotMultiViewSubPages(QStackedWidget):
     def show(self):
         if self.repaint:
             # pop out plots and delete old widget
-            logger.info("stacked_page: {}".format(self.count()))
             for p in self.plots:
                 p.setParent(None)
             for w in self.stacked_widgets:

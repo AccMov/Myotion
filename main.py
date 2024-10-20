@@ -1763,7 +1763,7 @@ if __name__ == "__main__":
 
     # get language, default en
     language = args.lang
-    if language == "":
+    if language == None:
         language = "en"
 
     # translator

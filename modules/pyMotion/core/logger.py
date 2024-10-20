@@ -14,11 +14,13 @@ class logger:
     def error(str):
         errBuffer.append(str)
         logger.pipe.write("Myotion -- ERROR: {}\n".format(str))
+        logger.pipe.flush()
 
     @staticmethod
     def info(str):
         infoBuffer.append(str)
         logger.pipe.write("Myotion -- INFO: {}\n".format(str))
+        logger.pipe.flush()
 
     @staticmethod
     def flush():

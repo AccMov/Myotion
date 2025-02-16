@@ -487,6 +487,9 @@ class MainWindow(QMainWindow):
 
         widgets.toggleLeftBox.clicked.connect(openCloseLeftBox)
         widgets.extraCloseColumnBtn.clicked.connect(openCloseLeftBox)
+        widgets.pushButton_17.clicked.connect(self.workspaceRemoveSelectedParticipant)
+        widgets.pushButton_18.clicked.connect(self.addEMGButtonClick)
+        widgets.checkBox_3.stateChanged.connect(self.workspaceToggleSelectAllParticipant)
 
         # EXTRA RIGHT BOX
         def openCloseRightBox():
@@ -620,6 +623,28 @@ class MainWindow(QMainWindow):
     # BUTTONS CLICK
     # Post here your functions for clicked buttons
     # ///////////////////////////////////////////////////////////////
+    
+    def workspaceRemoveSelectedParticipant (self):
+        """移除选中的项"""
+        selected_items = widgets.listWidget_3.selectedItems()
+        for item in selected_items:
+            p_name = item.text()
+            p = self.workspace.findParticipant(p_name)
+            if p is not None:
+                # 从 workspace 中移除参与者
+                self.workspace.participants.remove(p)
+                del self.workspace.profileList[p.name]
+            # 从 UI 中移除项
+            widgets.listWidget_3.takeItem(widgets.listWidget_3.row(item))
+        self.updateEMGParticipantBox()
+
+    def workspaceToggleSelectAllParticipant(self, state):
+        """全选或取消全选"""
+        state = not not state  # 将状态转换为布尔值
+        for i in range(widgets.listWidget_3.count()):
+            item = widgets.listWidget_3.item(i)
+            item.setCheckState(Qt.Checked if state else Qt.Unchecked)
+
     def buttonClick(self):
         # GET BUTTON CLICKED
         btn = self.sender()

@@ -51,7 +51,7 @@ from qplotview import QPlotView
 from modules import *
 from widgets import *
 
-os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100%
+# os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100%
 # SET AS GLOBAL WIDGETS
 # ///////////////////////////////////////////////////////////////
 widgets = None
@@ -734,6 +734,11 @@ class MainWindow(QMainWindow):
         if event.buttons() == Qt.RightButton:
             logger.info("Mouse click: RIGHT CLICK")
 
+    def handle_emg_load_done(self, person_name):
+        self.selectedParticipants.clear()
+        self.selectedParticipants.append(person_name)
+        self.singleEMGButtonClick()
+
     def addEMGButtonClick(self):
         # create person
         p, emgdata, kinematic = EMGAddWindow(self.workspace, self.home, 1200, 800).run()
@@ -748,6 +753,9 @@ class MainWindow(QMainWindow):
         # update UI
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
+
+        # 
+        self.handle_emg_load_done(p.name)
 
     def configButtonClick(self):
         rc = ConfigWindow(1200, 800).run()

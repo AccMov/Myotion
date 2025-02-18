@@ -33,7 +33,7 @@ class UIFunctions(MainWindow):
         if status == False:
             self.showMaximized()
             GLOBAL_STATE = True
-            self.ui.appMargins.setContentsMargins(0, 0, 0, 0)
+            # self.ui.appMargins.setContentsMargins(0, 0, 0, 0)
             self.ui.maximizeRestoreAppBtn.setToolTip("Restore")
             self.ui.maximizeRestoreAppBtn.setIcon(
                 QIcon(":/icons/images/icons/icon_restore.png")
@@ -47,7 +47,7 @@ class UIFunctions(MainWindow):
             GLOBAL_STATE = False
             self.showNormal()
             self.resize(self.width() + 1, self.height() + 1)
-            self.ui.appMargins.setContentsMargins(10, 10, 10, 10)
+            # self.ui.appMargins.setContentsMargins(10, 10, 10, 10)
             self.ui.maximizeRestoreAppBtn.setToolTip("Maximize")
             self.ui.maximizeRestoreAppBtn.setIcon(
                 QIcon(":/icons/images/icons/icon_maximize.png")

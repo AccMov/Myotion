@@ -60,14 +60,21 @@ perm = None
 
 # Global Constant
 # ///////////////////////////////////////////////////////////////
-class EMGAddWindow(QDialog):
+class EMGAddWindow(QMainWindow):
+    finished = Signal(tuple) # 定义一个信号，用于通知窗口关闭时返回结果
+
     def __init__(self, workspace, home, width, height, parent=None):
-        QDialog.__init__(self, parent)
+        QMainWindow.__init__(self)
+
         self.ui = Ui_EMGImport()
-        self.ui.setupUi(self)
+        # 创建一个中央部件并将 UI 设置到该部件上
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        self.ui.setupUi(central_widget)  # 将 UI 的布局设置到中央部件上
 
         self.resize(width, height)
         self.setWindowTitle(self.tr("Add EMG File"))
+        self.setWindowFlags(Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint | Qt.WindowCloseButtonHint)
 
         self.widgets = self.ui
         self.workspace = workspace
@@ -88,7 +95,7 @@ class EMGAddWindow(QDialog):
         self.widgets.importMVC_btn.clicked.connect(self.importMVCBtnClicked)
 
     def run(self):
-        self.exec()
+        self.show()
         return self.person, self.emg, self.kinematic
 
     # update emg and mvc qtablewidget
@@ -397,11 +404,14 @@ class EMGAddWindow(QDialog):
         for chan, joint in self.jointMap.items():
             self.workspace.addChanToJointMap(chan, joint)
 
+        # 发出信号，通知窗口关闭并传递结果
+        self.finished.emit((self.person, self.emg, self.kinematic))
         self.close()
 
     def cancelBtnClicked(self):
         self.person = None
         self.emg = None
+        self.finished.emit((self.person, self.emg, self.kinematic)) # 发出信号，通知窗口关闭并传递结果
         self.close()
 
 
@@ -734,28 +744,38 @@ class MainWindow(QMainWindow):
         if event.buttons() == Qt.RightButton:
             logger.info("Mouse click: RIGHT CLICK")
 
-    def handle_emg_load_done(self, person_name):
-        self.selectedParticipants.clear()
-        self.selectedParticipants.append(person_name)
-        self.singleEMGButtonClick()
-
-    def addEMGButtonClick(self):
-        # create person
-        p, emgdata, kinematic = EMGAddWindow(self.workspace, self.home, 1200, 800).run()
+    def on_emg_add_window_closed(self, result):
+        # 获取窗口返回的数据
+        p, emgdata, kinematic = result
+        
         if p is None:
             return
 
         logger.info("added participate {}".format(p.name))
 
-        # add to workspace
+        # 添加到 workspace
         self.workspace.addParticipant(p, emgdata, kinematic)
 
-        # update UI
+        # 更新 UI
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
 
-        # 
-        self.handle_emg_load_done(p.name)
+        # 调用 handle_emg_load_done
+        # self.handle_emg_load_done(p.name)
+        self.selectedParticipants.clear()
+        self.selectedParticipants.append(p.name)
+        self.singleEMGButtonClick()
+
+    def addEMGButtonClick(self):
+        # create person
+        self.emg_add_window = EMGAddWindow(self.workspace, self.home, 1200, 800)
+        
+        # 连接窗口关闭信号到槽函数
+        self.emg_add_window.finished.connect(self.on_emg_add_window_closed)
+
+        # 显示窗口
+        self.emg_add_window.run()  # 这里不需要返回结果，因为结果会通过信号传递
+
 
     def configButtonClick(self):
         rc = ConfigWindow(1200, 800).run()

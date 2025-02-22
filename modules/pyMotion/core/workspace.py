@@ -331,7 +331,7 @@ class workspace:
                     )
                 )
                 # load data from emg
-                profile.emg.async_load()
+                asyncio.run(profile.emg.async_load())
             else:
                 logger.info(
                     "emg async loader: loading profile {} from {}".format(

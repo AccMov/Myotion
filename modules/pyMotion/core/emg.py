@@ -1,3 +1,4 @@
+import asyncio
 from .timeSeriesTable import *
 from .c3d import *
 from .mat import *
@@ -380,21 +381,36 @@ class emg:
         if file != None and len(file):
             self.setEMGFile(file)
 
-    # async load of emg file, use for loading file in worker thread
-    # required emgfile, mvcfile and mvcfilemap to be pre-configured
-    def async_load(self):
-        if self.emgFile == None:
+    async def async_load(self):
+        """异步加载 EMG 和 MVC 文件"""
+        if self.emgFile is None:
             return -1
-        else:
-            self.setEMGFile(self.emgFile)
 
-        for chan, mvcfile in self.mvcFilesMap.items():
-            self.setMVCFile(chan, mvcfile)
+        # 异步加载 EMG 文件
+        await self.async_set_emg_file(self.emgFile)
 
-        # rename channel using map
+        # 异步加载 MVC 文件
+        tasks = [
+            self.async_set_mvc_file(chan, mvcfile)
+            for chan, mvcfile in self.mvcFilesMap.items()
+        ]
+        await asyncio.gather(*tasks)
+
+        # 重命名通道
         for old, new in self.chanMap.items():
             self.renameChannel(old, new)
+
         return 0
+
+    async def async_set_emg_file(self, file):
+        """异步加载 EMG 文件"""
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, self.setEMGFile, file)
+
+    async def async_set_mvc_file(self, channel, file):
+        """异步加载 MVC 文件"""
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, self.setMVCFile, channel, file)
 
     # applying tst to emg, used when
     # loading emg from a report

@@ -10,11 +10,11 @@ from enum import IntEnum
 
 
 class emgConfigEnum(IntEnum):
-    FILTER = 0
-    FULL_W_RECT = 1
-    DC_OFFSET = 2
-    ACTIVATION = 3
-    NORMALIZATION = 4
+    DC_OFFSET = 0
+    FILTER = 1
+    FULL_W_RECT = 2
+    NORMALIZATION = 3
+    ACTIVATION = 4
     SUMMARY = 5
     MAX = 6
 
@@ -30,8 +30,8 @@ class emgConfigInfo:
     ]
     nameMap = {
         emgConfigEnum.DC_OFFSET: "remove_dc_offset",
-        emgConfigEnum.FULL_W_RECT: "full_wave_rectification",
         emgConfigEnum.FILTER: "filter",
+        emgConfigEnum.FULL_W_RECT: "full_wave_rectification",
         emgConfigEnum.NORMALIZATION: "normalization",
         emgConfigEnum.ACTIVATION: "activation",
         emgConfigEnum.SUMMARY: "summary",

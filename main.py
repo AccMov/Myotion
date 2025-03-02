@@ -21,7 +21,7 @@ from pathlib import Path
 import webbrowser
 import argparse
 
-from PySide6.QtCore import Qt, Signal, Slot, QTranslator
+from PySide6.QtCore import Qt, Signal, Slot, QTranslator, QSignalBlocker
 from PySide6.QtGui import QIcon, QPalette
 from PySide6.QtWidgets import (
     QApplication,
@@ -509,9 +509,10 @@ class MainWindow(QMainWindow):
 
         # Project
         widgets.btn_new.clicked.connect(self.newProjectButtonClick)
-        widgets.btn_share.clicked.connect(self.saveProjectButtonClick)
+        widgets.btn_share.clicked.connect(lambda: self.saveProjectButtonClick(True))
         widgets.btn_adjustments.clicked.connect(self.loadProjectButtonClick)
         self.sigUpdateParticipants.connect(self.updateEMGParticipantBox)
+        widgets.treeView.doubleClicked.connect(self.handleTreeViewDoubleClick)
 
         # General
         widgets.settingsMenu.clicked.connect(self.configButtonClick)
@@ -613,6 +614,28 @@ class MainWindow(QMainWindow):
         perm.register(widgets.topMenu, permission.BASIC)  # menu page
         perm.register(widgets.extraTopMenu, permission.BASIC)  # workspace page
         perm.setPermLevel(permission.LOGOUT)
+
+        # 添加自动保存定时器
+        self.autosave_timer = QTimer(self)
+        self.autosave_timer.timeout.connect(self.autoSaveHandler)
+        self.autosave_interval = 60000  # 1分钟 (单位：毫秒)
+
+    def enableAutoSave(self, enable):
+        """ 控制自动保存开关 """
+        if enable:
+            self.autosave_timer.start(self.autosave_interval)
+            logger.info(f"AutoSave enabled, interval: {self.autosave_interval/1000}s")
+        else:
+            self.autosave_timer.stop()
+
+    def autoSaveHandler(self):
+        """ 自动保存处理器 """
+        if self.workspace is None:
+            return
+        
+        logger.info("Auto-saving workspace...")
+        self.saveProjectButtonClick(show=False)
+        logger.info("Auto-save completed")
 
     def test(self):
         self.newWorkSpace(os.getcwd(), "test")
@@ -736,7 +759,7 @@ class MainWindow(QMainWindow):
     # //////////////////////////////////////////////////////////////
     def mousePressEvent(self, event):
         # SET DRAG POS WINDOW
-        self.dragPos = event.globalPos()
+        self.dragPos = event.globalPosition().toPoint()
 
         # PRINT MOUSE EVENTS
         if event.buttons() == Qt.LeftButton:
@@ -765,6 +788,7 @@ class MainWindow(QMainWindow):
         self.selectedParticipants.clear()
         self.selectedParticipants.append(p.name)
         self.singleEMGButtonClick()
+        self.saveProjectButtonClick(show=False)
 
     def addEMGButtonClick(self):
         # create person
@@ -839,7 +863,7 @@ class MainWindow(QMainWindow):
         # Jump to EMG page
         widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
 
-    def saveProjectButtonClick(self):
+    def saveProjectButtonClick(self, show=True):
         if self.workspace is None:
             logger.info("workspace is empty, nothing to save")
             return
@@ -852,8 +876,9 @@ class MainWindow(QMainWindow):
                 QMessageBox.Ok,
             )
             return
-
-        QMessageBox.information(None, "save", "Workspace saved!", QMessageBox.Ok)
+        
+        if show:
+            QMessageBox.information(None, "save", "Workspace saved!", QMessageBox.Ok)
         logger.info("workspace is saved")
 
     def loadProjectButtonClick(self):
@@ -1102,6 +1127,7 @@ class MainWindow(QMainWindow):
         widgets.listWidget.setCurrentRow(step + 1)
         # equivent to double click on EMG configuration list
         self.EMGConfigurationListDoubleClicked(None)
+        self.saveProjectButtonClick(show=False)
 
     def EMGGenerateReportButtonClicked(self):
         # sanity
@@ -1372,8 +1398,8 @@ class MainWindow(QMainWindow):
     def updateEMGToolBox(self, type):
         type2toolbox = {
             emgConfigEnum.DC_OFFSET: 0,
-            emgConfigEnum.FULL_W_RECT: 1,
-            emgConfigEnum.FILTER: 2,
+            emgConfigEnum.FILTER: 1,
+            emgConfigEnum.FULL_W_RECT: 2,
             emgConfigEnum.NORMALIZATION: 3,
             emgConfigEnum.ACTIVATION: 4,
             emgConfigEnum.SUMMARY: 5,
@@ -1442,6 +1468,27 @@ class MainWindow(QMainWindow):
         else:
             widgets.treeView.setModel(None)
 
+    def handleTreeViewDoubleClick(self, index):
+        """ 处理文件树的双击事件 """
+        # 获取文件路径
+        file_path = self.filesystemTree.filePath(index)
+        
+        # 判断文件类型
+        if not os.path.isfile(file_path):
+            return
+        
+        # 处理需要根据文件类型执行的操作
+        print(f"Double clicked: {file_path}")
+        
+        # 如果是myo项目文件则打开
+        if file_path.endswith(".myo"):
+            # 先检查现有工作区保存状态
+            if self.ifOldProjectOpened():
+                return
+            
+            # 加载项目
+            self.loadWorkSpace(os.path.dirname(file_path), os.path.basename(file_path))
+            
     def updateEMGSavedConfigureList(self):
         if self.workspace is None:
             return
@@ -1559,6 +1606,9 @@ class MainWindow(QMainWindow):
         self.updateWorkProjectTreeWidget()
         self.updateEMGChannelSelectorContent()
 
+        # auto save
+        self.enableAutoSave(True)
+
         # notify rserver
         self.rserver.UpdateProjectPath(self.home)
         return 0
@@ -1586,6 +1636,9 @@ class MainWindow(QMainWindow):
         self.updateWorkProjectTreeWidget()
         self.updateEMGChannelSelectorContent()
         self.updateEMGSavedConfigureList()
+
+        # auto save
+        self.enableAutoSave(True)
 
         # notify rserver
         self.rserver.UpdateProjectPath(self.home)
@@ -1757,7 +1810,8 @@ class MainWindow(QMainWindow):
         # update UI
         self.updateEMGSignalProcessPanel()
         type, str = cfg.getTypeInfo(idx)
-        self.updateEMGToolBox(type)
+        with QSignalBlocker(widgets.toolBox):
+            self.updateEMGToolBox(type)
 
     def startBatchEMGProcess(self, people, configure):
         for p in people:

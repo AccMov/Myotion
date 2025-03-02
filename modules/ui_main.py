@@ -2190,7 +2190,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_62.addWidget(self.frame_29)
 
-        self.toolBox.addItem(self.page_2_full_wave, "\u00b7 Full wave rectification")
+        # self.toolBox.addItem(self.page_2_full_wave, "\u00b7 Full wave rectification")
         self.page_3_filter = QWidget()
         self.page_3_filter.setObjectName("page_3_filter")
         self.page_3_filter.setGeometry(QRect(0, 0, 157, 286))
@@ -2462,6 +2462,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_43.addWidget(self.frame_13)
 
         self.toolBox.addItem(self.page_3_filter, "\u00b7 Filter")
+        self.toolBox.addItem(self.page_2_full_wave, "\u00b7 Full wave rectification")
         self.page_4_norm = QWidget()
         self.page_4_norm.setObjectName("page_4_norm")
         self.page_4_norm.setGeometry(QRect(0, 0, 157, 286))
@@ -4833,7 +4834,7 @@ class Ui_MainWindow(object):
         )
         ___qlistwidgetitem1 = self.listWidget.item(1)
         ___qlistwidgetitem1.setText(
-            QCoreApplication.translate("MainWindow", "2. full wave rectification", None)
+            QCoreApplication.translate("MainWindow", "2. filter", None)
         )
         self.listWidget.setSortingEnabled(__sortingEnabled)
 

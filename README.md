@@ -9,7 +9,7 @@
 > 2. open Anaconda power shell
 > ```console
 > cd %PATH_OF_THIS_PROJECT%
-> conda env create --name accmov --file=accmov.yaml
+> conda env create --name accmov --file=accmov-win.yaml
 > ```
 >
 > ## run

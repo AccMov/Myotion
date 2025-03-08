@@ -539,6 +539,7 @@ class MainWindow(QMainWindow):
         widgets.checkBox_11.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.checkBox_12.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.checkBox_13.stateChanged.connect(self.EMGConfigureToggleConfiguration)
+        widgets.checkBox_13.stateChanged.connect(self.ChangeCheckboxText)
         widgets.comboBox_2.currentIndexChanged.connect(
             self.EMGChannelSelectorIndexChanged
         )
@@ -1007,6 +1008,12 @@ class MainWindow(QMainWindow):
         type, str = cfg.getTypeInfo(idx)
         self.selectSingleEMGStep(widgets.listWidget.currentRow())
         self.updateEMGToolBox(type)
+
+    def ChangeCheckboxText(self, state):
+        if state == Qt.Checked.value:
+            widgets.checkBox_13.setText(QCoreApplication.translate("MainWindow", "Cancel", None))
+        else:
+            widgets.checkBox_13.setText(QCoreApplication.translate("MainWindow", "Apply", None))
 
     def EMGConfigureToggleConfiguration(self, state):
         p, step, chan = self.singleEMG

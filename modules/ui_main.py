@@ -4767,7 +4767,7 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", " Click to process", None)
         )
         self.checkBox_13.setText(
-            QCoreApplication.translate("MainWindow", " Click to process", None)
+            QCoreApplication.translate("MainWindow", "Apply", None)
         )
         self.toolBox.setItemText(
             self.toolBox.indexOf(self.page_4_norm),

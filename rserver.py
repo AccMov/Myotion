@@ -32,6 +32,7 @@ class RServer(threading.Thread):
         self.host = "localhost"
         self.port = 7776
         self.language = language
+        self.p = None
 
     def run(self):
         app = Path(os.getcwd() + "/shiny/app.R")
@@ -40,9 +41,15 @@ class RServer(threading.Thread):
         args = "--language={}".format(self.language)
         cmd = '{} && "{}" "{}" {}'.format(envscript, rscript, app, args)
         print(cmd)
-        p = subprocess.Popen(cmd, shell=True, stdout=self.log_file, stderr=self.log_file)
+        self.p = subprocess.Popen(cmd, shell=True, stdout=self.log_file, stderr=self.log_file)
 
-        self.stdout, self.stderr = p.communicate()
+        self.stdout, self.stderr = self.p.communicate()
+    
+    def shutdown(self):
+        if self.p:
+            print('Shutdown R-Server')
+            self.p.terminate()  # 使用terminate更友好
+            self.p = None
 
     def UpdateProjectPath(self, path):
         # Connect to the R server

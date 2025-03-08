@@ -134,8 +134,8 @@ class emgSummary:
 
 
 class emgFilterEnum(IntEnum):
-    LOW_PASS = 0
-    BAND_PASS = 1
+    BAND_PASS = 0
+    LOW_PASS = 1
     MAX = 2
 
 

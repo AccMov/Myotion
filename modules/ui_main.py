@@ -3164,15 +3164,15 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_31.addItem(self.horizontalSpacer_15)
 
-        self.pushButton_16 = QPushButton(self.frame_49)
-        self.pushButton_16.setObjectName("pushButton_16")
-        self.pushButton_16.setCursor(QCursor(Qt.PointingHandCursor))
-        self.pushButton_16.setStyleSheet(
-            "background-color:rgba(0,0,0,0.8);\n" "margin:3px 2px;"
-        )
-        self.pushButton_16.setIcon(icon1)
+        # self.pushButton_16 = QPushButton(self.frame_49)
+        # self.pushButton_16.setObjectName("pushButton_16")
+        # self.pushButton_16.setCursor(QCursor(Qt.PointingHandCursor))
+        # self.pushButton_16.setStyleSheet(
+        #     "background-color:rgba(0,0,0,0.8);\n" "margin:3px 2px;"
+        # )
+        # self.pushButton_16.setIcon(icon1)
 
-        self.horizontalLayout_31.addWidget(self.pushButton_16)
+        # self.horizontalLayout_31.addWidget(self.pushButton_16)
 
         self.verticalLayout_56.addWidget(self.frame_49)
 
@@ -4854,7 +4854,7 @@ class Ui_MainWindow(object):
         self.checkBox_2.setText(
             QCoreApplication.translate("MainWindow", "Select All", None)
         )
-        self.pushButton_16.setText("")
+        # self.pushButton_16.setText("")
         ___qtablewidgetitem = self.tableWidget_2.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(
             QCoreApplication.translate("MainWindow", "Selected", None)

@@ -135,6 +135,12 @@ class EMGAddWindow(QMainWindow):
         for j in jointName.short:
             comboBox.addItem(jointName.getConcatName(j))
 
+        # 设置 QCompleter 并启用模糊匹配
+        completer = QCompleter([jointName.getConcatName(j) for j in jointName.short], comboBox)
+        completer.setFilterMode(Qt.MatchContains)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)  # 设置大小写不敏感
+        comboBox.setCompleter(completer)
+        
         if chan in self.jointMap:
             comboBox.setCurrentText(jointName.getConcatName(self.jointMap[chan]))
         else:
@@ -271,6 +277,11 @@ class EMGAddWindow(QMainWindow):
             dir=self.root,
             filter="EMG Files (*.c3d *.mat)",
         )
+
+        # Get all file names and join them with ","
+        file_names = [os.path.basename(file) for file in files]
+        file_names_str = ", ".join(file_names)
+        self.widgets.label_3.setText(file_names_str)
 
         # clear old, set new val
         self.mvcfilesMap.clear()
@@ -500,6 +511,7 @@ class MainWindow(QMainWindow):
         widgets.pushButton_17.clicked.connect(self.workspaceRemoveSelectedParticipant)
         widgets.pushButton_18.clicked.connect(self.addEMGButtonClick)
         widgets.checkBox_3.stateChanged.connect(self.workspaceToggleSelectAllParticipant)
+        widgets.listWidget_3.itemChanged.connect(self.checkWorkspaceParticipantSelectState)
 
         # EXTRA RIGHT BOX
         def openCloseRightBox():
@@ -594,7 +606,7 @@ class MainWindow(QMainWindow):
         self.filesystemTree = (
             QFileSystemModel()
         )  # file system tree for workspace directory
-        self.selectedParticipants = []  # key of selected participants
+        self.selectedParticipants = set()  # key of selected participants
         self.singleEMG = (
             None,
             None,
@@ -673,10 +685,37 @@ class MainWindow(QMainWindow):
 
     def workspaceToggleSelectAllParticipant(self, state):
         """全选或取消全选"""
+        # 暂时断开 listWidget_3 的信号连接
+        widgets.listWidget_3.itemChanged.disconnect(self.checkWorkspaceParticipantSelectState)
+
         state = not not state  # 将状态转换为布尔值
         for i in range(widgets.listWidget_3.count()):
             item = widgets.listWidget_3.item(i)
             item.setCheckState(Qt.Checked if state else Qt.Unchecked)
+        
+        # 重新连接 listWidget_3 的信号
+        widgets.listWidget_3.itemChanged.connect(self.checkWorkspaceParticipantSelectState)
+
+    def checkWorkspaceParticipantSelectState(self):
+        # 暂时断开 checkBox_3 的信号连接
+        widgets.checkBox_3.stateChanged.disconnect(self.workspaceToggleSelectAllParticipant)
+
+        # 检查是否有任何一个 item 被取消选择
+        all_checked = True
+        for i in range(widgets.listWidget_3.count()):
+            if widgets.listWidget_3.item(i).checkState() != Qt.Checked:
+                all_checked = False
+                break
+        
+        # 如果有任何一个 item 被取消选择，取消 checkbox 的选择状态
+        if not all_checked:
+            widgets.checkBox_3.setCheckState(Qt.Unchecked)
+        else:
+            widgets.checkBox_3.setCheckState(Qt.Checked)
+        
+        # 重新连接 checkBox_3 的信号
+        widgets.checkBox_3.stateChanged.connect(self.workspaceToggleSelectAllParticipant)
+
 
     def buttonClick(self):
         # GET BUTTON CLICKED
@@ -786,7 +825,7 @@ class MainWindow(QMainWindow):
         # 调用 handle_emg_load_done
         # self.handle_emg_load_done(p.name)
         self.selectedParticipants.clear()
-        self.selectedParticipants.append(p.name)
+        self.selectedParticipants.add(p.name)
         self.singleEMGButtonClick()
         self.saveProjectButtonClick(show=False)
 
@@ -939,7 +978,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.Ok,
             )
             return
-        p_name = self.selectedParticipants[0]
+        p_name = self.selectedParticipants.pop()
         p = self.workspace.findParticipant(p_name)
         self.startSingleEMGProcess(p)
 
@@ -947,10 +986,11 @@ class MainWindow(QMainWindow):
         sender = self.sender()
         p = sender.objectName()
 
-        if state:
-            self.selectedParticipants.append(p)
+        if state == Qt.Checked.value:
+            self.selectedParticipants.add(p)
         else:
-            self.selectedParticipants.remove(p)
+            if p in self.selectedParticipants:
+                self.selectedParticipants.remove(p)
 
     def EMGConfigurationListDoubleClicked(self, item):
         curr = widgets.listWidget.currentRow()
@@ -1227,16 +1267,28 @@ class MainWindow(QMainWindow):
         self.startBatchEMGProcess(listofpeople, config)
 
     def EMGParticipantSelectAllClicked(self, state):
-        self.selectedParticipants.clear()
-        state = not not state
-        if state:
-            participants = self.workspace.getFilteredParticipants(
-                self.participant_filter
-            )
+        """ 全选复选框点击处理 """
+        # 设置表格中的所有checkbox
+        state = Qt.CheckState(state)
+        widgets.checkBox_2.setCheckState(state)
+        
+        # 暂时断开单个checkbox的信号
+        for i in range(widgets.tableWidget_2.rowCount()):
+            checkbox = widgets.tableWidget_2.cellWidget(i, 0).findChild(QCheckBox)
+            checkbox.blockSignals(True)
+            checkbox.setCheckState(state)
+            checkbox.blockSignals(False)
+
+        participants = self.workspace.getFilteredParticipants(self.participant_filter)
+        if state == Qt.Checked.value:
             for p in participants:
-                name = p.name
-                self.selectedParticipants.append(name)
-        self.updateEMGParticipantBox()
+                self.selectedParticipants.add(p.name)
+        else:
+            for p in participants:
+                if p in self.selectedParticipants:
+                    self.selectedParticipants.remove(p.name)
+
+        # self.updateEMGParticipantBox()
 
     def FFTPlotClearAllClicked(self):
         widgets.scrollArea_3.deleteAllPages()
@@ -1269,7 +1321,22 @@ class MainWindow(QMainWindow):
         else:
             checkbox.setChecked(False)
         checkbox.stateChanged.connect(self.participantCheckBoxChanged)
+        checkbox.stateChanged.connect(self.handleParticipantCheckState)
         return checkbox
+
+    def handleParticipantCheckState(self, state):
+        """ 当单个checkbox状态改变时的处理函数 """
+        # 暂时关闭信号防止循环触发
+        with QSignalBlocker(widgets.checkBox_2):
+            # 检查是否全部选中
+            all_checked = True
+            for i in range(widgets.tableWidget_2.rowCount()):
+                w = widgets.tableWidget_2.cellWidget(i, 0).findChild(QCheckBox)
+                if not w.isChecked():
+                    all_checked = False
+                    break
+                    
+            widgets.checkBox_2.setChecked(all_checked)
 
     def EMGCreateHBox(self, w, parent=None):
         container = QWidget()
@@ -1590,7 +1657,7 @@ class MainWindow(QMainWindow):
         self.workspace = None
         self.home = None
         self.filesystemTree = QFileSystemModel()
-        self.selectedParticipants = []
+        self.selectedParticipants.clear()
 
     def newWorkSpace(self, fpath, name):
         # create new project
@@ -1828,6 +1895,21 @@ class MainWindow(QMainWindow):
         self.updateEMGParticipantBox()
 
 
+    def closeEvent(self, event):  # 添加窗口关闭事件处理
+        # 显式销毁所有QPlotView实例
+        self.deletePlots()
+        event.accept()
+
+    def deletePlots(self):
+        # 删除同时存在于UI和Python层面的对象引用
+        if hasattr(self, 'plot_input'):
+            widgets.plot_input.deleteLater()
+            del widgets.plot_input
+        if hasattr(self, 'plot_output'):
+            widgets.plot_output.deleteLater()
+            del widgets.plot_output
+
+
 # setting up Url Scheme string before app starts
 # this is for qplotview setup
 def QPlotViewSetup():
@@ -1881,5 +1963,6 @@ if __name__ == "__main__":
 
     window = MainWindow(language, sys_log, r_log)
     qApp.exec()
+    window.rserver.shutdown()
     window.rserver.join()
     sys.exit(0)

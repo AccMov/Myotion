@@ -629,6 +629,10 @@ class MainWindow(QMainWindow):
         self.freqAnalysisPlots = []  # plot diagram for frequency analysis
         self.plotsPerPage_list = [0, 1, 3, 5, 10]  # correspond to ui combox_19 setting
 
+
+        # 设置 EMG 过滤器输入框的验证器
+        self.setupEMGFilterValidators()
+
         # self.test()
 
         # Permission widget setup
@@ -1059,6 +1063,49 @@ class MainWindow(QMainWindow):
         )
         self.__updateEMGRenderBuffer(prev=False)
         self.updateEMGSignalProcessPanel(prev=False)
+
+    def setupEMGFilterValidators(self):
+        """设置 EMG 过滤器输入框的验证器，限制输入范围"""
+        # 初始时使用一个默认的最大值，后续会根据实际采样率动态调整
+        default_max = 1000  # 默认最大值
+        
+        # 创建整数验证器，限制输入范围为 0 到 default_max
+        validator_band_high = QIntValidator(0, default_max, self)
+        validator_band_low = QIntValidator(0, default_max, self)
+        validator_low_pass = QIntValidator(0, default_max, self)
+        
+        # 应用验证器到输入框
+        widgets.lineEdit_10.setValidator(validator_band_high)
+        widgets.lineEdit_11.setValidator(validator_band_low)
+        widgets.lineEdit_12.setValidator(validator_low_pass)
+        
+        # 存储验证器引用，以便后续更新
+        self.validator_band_high = validator_band_high
+        self.validator_band_low = validator_band_low
+        self.validator_low_pass = validator_low_pass
+
+    def updateEMGFilterValidators(self, p):
+        """根据采样率更新过滤器输入框的验证器范围"""
+        if p is None:
+            return
+            
+        try:
+            fs = self.workspace[p].emg.getfs()
+            max_freq = fs / 2
+            
+            # 更新验证器的范围
+            self.validator_band_high.setTop(max_freq)
+            self.validator_band_low.setTop(max_freq)
+            self.validator_low_pass.setTop(max_freq)
+            
+            # 更新输入框的提示文本
+            widgets.lineEdit_10.setPlaceholderText(f"high: 0-{max_freq}")
+            widgets.lineEdit_11.setPlaceholderText(f"low: 0-{max_freq}")
+            widgets.lineEdit_12.setPlaceholderText(f"low: 0-{max_freq}")
+            
+            logger.info(f"EMG filter validators updated with max frequency: {max_freq}")
+        except Exception as e:
+            logger.error(f"Failed to update EMG filter validators: {e}")
 
     def EMGConfigureFilterConfiguration(self):
         p, step, chan = self.singleEMG
@@ -1853,6 +1900,9 @@ class MainWindow(QMainWindow):
         if not self.workspace.hasParticipant(p):
             return -1
 
+        # 更新过滤器输入框的验证器范围
+        self.updateEMGFilterValidators(p)
+        
         # set fsm
         chan = self.workspace[p].emg.getChannels()[0]
         self.singleEMG = (p, 0, chan)

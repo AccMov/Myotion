@@ -144,7 +144,7 @@ class emgFilter:
 
     def __init__(self):
         self.enable = False
-        self.type = emgFilterEnum.LOW_PASS
+        self.type = emgFilterEnum.BAND_PASS
         self.cutoff_l = 0
         self.cutoff_h = 0
         self.order = int(2)
@@ -190,7 +190,7 @@ class emgFilter:
         if e and e.text:
             obj.type = xmlStringParse(e.text, int)
         else:
-            obj.type = emgFilterEnum.LOW_PASS
+            obj.type = emgFilterEnum.BAND_PASS
         e = root.find("order")
         if e and e.text:
             obj.order = xmlStringParse(e.text, int)
@@ -262,8 +262,15 @@ class emgConfigure:
     def __init__(self):
         # default config for each step
         self.stepConfig = []
-        for s in emgConfigInfo.classical_steps:
-            self.stepConfig.append(self.initConfig(s))
+        for i, s in enumerate(emgConfigInfo.classical_steps):
+            config = self.initConfig(s)
+            
+            # 特殊处理第二个 FILTER (索引为 3，要与classical_steps同步修改)
+            if s == emgConfigEnum.FILTER and i == 3:  # 第二个 filter
+                config.type = emgFilterEnum.LOW_PASS
+                
+            self.stepConfig.append(config)
+
 
     # use step id as key to access config file
     def __getitem__(self, id):

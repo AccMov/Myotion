@@ -4746,18 +4746,18 @@ class Ui_MainWindow(object):
         self.lineEdit_10.setInputMask("")
         self.lineEdit_10.setText("")
         self.lineEdit_10.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", "cut-off frequency high", None)
+            QCoreApplication.translate("MainWindow", "high", None)
         )
         self.lineEdit_11.setText("")
         self.lineEdit_11.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", "cut-off frequency low", None)
+            QCoreApplication.translate("MainWindow", "low", None)
         )
         self.label_37.setText(
             QCoreApplication.translate("MainWindow", "Low Pass:", None)
         )
         self.lineEdit_12.setText("")
         self.lineEdit_12.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", "cut-off frequency low", None)
+            QCoreApplication.translate("MainWindow", "low", None)
         )
         self.toolBox.setItemText(
             self.toolBox.indexOf(self.page_3_filter),

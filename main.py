@@ -566,8 +566,8 @@ class MainWindow(QMainWindow):
 
         # start page
         widgets.settingsTopBtn.hide()
-        widgets.signInButton.clicked.connect(self.login_click)
-        # widgets.signInButton.clicked.connect(self.login_click_debug)
+        # widgets.signInButton.clicked.connect(self.login_click)
+        widgets.signInButton.clicked.connect(self.login_click_debug)
         widgets.signUpButton.clicked.connect(
             lambda x: webbrowser.open("http://www.accmov.com")
         )

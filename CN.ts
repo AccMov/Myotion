@@ -4,65 +4,65 @@
 <context>
     <name>EMGAddWindow</name>
     <message>
-        <location filename="main.py" line="69"/>
+        <location filename="main.py" line="76"/>
         <source>Add EMG File</source>
         <translation>添加EMG文件</translation>
     </message>
     <message>
-        <location filename="main.py" line="184"/>
-        <location filename="main.py" line="229"/>
-        <location filename="main.py" line="244"/>
-        <location filename="main.py" line="304"/>
-        <location filename="main.py" line="309"/>
-        <location filename="main.py" line="316"/>
-        <location filename="main.py" line="321"/>
-        <location filename="main.py" line="329"/>
-        <location filename="main.py" line="342"/>
+        <location filename="main.py" line="199"/>
+        <location filename="main.py" line="247"/>
+        <location filename="main.py" line="265"/>
+        <location filename="main.py" line="333"/>
+        <location filename="main.py" line="340"/>
+        <location filename="main.py" line="350"/>
+        <location filename="main.py" line="358"/>
+        <location filename="main.py" line="368"/>
+        <location filename="main.py" line="381"/>
         <source>error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="main.py" line="184"/>
+        <location filename="main.py" line="200"/>
         <source>Selected mvc file is invalid!</source>
         <translation>选择的mvc文件无效！</translation>
     </message>
     <message>
-        <location filename="main.py" line="229"/>
+        <location filename="main.py" line="248"/>
         <source>Selected emg file is invalid!</source>
         <translation>选择的emg文件无效！</translation>
     </message>
     <message>
-        <location filename="main.py" line="244"/>
+        <location filename="main.py" line="266"/>
         <source>Please select emg file before MVC file!</source>
         <translation>选择MVC文件前请先选择EMG文件！</translation>
     </message>
     <message>
-        <location filename="main.py" line="304"/>
+        <location filename="main.py" line="333"/>
         <source>No EMG file selected!</source>
         <translation>EMG文件未选择！</translation>
     </message>
     <message>
-        <location filename="main.py" line="309"/>
+        <location filename="main.py" line="341"/>
         <source>MVC file not complete!</source>
         <translation>MVC文件不完整！</translation>
     </message>
     <message>
-        <location filename="main.py" line="316"/>
+        <location filename="main.py" line="351"/>
         <source>Name of pariticipant not set!</source>
         <translation>数据采集者名字未设置！</translation>
     </message>
     <message>
-        <location filename="main.py" line="321"/>
+        <location filename="main.py" line="359"/>
         <source>Name of pariticipant already exists!</source>
         <translation>数据采集者名字已存在！</translation>
     </message>
     <message>
-        <location filename="main.py" line="330"/>
+        <location filename="main.py" line="369"/>
         <source>Joint of channel {} not set!</source>
         <translation>关节未选择！</translation>
     </message>
     <message>
-        <location filename="main.py" line="343"/>
+        <location filename="main.py" line="384"/>
         <source>Duplicated joint name founded, please check line {} and {}</source>
         <translation>有重复的关节名字，请检查</translation>
     </message>
@@ -70,9 +70,9 @@
 <context>
     <name>Form</name>
     <message>
-        <location filename="configuration.ui" line="14"/>
-        <location filename="emg_import.ui" line="14"/>
         <location filename="login.ui" line="26"/>
+        <location filename="emg_import.ui" line="14"/>
+        <location filename="configuration.ui" line="14"/>
         <source>Form</source>
         <translation type="unfinished"></translation>
     </message>
@@ -149,14 +149,14 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="configuration.ui" line="762"/>
         <location filename="emg_import.ui" line="503"/>
+        <location filename="configuration.ui" line="762"/>
         <source>Confirm</source>
         <translation type="unfinished">确认</translation>
     </message>
     <message>
-        <location filename="configuration.ui" line="779"/>
         <location filename="emg_import.ui" line="520"/>
+        <location filename="configuration.ui" line="779"/>
         <source>Cancel</source>
         <translation type="unfinished">取消</translation>
     </message>
@@ -244,24 +244,20 @@
 <context>
     <name>LoginDialog</name>
     <message>
-        <location filename="modules/login.py" line="23"/>
         <source>Error</source>
-        <translation>错误</translation>
+        <translation type="vanished">错误</translation>
     </message>
     <message>
-        <location filename="modules/login.py" line="31"/>
         <source>Invalid username or password</source>
-        <translation>用户名或密码错误</translation>
+        <translation type="vanished">用户名或密码错误</translation>
     </message>
     <message>
-        <location filename="modules/login.py" line="34"/>
         <source>User is not registered, please contact admin</source>
-        <translation>用户未注册，请联系我们</translation>
+        <translation type="vanished">用户未注册，请联系我们</translation>
     </message>
     <message>
-        <location filename="modules/login.py" line="35"/>
         <source>Unknown error, please contact support</source>
-        <translation>未知错误，请联系我们</translation>
+        <translation type="vanished">未知错误，请联系我们</translation>
     </message>
 </context>
 <context>
@@ -554,14 +550,22 @@
     </message>
     <message>
         <location filename="main.ui" line="4481"/>
-        <source>cut-off frequency high</source>
-        <translation>截止频率-高</translation>
+        <source>high</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="main.ui" line="4504"/>
         <location filename="main.ui" line="4590"/>
+        <source>low</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>cut-off frequency high</source>
+        <translation type="vanished">截止频率-高</translation>
+    </message>
+    <message>
         <source>cut-off frequency low</source>
-        <translation>截止频率-低</translation>
+        <translation type="vanished">截止频率-低</translation>
     </message>
     <message>
         <location filename="main.ui" line="4552"/>
@@ -972,116 +976,126 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="746"/>
-        <location filename="main.py" line="752"/>
-        <location filename="main.py" line="768"/>
-        <location filename="main.py" line="794"/>
-        <location filename="main.py" line="806"/>
-        <location filename="main.py" line="812"/>
-        <location filename="main.py" line="818"/>
-        <location filename="main.py" line="904"/>
-        <location filename="main.py" line="915"/>
-        <location filename="main.py" line="923"/>
+        <location filename="main.py" line="903"/>
+        <location filename="main.py" line="912"/>
         <location filename="main.py" line="931"/>
-        <location filename="main.py" line="937"/>
-        <location filename="main.py" line="991"/>
-        <location filename="main.py" line="1024"/>
-        <location filename="main.py" line="1030"/>
-        <location filename="main.py" line="1042"/>
-        <location filename="main.py" line="1065"/>
-        <location filename="main.py" line="1518"/>
+        <location filename="main.py" line="961"/>
+        <location filename="main.py" line="976"/>
+        <location filename="main.py" line="985"/>
+        <location filename="main.py" line="994"/>
+        <location filename="main.py" line="1090"/>
+        <location filename="main.py" line="1103"/>
+        <location filename="main.py" line="1113"/>
+        <location filename="main.py" line="1122"/>
+        <location filename="main.py" line="1130"/>
+        <location filename="main.py" line="1187"/>
+        <location filename="main.py" line="1223"/>
+        <location filename="main.py" line="1232"/>
+        <location filename="main.py" line="1247"/>
+        <location filename="main.py" line="1272"/>
+        <location filename="main.py" line="1782"/>
         <source>error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="main.py" line="746"/>
+        <location filename="main.py" line="904"/>
         <source>Selected path does not exist!</source>
         <translation>选择的路径不存在！</translation>
     </message>
     <message>
-        <location filename="main.py" line="752"/>
+        <location filename="main.py" line="913"/>
         <source>Failed to create new Workspace!</source>
         <translation>创建项目失败！</translation>
     </message>
     <message>
-        <location filename="main.py" line="768"/>
+        <location filename="main.py" line="932"/>
         <source>Failed to save Workspace!</source>
         <translation>保存项目失败！</translation>
     </message>
     <message>
-        <location filename="main.py" line="781"/>
+        <location filename="main.py" line="947"/>
         <source>open Project file</source>
         <translation>打开项目文件</translation>
     </message>
     <message>
-        <location filename="main.py" line="783"/>
+        <location filename="main.py" line="949"/>
         <source>Project Files (*.myo)</source>
         <translation>项目文件(*.myo)</translation>
     </message>
     <message>
-        <location filename="main.py" line="794"/>
+        <location filename="main.py" line="962"/>
         <source>Failed to load Workspace!</source>
         <translation>加载项目失败！</translation>
     </message>
     <message>
-        <location filename="main.py" line="806"/>
+        <location filename="main.py" line="977"/>
         <source>No participant selected!</source>
         <translation>未选择数据采集者！</translation>
     </message>
     <message>
-        <location filename="main.py" line="812"/>
+        <location filename="main.py" line="986"/>
         <source>Only one participant can be selected!</source>
         <translation>只能选择一名数据采集者！</translation>
     </message>
     <message>
-        <location filename="main.py" line="818"/>
+        <location filename="main.py" line="995"/>
         <source>Current EMG process is not finished!</source>
         <translation>当前EMG处理未完成！</translation>
     </message>
     <message>
-        <location filename="main.py" line="904"/>
-        <location filename="main.py" line="931"/>
+        <location filename="main.py" line="1031"/>
+        <source>Cancel</source>
+        <translation type="unfinished">取消</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="1033"/>
+        <source>Apply</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="1091"/>
+        <location filename="main.py" line="1123"/>
         <source>cut off frequency is not complete!</source>
         <translation>截止频率不完整！</translation>
     </message>
     <message>
-        <location filename="main.py" line="916"/>
-        <location filename="main.py" line="938"/>
+        <location filename="main.py" line="1104"/>
+        <location filename="main.py" line="1131"/>
         <source>cut off frequency has to be between 0 and {}!</source>
         <translation>截止频率必须大于0小于</translation>
     </message>
     <message>
-        <location filename="main.py" line="924"/>
+        <location filename="main.py" line="1114"/>
         <source>cut off low has to be smaller than cut off high!</source>
         <translation>截止频率（低）必须小于截止频率（高）！</translation>
     </message>
     <message>
-        <location filename="main.py" line="991"/>
+        <location filename="main.py" line="1187"/>
         <source>end of emg process!</source>
         <translation>EMG处理结束！</translation>
     </message>
     <message>
-        <location filename="main.py" line="1024"/>
+        <location filename="main.py" line="1224"/>
         <source>Single EMG not started!</source>
         <translation>单个EMG处理未开始！</translation>
     </message>
     <message>
-        <location filename="main.py" line="1030"/>
+        <location filename="main.py" line="1233"/>
         <source>EMG process file not available!</source>
         <translation>EMG配置文件不存在！</translation>
     </message>
     <message>
-        <location filename="main.py" line="1042"/>
+        <location filename="main.py" line="1248"/>
         <source>Please select participants first!</source>
         <translation>请先选择数据采集者！</translation>
     </message>
     <message>
-        <location filename="main.py" line="1066"/>
+        <location filename="main.py" line="1275"/>
         <source>No saved configuration file found, please use single EMG to generate configure file!</source>
         <translation>未发现可用的EMG配置文件，请先使用信号处理并保存配置文件！</translation>
     </message>
     <message>
-        <location filename="main.py" line="1518"/>
+        <location filename="main.py" line="1783"/>
         <source>No kinematic data available!</source>
         <translation>没有可用的人体工程学数据！</translation>
     </message>
@@ -1089,40 +1103,32 @@
 <context>
     <name>PlayBarWidget</name>
     <message>
-        <location filename="modules/kinematics/playbarwidget.py" line="235"/>
         <source>Current Frame:</source>
-        <translation>当前帧：</translation>
+        <translation type="vanished">当前帧：</translation>
     </message>
     <message>
-        <location filename="modules/kinematics/playbarwidget.py" line="238"/>
         <source>Current Frame: </source>
-        <translation>当前帧：</translation>
+        <translation type="vanished">当前帧：</translation>
     </message>
     <message>
-        <location filename="modules/kinematics/playbarwidget.py" line="241"/>
-        <location filename="modules/kinematics/playbarwidget.py" line="285"/>
         <source>Play</source>
-        <translation>播放</translation>
+        <translation type="vanished">播放</translation>
     </message>
     <message>
-        <location filename="modules/kinematics/playbarwidget.py" line="248"/>
         <source>Prev</source>
-        <translation>后退</translation>
+        <translation type="vanished">后退</translation>
     </message>
     <message>
-        <location filename="modules/kinematics/playbarwidget.py" line="254"/>
         <source>Next</source>
-        <translation>前进</translation>
+        <translation type="vanished">前进</translation>
     </message>
     <message>
-        <location filename="modules/kinematics/playbarwidget.py" line="260"/>
         <source>Increment</source>
-        <translation>增加</translation>
+        <translation type="vanished">增加</translation>
     </message>
     <message>
-        <location filename="modules/kinematics/playbarwidget.py" line="281"/>
         <source>Pause</source>
-        <translation>暂停</translation>
+        <translation type="vanished">暂停</translation>
     </message>
 </context>
 <context>
@@ -1239,9 +1245,8 @@
 <context>
     <name>RenderWidget</name>
     <message>
-        <location filename="modules/kinematics/renderwidget.py" line="16"/>
         <source>No model to render</source>
-        <translation>无渲染模型</translation>
+        <translation type="vanished">无渲染模型</translation>
     </message>
 </context>
 </TS>

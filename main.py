@@ -280,9 +280,16 @@ class EMGAddWindow(QMainWindow):
 
         # Get all file names and join them with ","
         file_names = [os.path.basename(file) for file in files]
-        file_names_str = ", ".join(file_names)
+        # 设置 label_3 的自动换行属性
+        self.widgets.label_3.setWordWrap(True)
+        # 如果文件数量过多，限制显示数量并添加省略号
+        if len(file_names) > 5:
+            displayed_files = file_names[:5]
+            file_names_str = ",\n".join(displayed_files) + f",\n...\n共 {len(file_names)} 个文件"
+        else:
+            file_names_str = ",\n".join(file_names)
+            
         self.widgets.label_3.setText(file_names_str)
-
         # clear old, set new val
         self.mvcfilesMap.clear()
         self.mvcfiles = files

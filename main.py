@@ -518,6 +518,8 @@ class MainWindow(QMainWindow):
         widgets.extraCloseColumnBtn.clicked.connect(openCloseLeftBox)
         widgets.pushButton_17.clicked.connect(self.workspaceRemoveSelectedParticipant)
         widgets.pushButton_18.clicked.connect(self.addEMGButtonClick)
+        widgets.pushButton_16.clicked.connect(self.emgPageRemoveSelectedParticipant)
+        widgets.pushButton_161.clicked.connect(self.addEMGButtonClick)
         widgets.checkBox_3.stateChanged.connect(self.workspaceToggleSelectAllParticipant)
         widgets.listWidget_3.itemChanged.connect(self.checkWorkspaceParticipantSelectState)
 
@@ -710,6 +712,46 @@ class MainWindow(QMainWindow):
             # 从 UI 中移除项
             widgets.listWidget_3.takeItem(widgets.listWidget_3.row(item))
         self.updateEMGParticipantBox()
+
+    def emgPageRemoveSelectedParticipant(self):
+        """从 EMG 页面移除选中的参与者"""
+        # 获取 EMG 页面上选中的参与者
+        selected_participants = list(self.selectedParticipants)
+        
+        if not selected_participants:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("No participant selected!"),
+                QMessageBox.Ok,
+            )
+            return
+            
+        # 确认是否删除
+        reply = QMessageBox.question(
+            None,
+            self.tr("confirm"),
+            self.tr("Are you sure to remove selected participant(s)?"),
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        
+        if reply == QMessageBox.No:
+            return
+            
+        # 执行删除操作
+        for p_name in selected_participants:
+            p = self.workspace.findParticipant(p_name)
+            if p is not None:
+                # 从 workspace 中移除参与者
+                self.workspace.participants.remove(p)
+                del self.workspace.profileList[p.name]
+                
+        # 清空选择集合
+        self.selectedParticipants.clear()
+        
+        # 更新 UI
+        self.updateEMGParticipantBox()
+        self.updateWorkSpaceParticipantBox()
 
     def workspaceToggleSelectAllParticipant(self, state):
         """全选或取消全选"""
@@ -1039,11 +1081,57 @@ class MainWindow(QMainWindow):
         sender = self.sender()
         p = sender.objectName()
 
-        if state == Qt.Checked.value:
+        if Qt.CheckState(state) == Qt.Checked:
             self.selectedParticipants.add(p)
         else:
             if p in self.selectedParticipants:
                 self.selectedParticipants.remove(p)
+
+        # 同步更新 listWidget_3 的状态
+        self.syncListWidgetWithSelectedParticipants()
+        
+    def syncListWidgetWithSelectedParticipants(self):
+        """同步 selectedParticipants 到 listWidget_3"""
+        # 暂时阻断信号以避免循环触发
+        widgets.listWidget_3.blockSignals(True)
+        
+        # 更新 listWidget_3 中的选择状态
+        for i in range(widgets.listWidget_3.count()):
+            item = widgets.listWidget_3.item(i)
+            p_name = item.text()
+            if p_name in self.selectedParticipants:
+                item.setCheckState(Qt.Checked)
+            else:
+                item.setCheckState(Qt.Unchecked)
+                
+        widgets.listWidget_3.blockSignals(False)
+
+    def listWidgetItemChanged(self, item):
+        """处理 listWidget_3 项目状态变化"""
+        p_name = item.text()
+        
+        if item.checkState() == Qt.Checked:
+            self.selectedParticipants.add(p_name)
+        else:
+            if p_name in self.selectedParticipants:
+                self.selectedParticipants.remove(p_name)
+                
+        # 同步更新 tableWidget_2 的状态
+        self.syncTableWidgetWithSelectedParticipants()
+        
+    def syncTableWidgetWithSelectedParticipants(self):
+        """同步 selectedParticipants 到 tableWidget_2"""
+        # 遍历表格中的所有复选框
+        for i in range(widgets.tableWidget_2.rowCount()):
+            cell_widget = widgets.tableWidget_2.cellWidget(i, 0)
+            if cell_widget:
+                checkbox = cell_widget.findChild(QCheckBox)
+                if checkbox:
+                    p_name = checkbox.objectName()
+                    # 暂时阻断信号以避免循环触发
+                    checkbox.blockSignals(True)
+                    checkbox.setChecked(p_name in self.selectedParticipants)
+                    checkbox.blockSignals(False)
 
     def EMGConfigurationListDoubleClicked(self, item):
         curr = widgets.listWidget.currentRow()
@@ -1062,7 +1150,7 @@ class MainWindow(QMainWindow):
         self.updateEMGToolBox(type)
 
     def ChangeCheckboxText(self, state):
-        if state == Qt.Checked.value:
+        if Qt.CheckState(state) == Qt.Checked:
             widgets.checkBox_13.setText(QCoreApplication.translate("MainWindow", "Cancel", None))
         else:
             widgets.checkBox_13.setText(QCoreApplication.translate("MainWindow", "Apply", None))
@@ -1382,7 +1470,7 @@ class MainWindow(QMainWindow):
             checkbox.blockSignals(False)
 
         participants = self.workspace.getFilteredParticipants(self.participant_filter)
-        if state == Qt.Checked.value:
+        if Qt.CheckState(state) == Qt.Checked:
             for p in participants:
                 self.selectedParticipants.add(p.name)
         else:
@@ -1513,6 +1601,9 @@ class MainWindow(QMainWindow):
             widgets.tableWidget_2.setCellWidget(i, 2, self.EMGCreateHBox(ready))
             widgets.tableWidget_2.setCellWidget(i, 3, self.EMGCreateHBox(report))
 
+        # 同步 listWidget_3 的状态
+        self.syncListWidgetWithSelectedParticipants()
+
     def updateWorkSpaceParticipantBox(self):
         # listwidget_3
         participants = self.workspace.getParticipants()
@@ -1527,6 +1618,9 @@ class MainWindow(QMainWindow):
             item.setCheckState(Qt.Unchecked)
             widgets.listWidget_3.addItem(item)
             widgets.listWidget_3.item(i).setForeground(Qt.black)
+
+        # 连接信号
+        widgets.listWidget_3.itemChanged.connect(self.listWidgetItemChanged)
 
     # update waveform regarding to config step and user input metrics
     def updateEMGSignalProcessPanel(self, prev=True, post=True):

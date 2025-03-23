@@ -458,6 +458,7 @@ class ConfigWindow(QDialog):
 class MainWindow(QMainWindow):
     # SIGNALS
     sigUpdateParticipants = Signal()
+    sigAsyncLoadError = Signal(str)
 
     def __init__(self, language, sys_log, r_log):
         QMainWindow.__init__(self)
@@ -531,6 +532,7 @@ class MainWindow(QMainWindow):
         widgets.btn_share.clicked.connect(lambda: self.saveProjectButtonClick(True))
         widgets.btn_adjustments.clicked.connect(self.loadProjectButtonClick)
         self.sigUpdateParticipants.connect(self.updateEMGParticipantBox)
+        self.sigAsyncLoadError.connect(self.handleAsyncLoadError)
         widgets.treeView.doubleClicked.connect(self.handleTreeViewDoubleClick)
 
         # General
@@ -644,6 +646,19 @@ class MainWindow(QMainWindow):
         self.autosave_timer = QTimer(self)
         self.autosave_timer.timeout.connect(self.autoSaveHandler)
         self.autosave_interval = 60000  # 1分钟 (单位：毫秒)
+
+    def handleAsyncLoadError(self, error_msg):
+        """处理异步加载过程中的错误"""
+        logger.error(f"async load error: {error_msg}")
+        QMessageBox.critical(
+            None,
+            self.tr("error"),
+            self.tr(f"Wrong to load workspace: {error_msg}"),
+            QMessageBox.Ok,
+        )
+        # 重置工作区状态
+        self.reset()
+        widgets.tableWidget_2.clearContents()
 
     def enableAutoSave(self, enable):
         """ 控制自动保存开关 """
@@ -966,11 +981,20 @@ class MainWindow(QMainWindow):
         file = os.path.basename(filepath[0])
         path = filepath[0][: -len(file)]
 
-        if self.loadWorkSpace(path, file):
+        try:
+            if self.loadWorkSpace(path, file):
+                QMessageBox.critical(
+                    None,
+                    self.tr("error"),
+                    self.tr("Failed to load Workspace!"),
+                    QMessageBox.Ok,
+                )
+                return
+        except Exception as e:
             QMessageBox.critical(
                 None,
                 self.tr("error"),
-                self.tr("Failed to load Workspace!"),
+                self.tr(f"Failed to load Workspace: {str(e)}"),
                 QMessageBox.Ok,
             )
             return
@@ -1451,6 +1475,9 @@ class MainWindow(QMainWindow):
     def emitPariticipantUpdate(self):
         self.sigUpdateParticipants.emit()
 
+    def emitAsyncLoadError(self, str):
+        self.sigAsyncLoadError.emit(str)
+
     # UPDATE UI EVENTS/Slots
     # //////////////////////////////////////////////////////////////
     @Slot()
@@ -1764,7 +1791,7 @@ class MainWindow(QMainWindow):
 
     def loadWorkSpace(self, path, file):
         self.workspace = workspace.loadWorkSpace(
-            path, file, self.emitPariticipantUpdate
+            path, file, self.emitPariticipantUpdate, self.emitAsyncLoadError
         )
         if self.workspace == None:
             return -1
@@ -1902,7 +1929,7 @@ class MainWindow(QMainWindow):
 
         # 更新过滤器输入框的验证器范围
         self.updateEMGFilterValidators(p)
-        
+
         # set fsm
         chan = self.workspace[p].emg.getChannels()[0]
         self.singleEMG = (p, 0, chan)

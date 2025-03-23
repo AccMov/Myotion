@@ -259,7 +259,7 @@ class workspace:
         writer.write()
 
     @staticmethod
-    def loadWorkSpace(path, file, doneCallback):
+    def loadWorkSpace(path, file, doneCallback, errorCallback):
         logger.info("loadWorkSpace: loading from {}/{}...".format(path, file))
         proj_name = file[: -len(PROJ_EXT)]
         workspace_obj = workspace(None, proj_name)
@@ -317,36 +317,46 @@ class workspace:
         # spawn a loading thread to load emg
         if len(pending_load):
             workspace_obj.emgloaderthread = threading.Thread(
-                target=workspace_obj.emgAsyncLoader, args=(pending_load, doneCallback)
+                target=workspace_obj.emgAsyncLoader, args=(pending_load, doneCallback, errorCallback)
             )
             workspace_obj.emgloaderthread.start()
         return workspace_obj
 
-    def emgAsyncLoader(self, pending_load, doneCallback):
+    def emgAsyncLoader(self, pending_load, doneCallback, errorCallback):
         for name, profile in pending_load.items():
-            if profile.report == None:
-                logger.info(
-                    "emg async loader: loading profile {} from {}".format(
-                        name, profile.emg.emgFile
+            try:
+                if profile.report == None:
+                    logger.info(
+                        "emg async loader: loading profile {} from {}".format(
+                            name, profile.emg.emgFile
+                        )
                     )
-                )
-                # load data from emg
-                asyncio.run(profile.emg.async_load())
-            else:
-                logger.info(
-                    "emg async loader: loading profile {} from {}".format(
-                        name, profile.report.fpath
+                    # load data from emg
+                    asyncio.run(profile.emg.async_load())
+                else:
+                    logger.info(
+                        "emg async loader: loading profile {} from {}".format(
+                            name, profile.report.fpath
+                        )
                     )
-                )
-                # load data from report
-                tst = profile.report.async_load()
-                # construct emg from tst
-                profile.emg.load_from_report(tst)
-            # load kinematics data
-            profile.kinematic = kinematic(profile.emg.emgFile)
-            logger.info("emg async loader: done")
-            profile.loading = False
-            doneCallback()
+                    # load data from report
+                    tst = profile.report.async_load()
+                    # construct emg from tst
+                    profile.emg.load_from_report(tst)
+                # load kinematics data
+                profile.kinematic = kinematic(profile.emg.emgFile)
+                logger.info("emg async loader: done")
+                profile.loading = False
+                doneCallback()
+            except Exception as e:
+                # 捕获异常并记录日志
+                logger.error(f"emg async loader: wrong to load {name} with {profile.emg.emgFile}")
+                # 标记加载完成，避免界面卡死
+                profile.loading = False
+                self.emgloaderstop = True
+                # 将异常信息传递给回调函数
+                errorCallback(f"can not load {name} with {profile.emg.emgFile}")
+
             if self.emgloaderstop:
                 logger.info("emg async loader: stopping")
                 return

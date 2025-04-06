@@ -370,7 +370,7 @@ class timeSeriesTable:
 
     # return ndarray with filterd data
     def lowpass(self, key, Wn, N=2):
-        if Wn < 0 or Wn >= self.fs / 2:
+        if Wn <= 0 or Wn >= self.fs / 2:
             raise ValueError("frequency must be 0 < Wn < fs/2")
         # create low pass filter
         sos = self.__butterWorth(N, Wn, "lp")
@@ -378,9 +378,9 @@ class timeSeriesTable:
 
     # return ndarray with filterd data
     def bandpass(self, key, Wlow, Whigh, N=2):
-        if Wlow < 0 or Wlow >= self.fs / 2:
+        if Wlow <= 0 or Wlow >= self.fs / 2:
             raise ValueError("frequency must be 0 < Wn < fs/2")
-        if Whigh < 0 or Whigh >= self.fs / 2:
+        if Whigh <= 0 or Whigh >= self.fs / 2:
             raise ValueError("frequency must be 0 < Wn < fs/2")
         # create band pass filter
         sos = self.__butterWorth(N, [Wlow, Whigh], "bp")

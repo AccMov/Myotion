@@ -564,6 +564,7 @@ class MainWindow(QMainWindow):
         widgets.pushButton_26.clicked.connect(self.EMGGenerateReportButtonClicked)
         widgets.pushButton_27.clicked.connect(self.EMGSaveConfigurationButtonClicked)
         widgets.pushButton_12.clicked.connect(self.EMGBatchProcessButtonClicked)
+        widgets.pushButton_12.setEnabled(False)
         widgets.lineEdit_3.textChanged.connect(self.updateFilterText)
         widgets.checkBox_2.stateChanged.connect(self.EMGParticipantSelectAllClicked)
 
@@ -1066,13 +1067,19 @@ class MainWindow(QMainWindow):
             return
 
         if p is not None:
-            QMessageBox.critical(
+            reply = QMessageBox.question(
                 None,
-                self.tr("error"),
-                self.tr("Current EMG process is not finished!"),
-                QMessageBox.Ok,
+                self.tr("Attention"),
+                self.tr("Current EMG process is not finished! Do you want to start a new process?"),
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                QMessageBox.Cancel
             )
-            return
+            if reply == QMessageBox.Yes:
+                self.singleEMG = (None, None, None)
+                self.inputBuffer = None
+                self.outputBuffer = None
+            else:
+                return
         p_name = self.selectedParticipants.pop()
         p = self.workspace.findParticipant(p_name)
         self.startSingleEMGProcess(p)
@@ -1089,6 +1096,7 @@ class MainWindow(QMainWindow):
 
         # 同步更新 listWidget_3 的状态
         self.syncListWidgetWithSelectedParticipants()
+        self.updateBatchProcessButtonState()
         
     def syncListWidgetWithSelectedParticipants(self):
         """同步 selectedParticipants 到 listWidget_3"""
@@ -1147,7 +1155,6 @@ class MainWindow(QMainWindow):
         idx = widgets.listWidget.currentRow()
         type, str = cfg.getTypeInfo(idx)
         self.selectSingleEMGStep(widgets.listWidget.currentRow())
-        self.updateEMGToolBox(type)
 
     def ChangeCheckboxText(self, state):
         if Qt.CheckState(state) == Qt.Checked:
@@ -1338,7 +1345,7 @@ class MainWindow(QMainWindow):
         if cfg is None:
             return
         type, str = cfg.getTypeInfo(step)
-        self.updateEMGToolBox(type)
+        # self.selectSingleEMGStep(idx)
 
     def EMGStepNextButtonClicked(self):
         p, step, chan = self.singleEMG
@@ -1358,6 +1365,7 @@ class MainWindow(QMainWindow):
         # equivent to double click on EMG configuration list
         self.EMGConfigurationListDoubleClicked(None)
         self.saveProjectButtonClick(show=False)
+        self.EMGSaveConfigurationButtonClicked()
 
     def EMGGenerateReportButtonClicked(self):
         # sanity
@@ -1475,10 +1483,11 @@ class MainWindow(QMainWindow):
                 self.selectedParticipants.add(p.name)
         else:
             for p in participants:
-                if p in self.selectedParticipants:
+                if p.name in self.selectedParticipants:
                     self.selectedParticipants.remove(p.name)
+        
+        self.updateBatchProcessButtonState()
 
-        # self.updateEMGParticipantBox()
 
     def FFTPlotClearAllClicked(self):
         widgets.scrollArea_3.deleteAllPages()
@@ -1662,16 +1671,6 @@ class MainWindow(QMainWindow):
             widgets.listWidget.item(i).setForeground(Qt.black)
 
     def updateEMGToolBox(self, type):
-        type2toolbox = {
-            emgConfigEnum.DC_OFFSET: 0,
-            emgConfigEnum.FILTER: 1,
-            emgConfigEnum.FULL_W_RECT: 2,
-            emgConfigEnum.NORMALIZATION: 3,
-            emgConfigEnum.ACTIVATION: 4,
-            emgConfigEnum.SUMMARY: 5,
-        }
-        idx = type2toolbox[type]
-        widgets.toolBox.setCurrentIndex(idx)
         # update toolbox with current config
         p, step, chan = self.singleEMG
         if p is None:
@@ -1706,6 +1705,7 @@ class MainWindow(QMainWindow):
                 Qt.Checked if cfg[step].enable else Qt.Unchecked
             )
         elif type == emgConfigEnum.SUMMARY:
+            setp = emgConfigEnum.SUMMARY
             widgets.label_23.setText("{:.4f}".format(cfg[step].max))
             widgets.label_25.setText("{:.4f}".format(cfg[step].min))
             widgets.label_27.setText("{:.4f}".format(cfg[step].med))
@@ -1766,6 +1766,9 @@ class MainWindow(QMainWindow):
             widgets.listWidget_2.addItem(key)
             widgets.listWidget_2.item(i).setForeground(Qt.black)
             i += 1
+        
+        widgets.listWidget_2.itemSelectionChanged.connect(self.updateBatchProcessButtonState)
+
 
     def updateFilterText(self):
         filter_str = widgets.lineEdit_3.text()
@@ -2055,8 +2058,9 @@ class MainWindow(QMainWindow):
             return
         idx = widgets.listWidget.currentRow()
         type, str = cfg.getTypeInfo(idx)
+        widgets.toolBox.setCurrentIndex(int(type))
         self.updateEMGToolBox(type)
-
+        
     def selectSingleEMGStep(self, idx):
         p, step, chan = self.singleEMG
         if p is None:
@@ -2079,8 +2083,8 @@ class MainWindow(QMainWindow):
         # update UI
         self.updateEMGSignalProcessPanel()
         type, str = cfg.getTypeInfo(idx)
-        with QSignalBlocker(widgets.toolBox):
-            self.updateEMGToolBox(type)
+        widgets.toolBox.setCurrentIndex(int(type))
+        self.updateEMGToolBox(type)
 
     def startBatchEMGProcess(self, people, configure):
         for p in people:
@@ -2110,6 +2114,18 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'plot_output'):
             widgets.plot_output.deleteLater()
             del widgets.plot_output
+
+    # 更新批处理按钮状态
+    def updateBatchProcessButtonState(self):
+        """更新批处理按钮的可点击状态"""
+        # 检查 listWidget_2 是否有且仅有一个选中项
+        list_selected_count = len(widgets.listWidget_2.selectedItems())
+        
+        # 检查 tableWidget_2 中选中的参与者数量
+        table_selected_count = len(self.selectedParticipants)
+        
+        # 设置按钮状态
+        widgets.pushButton_12.setEnabled(list_selected_count == 1 and table_selected_count > 1)
 
 
 # setting up Url Scheme string before app starts

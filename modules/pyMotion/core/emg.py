@@ -681,10 +681,14 @@ class emg:
                 cfg.rms = tst.rms(chan)
                 cfg.ptp = tst.ptp(chan)
                 cfg.zeros = tst.countZeros(chan)
-        except:
+        except Exception as e:
             output = [0] * tst.size()
+            import traceback
+            error_msg = traceback.format_exc()
             logger.error(
-                "cannot apply configuration on chan: {}, step: {}".format(chan, tname)
+                "cannot apply config to channel: {}, step: {}, Error Message: {}\n{}".format(
+                    chan, tname, str(e), error_msg
+                )
             )
         return output
 

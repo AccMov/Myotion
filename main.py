@@ -455,6 +455,72 @@ class ConfigWindow(QDialog):
         self.close()
 
 
+class EMGConfigWindow(QDialog):
+    def __init__(self, cfg, is_edit_state=True, parent=None):
+        QDialog.__init__(self, parent)
+        self.ui = Ui_EMGConfigWindow()
+        self.ui.setupUi(self)
+
+        self.widgets = self.ui
+
+        self.widgets.start.clicked.connect(self.confirmBtnClicked)
+        self.widgets.cancel.clicked.connect(self.cancelBtnClicked)
+
+        if is_edit_state:
+            self.setWindowTitle("EMG Config")
+            self.widgets.start.setText("Save")
+        else:
+            self.setWindowTitle("Batch Process")
+            self.widgets.start.setText("Start")
+
+        self._cfg = cfg
+        self._state = False
+        self._init()
+
+    def run(self):
+        self.exec()
+        return self._state, self._cfg
+
+    def confirmBtnClicked(self):
+        self._state = True
+
+        self._cfg[0].enable = self.ui.dc_offset.checkState() == Qt.CheckState.Checked
+        self._cfg[2].enable = self.ui.full_wave_rectification.checkState() == Qt.CheckState.Checked
+        self._cfg[4].enable = self.ui.normalization.checkState() == Qt.CheckState.Checked
+
+        self._cfg[1].enable = self.ui.low_pass_switch.checkState() == Qt.CheckState.Checked
+        self._cfg[1].order = self.ui.low_pass_order.currentIndex()
+        self._cfg[1].cutoff_l = self.ui.low_pass_value.value()
+
+        self._cfg[3].enable = self.ui.band_pass_switch.checkState() == Qt.CheckState.Checked
+        self._cfg[3].order = self.ui.band_pass_order.currentIndex()
+        self._cfg[3].cutoff_l = self.ui.band_pass_low.value()
+        self._cfg[3].cutoff_h = self.ui.band_pass_high.value()
+
+        self.close()
+
+    def cancelBtnClicked(self):
+        self.close()
+
+    def _init(self):
+        self.ui.dc_offset.setCheckState(Qt.CheckState.Checked if self._cfg[0].enable else Qt.CheckState.Unchecked)
+        
+        self.ui.full_wave_rectification.setCheckState(Qt.CheckState.Checked if self._cfg[2].enable else Qt.CheckState.Unchecked)
+        
+        self.ui.normalization.setCheckState(Qt.CheckState.Checked if self._cfg[4].enable else Qt.CheckState.Unchecked)
+
+        lp = self._cfg[1]
+        self.ui.low_pass_switch.setCheckState(Qt.CheckState.Checked if lp.enable else Qt.CheckState.Unchecked)
+        self.ui.low_pass_order.setCurrentIndex(lp.order)
+        self.ui.low_pass_value.setValue(lp.cutoff_l)
+
+        bp = self._cfg[3]
+        self.ui.band_pass_switch.setCheckState(Qt.CheckState.Checked if bp.enable else Qt.CheckState.Unchecked)
+        self.ui.band_pass_order.setCurrentIndex(bp.order)
+        self.ui.band_pass_low.setValue(bp.cutoff_l)
+        self.ui.band_pass_high.setValue(bp.cutoff_h)
+
+
 class MainWindow(QMainWindow):
     # SIGNALS
     sigUpdateParticipants = Signal()
@@ -1462,7 +1528,12 @@ class MainWindow(QMainWindow):
             config = configureList[config_name]
 
         logger.info("batch process: select configure {}".format(config_name))
-        self.startBatchEMGProcess(listofpeople, config)
+
+        isStart, cfg = EMGConfigWindow(config, False).run()
+        if isStart:
+            self.startBatchEMGProcess(listofpeople, cfg)
+        else:
+            logger.info("batch process: cancelled")
 
     def EMGParticipantSelectAllClicked(self, state):
         """ 全选复选框点击处理 """
@@ -1768,7 +1839,43 @@ class MainWindow(QMainWindow):
             i += 1
         
         widgets.listWidget_2.itemSelectionChanged.connect(self.updateBatchProcessButtonState)
+        widgets.listWidget_2.itemDoubleClicked.connect(self.onListWidget2ItemDoubleClicked)
 
+    def onListWidget2ItemDoubleClicked(self, item):
+        cfgname = item.text()
+        configureList = self.workspace.getEMGConfigures()
+        config = configureList[cfgname]
+        isSave, cfg = EMGConfigWindow(config).run()
+
+        if not isSave:
+            return 
+
+        p = self.workspace.getParticipantWithName(self.extract_participant_name_from_configname(cfgname))
+        if p is not None:
+            self.workspace[p].emg.setProcessConfig(cfg)
+            self.workspace.saveEMGConfigure(p, cfgname)
+            self.saveWorkSpace()
+        else:
+            logger.error("participant name not found")
+            return
+
+    def extract_participant_name_from_configname(self, cfgname):
+        """从配置文件名称中提取参与者名称
+        
+        Args:
+            cfgname: 格式为 "p.name's EMGConfig" 的配置文件名
+            
+        Returns:
+            提取出的参与者名称
+        """
+        # 检查是否包含后缀
+        if "'s EMGConfig" in cfgname:
+            # 通过分割字符串提取参与者名称
+            p_name = cfgname.split("'s EMGConfig")[0]
+            return p_name
+        else:
+            # 如果格式不匹配，返回原始字符串或None
+            return None
 
     def updateFilterText(self):
         filter_str = widgets.lineEdit_3.text()

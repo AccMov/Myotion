@@ -139,6 +139,12 @@ class workspace:
     def getParticipants(self):
         return self.participants
 
+    def getParticipantWithName(self, name):
+        for s in self.participants:
+            if name == s.name:
+                return s
+        return None
+
     def getparticipantStringList(self):
         return [p.name for p in self.participants]
 

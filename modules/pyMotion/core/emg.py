@@ -42,7 +42,7 @@ class emgDCOffset:
     id = emgConfigEnum.DC_OFFSET
 
     def __init__(self):
-        self.enable = False
+        self.enable = True
 
     def toXML(self):
         e = xmlElement("emgDCOffset")
@@ -68,7 +68,7 @@ class emgRectification:
     id = emgConfigEnum.FULL_W_RECT
 
     def __init__(self):
-        self.enable = False
+        self.enable = True
 
     def toXML(self):
         e = xmlElement("emgRectification")
@@ -94,7 +94,7 @@ class emgNormalization:
     id = emgConfigEnum.NORMALIZATION
 
     def __init__(self):
-        self.enable = False
+        self.enable = True
 
     def toXML(self):
         e = xmlElement("emgNormalization")
@@ -143,7 +143,7 @@ class emgFilter:
     id = emgConfigEnum.FILTER
 
     def __init__(self):
-        self.enable = False
+        self.enable = True
         self.type = emgFilterEnum.BAND_PASS
         self.cutoff_l = 0
         self.cutoff_h = 0

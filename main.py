@@ -616,7 +616,6 @@ class MainWindow(QMainWindow):
         widgets.checkBox_11.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.checkBox_12.stateChanged.connect(self.EMGConfigureToggleConfiguration)
         widgets.checkBox_13.stateChanged.connect(self.EMGConfigureToggleConfiguration)
-        widgets.checkBox_13.stateChanged.connect(self.ChangeCheckboxText)
         widgets.comboBox_2.currentIndexChanged.connect(
             self.EMGChannelSelectorIndexChanged
         )
@@ -1222,12 +1221,6 @@ class MainWindow(QMainWindow):
         type, str = cfg.getTypeInfo(idx)
         self.selectSingleEMGStep(widgets.listWidget.currentRow())
 
-    def ChangeCheckboxText(self, state):
-        if Qt.CheckState(state) == Qt.Checked:
-            widgets.checkBox_13.setText(QCoreApplication.translate("MainWindow", "Cancel", None))
-        else:
-            widgets.checkBox_13.setText(QCoreApplication.translate("MainWindow", "Apply", None))
-
     def EMGConfigureToggleConfiguration(self, state):
         p, step, chan = self.singleEMG
         if p is None:
@@ -1237,10 +1230,12 @@ class MainWindow(QMainWindow):
             return
 
         state = not not state
-        if cfg[step].enable == state:
+        if state:
+            cfg[step].enable = False
             return
+        else:
+            cfg[step].enable = True
 
-        cfg[step].enable = state
         logger.info(
             "EMG process step {}, configuration {} set to {}".format(
                 step, cfg.getStepStringList()[step], state
@@ -1751,15 +1746,15 @@ class MainWindow(QMainWindow):
             return
         if type == emgConfigEnum.DC_OFFSET:
             widgets.checkBox_4.setCheckState(
-                Qt.Checked if cfg[step].enable else Qt.Unchecked
+                Qt.Unchecked if cfg[step].enable else Qt.Checked
             )
         elif type == emgConfigEnum.FULL_W_RECT:
             widgets.checkBox_11.setCheckState(
-                Qt.Checked if cfg[step].enable else Qt.Unchecked
+                Qt.Unchecked if cfg[step].enable else Qt.Checked
             )
         elif type == emgConfigEnum.FILTER:
             widgets.checkBox_13.setCheckState(
-                Qt.Checked if cfg[step].enable else Qt.Unchecked
+                Qt.Unchecked if cfg[step].enable else Qt.Checked
             )
             if cfg[step].type == emgFilterEnum.BAND_PASS:
                 widgets.comboBox_7.setCurrentIndex(0)
@@ -1773,7 +1768,7 @@ class MainWindow(QMainWindow):
                 widgets.lineEdit_11.setText("")
         elif type == emgConfigEnum.NORMALIZATION:
             widgets.checkBox_12.setCheckState(
-                Qt.Checked if cfg[step].enable else Qt.Unchecked
+                Qt.Unchecked if cfg[step].enable else Qt.Checked
             )
         elif type == emgConfigEnum.SUMMARY:
             setp = emgConfigEnum.SUMMARY

@@ -4641,7 +4641,7 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "Current Process", None)
         )
         self.checkBox_4.setText(
-            QCoreApplication.translate("MainWindow", " Click to process", None)
+            QCoreApplication.translate("MainWindow", "Skip", None)
         )
         self.label_17.setText(
             QCoreApplication.translate(
@@ -4656,7 +4656,7 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "\u00b7 Remove dc offset", None),
         )
         self.checkBox_11.setText(
-            QCoreApplication.translate("MainWindow", " Click to process", None)
+            QCoreApplication.translate("MainWindow", "Skip", None)
         )
         self.pushButton_20.setText(
             QCoreApplication.translate("MainWindow", "Next", None)
@@ -4772,10 +4772,10 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "\u00b7 Filter", None),
         )
         self.checkBox_12.setText(
-            QCoreApplication.translate("MainWindow", " Click to process", None)
+            QCoreApplication.translate("MainWindow", "Skip", None)
         )
         self.checkBox_13.setText(
-            QCoreApplication.translate("MainWindow", "Apply", None)
+            QCoreApplication.translate("MainWindow", "Skip", None)
         )
         self.toolBox.setItemText(
             self.toolBox.indexOf(self.page_4_norm),

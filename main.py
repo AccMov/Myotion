@@ -675,6 +675,8 @@ class MainWindow(QMainWindow):
             widgets.frame_64.hide()
             perm.setPermLevel(permission.BASIC)
 
+            perm.startServerHeartbeat(self.account)
+
     def logout_click(self):
         # check old project saved
         if self.ifOldProjectOpened():
@@ -690,6 +692,8 @@ class MainWindow(QMainWindow):
         widgets.settingsTopBtn.hide()
         widgets.frame_64.show()
         perm.setPermLevel(permission.LOGOUT)
+
+        perm.stopServerHeartbeat()
 
     # RESIZE EVENTS
     # ///////////////////////////////////////////////////////////////

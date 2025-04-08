@@ -29,6 +29,8 @@ class LoginDialog(QDialog):
             return
         elif ret.status_code == 401:
             mb.setText(self.tr("Invalid username or password"))
+        elif ret.status_code == 403:
+            mb.setText(self.tr("User is already logged in in another place, please log out first!"))
         elif ret.status_code == 500:
             if "can not find tenant for key" in ret.json()["message"]:
                 mb.setText(self.tr("User is not registered, please contact admin"))

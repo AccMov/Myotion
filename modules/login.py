@@ -17,7 +17,7 @@ class LoginDialog(QDialog):
     def login(self):
         username = self.ui.lineEdit.text()
         password = self.ui.lineEdit_2.text()
-        ret = bm.get_tenant(username, password)
+        ret = bm.login(username, password)
         mb = QMessageBox()
         mb.setIcon(QMessageBox.Icon.Warning)
         mb.setWindowTitle(self.tr("Error"))

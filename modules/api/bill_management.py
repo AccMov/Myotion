@@ -15,6 +15,14 @@ def get_tenant(username: str, password: str):
         auth=requests.auth.HTTPBasicAuth(username, password),
     )
 
+def login(username: str, password: str):
+    return requests.get(
+        url=f"{baseUrl}:{other_port}/login",
+        headers={"accept": "application/json"},
+        verify=True,
+        auth=requests.auth.HTTPBasicAuth(username, password),
+    )
+
 def heartBeat(username: str, password: str):
     return requests.get(
         url=f"{baseUrl}:{other_port}/status",

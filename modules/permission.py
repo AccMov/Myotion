@@ -96,7 +96,8 @@ class permission:
         self.heartThread.daemon = True
         self.heartThread.start()
 
-    def stopServerHeatbeat(self):
-        self.th_run = 0
-        self.heartThread.stop()
+    def stopServerHeartbeat(self):
+        if self.heartThread:
+            self.th_run = 0
+            self.heartThread.join()
         self.heartThread = None

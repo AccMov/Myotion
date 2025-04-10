@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
 )
 from PySide6.QtWebEngineCore import QWebEngineUrlScheme
+from modules.api import bill_management as bm
 
 from rserver import RServer
 from miscWidgets import *
@@ -601,6 +602,14 @@ class MainWindow(QMainWindow):
         perm.register(widgets.extraTopMenu, permission.BASIC)  # workspace page
         perm.setPermLevel(permission.LOGOUT)
 
+    def closeEvent(self, event):
+        # clean up app when closed
+        # logout
+        self.logout_click()
+        # kill rserver
+        self.rserver.join()
+        event.accept()
+
     def test(self):
         self.newWorkSpace(os.getcwd(), "test")
         f = os.getcwd() + "/ERRPT.c3d"
@@ -691,8 +700,10 @@ class MainWindow(QMainWindow):
         )
         widgets.settingsTopBtn.hide()
         widgets.frame_64.show()
-        perm.setPermLevel(permission.LOGOUT)
 
+        if len(self.account.username):
+            bm.logout(self.account.username, self.account.password)
+        perm.setPermLevel(permission.LOGOUT)
         perm.stopServerHeartbeat()
 
     # RESIZE EVENTS
@@ -1778,5 +1789,4 @@ if __name__ == "__main__":
 
     window = MainWindow(language, sys_log, r_log)
     qApp.exec()
-    window.rserver.join()
     sys.exit(0)

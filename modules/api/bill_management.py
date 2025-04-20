@@ -11,7 +11,8 @@ def get_tenant(username: str, password: str):
         url=f"{baseUrl}:{kb_port}/1.0/kb/tenants",
         params={"apiKey": username + "_apikey"},
         headers={"accept": "application/json"},
-        verify=True,
+        #verify=True,
+        verify=False,
         auth=requests.auth.HTTPBasicAuth(username, password),
     )
 
@@ -19,7 +20,8 @@ def login(username: str, password: str):
     return requests.get(
         url=f"{baseUrl}:{other_port}/login",
         headers={"accept": "application/json"},
-        verify=True,
+        #verify=True,
+        verify=False,
         auth=requests.auth.HTTPBasicAuth(username, password),
     )
 
@@ -27,7 +29,8 @@ def logout(username: str, password: str):
     return requests.get(
         url=f"{baseUrl}:{other_port}/logout",
         headers={"accept": "application/json"},
-        verify=True,
+        #verify=True,
+        verify=False,
         auth=requests.auth.HTTPBasicAuth(username, password),
     )
 
@@ -36,6 +39,7 @@ def heartBeat(username: str, password: str):
         url=f"{baseUrl}:{other_port}/status",
         params={},
         headers={"accept": "application/json"},
-        verify=True,
+        #verify=True,
+        verify=False,
         auth=requests.auth.HTTPBasicAuth(username, password),
     )

@@ -2190,7 +2190,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_62.addWidget(self.frame_29)
 
-        self.toolBox.addItem(self.page_2_full_wave, "\u00b7 Full wave rectification")
+        # self.toolBox.addItem(self.page_2_full_wave, "\u00b7 Full wave rectification")
         self.page_3_filter = QWidget()
         self.page_3_filter.setObjectName("page_3_filter")
         self.page_3_filter.setGeometry(QRect(0, 0, 157, 286))
@@ -2462,6 +2462,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_43.addWidget(self.frame_13)
 
         self.toolBox.addItem(self.page_3_filter, "\u00b7 Filter")
+        self.toolBox.addItem(self.page_2_full_wave, "\u00b7 Full wave rectification")
         self.page_4_norm = QWidget()
         self.page_4_norm.setObjectName("page_4_norm")
         self.page_4_norm.setGeometry(QRect(0, 0, 157, 286))
@@ -3170,8 +3171,16 @@ class Ui_MainWindow(object):
             "background-color:rgba(0,0,0,0.8);\n" "margin:3px 2px;"
         )
         self.pushButton_16.setIcon(icon1)
-
         self.horizontalLayout_31.addWidget(self.pushButton_16)
+
+        self.pushButton_161 = QPushButton(self.frame_49)
+        self.pushButton_161.setObjectName("pushButton_161")
+        self.pushButton_161.setCursor(QCursor(Qt.PointingHandCursor))
+        self.pushButton_161.setStyleSheet(
+            "background-color:rgba(0,0,0,0.8);\n" "margin:3px 2px;"
+        )
+        self.pushButton_161.setIcon(icon2)
+        self.horizontalLayout_31.addWidget(self.pushButton_161)
 
         self.verticalLayout_56.addWidget(self.frame_49)
 
@@ -4632,7 +4641,7 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "Current Process", None)
         )
         self.checkBox_4.setText(
-            QCoreApplication.translate("MainWindow", " Click to process", None)
+            QCoreApplication.translate("MainWindow", "Skip", None)
         )
         self.label_17.setText(
             QCoreApplication.translate(
@@ -4647,7 +4656,7 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "\u00b7 Remove dc offset", None),
         )
         self.checkBox_11.setText(
-            QCoreApplication.translate("MainWindow", " Click to process", None)
+            QCoreApplication.translate("MainWindow", "Skip", None)
         )
         self.pushButton_20.setText(
             QCoreApplication.translate("MainWindow", "Next", None)
@@ -4745,28 +4754,28 @@ class Ui_MainWindow(object):
         self.lineEdit_10.setInputMask("")
         self.lineEdit_10.setText("")
         self.lineEdit_10.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", "cut-off frequency high", None)
+            QCoreApplication.translate("MainWindow", "high", None)
         )
         self.lineEdit_11.setText("")
         self.lineEdit_11.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", "cut-off frequency low", None)
+            QCoreApplication.translate("MainWindow", "low", None)
         )
         self.label_37.setText(
             QCoreApplication.translate("MainWindow", "Low Pass:", None)
         )
         self.lineEdit_12.setText("")
         self.lineEdit_12.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", "cut-off frequency low", None)
+            QCoreApplication.translate("MainWindow", "low", None)
         )
         self.toolBox.setItemText(
             self.toolBox.indexOf(self.page_3_filter),
             QCoreApplication.translate("MainWindow", "\u00b7 Filter", None),
         )
         self.checkBox_12.setText(
-            QCoreApplication.translate("MainWindow", " Click to process", None)
+            QCoreApplication.translate("MainWindow", "Skip", None)
         )
         self.checkBox_13.setText(
-            QCoreApplication.translate("MainWindow", " Click to process", None)
+            QCoreApplication.translate("MainWindow", "Skip", None)
         )
         self.toolBox.setItemText(
             self.toolBox.indexOf(self.page_4_norm),
@@ -4833,7 +4842,7 @@ class Ui_MainWindow(object):
         )
         ___qlistwidgetitem1 = self.listWidget.item(1)
         ___qlistwidgetitem1.setText(
-            QCoreApplication.translate("MainWindow", "2. full wave rectification", None)
+            QCoreApplication.translate("MainWindow", "2. filter", None)
         )
         self.listWidget.setSortingEnabled(__sortingEnabled)
 
@@ -4854,6 +4863,7 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "Select All", None)
         )
         self.pushButton_16.setText("")
+        self.pushButton_161.setText("")
         ___qtablewidgetitem = self.tableWidget_2.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(
             QCoreApplication.translate("MainWindow", "Selected", None)

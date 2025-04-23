@@ -341,7 +341,7 @@ class Ui_EMGImport(object):
         )
         ___qtablewidgetitem1 = self.tableWidget.horizontalHeaderItem(1)
         ___qtablewidgetitem1.setText(
-            QCoreApplication.translate("Form", "IsControlSignal", None)
+            QCoreApplication.translate("Form", "Is Control Signal", None)
         )
         ___qtablewidgetitem2 = self.tableWidget.horizontalHeaderItem(2)
         ___qtablewidgetitem2.setText(

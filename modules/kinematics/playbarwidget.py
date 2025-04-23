@@ -66,11 +66,16 @@ class SliderWidget(QSlider):
         self.setMinimum(0)
         self.setMaximum(100)
         self.setValue(0)
-        self.setTickPosition(QSlider.TickPosition.TicksBothSides)
+        self.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.setTickInterval(10)
         self.setSingleStep(1)
         self.setStyleSheet(
             """
+            QSlider {
+                padding-left: 0px;
+                padding-right: 10px;
+                padding-bottom: 20px;
+            }
              QSlider::groove:horizontal {
                 border: 1px solid #bbb;
                 background: white;
@@ -126,7 +131,7 @@ class SliderWidget(QSlider):
             }
             """
         )
-        self.left_margin = 10
+        self.left_margin = 0
         self.top_margin = 10
         self.right_margin = 10
         self.bottom_margin = 10
@@ -147,41 +152,25 @@ class SliderWidget(QSlider):
 
         for v, v_str in self.levels:
             rect = painter.drawText(QRect(), Qt.TextFlag.TextDontPrint, v_str)
-            if self.orientation() == Qt.Orientation.Horizontal:
-                x_loc = (
-                    QStyle.sliderPositionFromValue(
-                        self.minimum(), self.maximum(), v, available
-                    )
-                    + length // 2
+            x_loc = (
+                QStyle.sliderPositionFromValue(
+                    self.minimum(), self.maximum(), v, available
                 )
-                left = x_loc - rect.width() // 2 + self.left_margin
-                bottom = self.rect().bottom()
-                if v == self.minimum():
-                    if left <= 0:
-                        self.left_margin = rect.width() // 2 - x_loc
-                    if self.bottom_margin <= rect.height():
-                        self.bottom_margin = rect.height()
-                    self.setContentsMargins(
-                        self.left_margin,
-                        self.top_margin,
-                        self.right_margin,
-                        self.bottom_margin,
-                    )
-            else:
-                y_loc = QStyle.sliderPositionFromValue(
-                    self.minimum(), self.maximum(), v, available, upsideDown=True
-                )
-                bottom = y_loc + length // 2 + rect.height() // 2 + self.top_margin - 3
-
-                left = self.left_margin - rect.width()
+                + length // 2
+            )
+            left = x_loc - rect.width() - self.left_margin
+            bottom = self.rect().bottom()
+            if v == self.minimum():
                 if left <= 0:
-                    self.left_margin = rect.width() + 2
-                    self.setContentsMargins(
-                        self.left_margin,
-                        self.top_margin,
-                        self.right_margin,
-                        self.bottom_margin,
-                    )
+                    self.left_margin = rect.width() // 2 - x_loc
+                if self.bottom_margin <= rect.height():
+                    self.bottom_margin = rect.height()
+                self.setContentsMargins(
+                    self.left_margin,
+                    self.top_margin,
+                    self.right_margin,
+                    self.bottom_margin,
+                )
             pos = QPoint(left, bottom)
             painter.drawText(pos, v_str)
         return
@@ -190,10 +179,13 @@ class SliderWidget(QSlider):
         self.setMinimum(min)
         self.setMaximum(max)
         interval = (max - min) // 10
-
+        # 确保至少有一个间隔
+        if interval == 0:
+            interval = 1
+            
         self.levels = list(
-            zip(range(min, max + 1, interval), map(str, range(min, max + 1, interval)))
-        )
+            zip(range(min, max + 1, interval), 
+            map(str, range(min, max + 1, interval))))
         self.repaint()
 
     def mousePressEvent(self, event):

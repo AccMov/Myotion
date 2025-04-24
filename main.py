@@ -644,8 +644,7 @@ class MainWindow(QMainWindow):
 
         # start page
         widgets.settingsTopBtn.hide()
-        # widgets.signInButton.clicked.connect(self.login_click)
-        widgets.signInButton.clicked.connect(self.login_click_debug)
+        widgets.signInButton.clicked.connect(self.login_click)
         widgets.signUpButton.clicked.connect(
             lambda x: webbrowser.open("http://www.accmov.com")
         )
@@ -909,22 +908,6 @@ class MainWindow(QMainWindow):
             widgets.frame_64.hide()
             perm.setPermLevel(permission.BASIC)
             perm.startServerHeartbeat(self.account)
-
-    def login_click_debug(self):
-        # dlg = LoginDialog()
-        # if dlg.exec() == QDialog.DialogCode.Accepted:
-        name = 'testuser'
-        pd = 'password'
-        if True:
-            self.account = Account(name, pd)
-            # self.account.key_from_json(dlg.user)
-            widgets.subtitle_label.setText(
-                "Welcome to MSK workplace, " + name
-            )
-            widgets.settingsTopBtn.setText(name)
-            widgets.settingsTopBtn.show()
-            widgets.frame_64.hide()
-            perm.setPermLevel(permission.BASIC)
 
     def logout_click(self):
         # check old project saved

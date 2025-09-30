@@ -87,7 +87,7 @@ class EMGAddWindow(QMainWindow):
         self.mvcfiles = []
         self.mvcfilesMap = {}  # mapping mvc_file -> chan
         self.jointMap = {}  # mapping chan -> joints (short name)
-        self.isControlSignal = {}  # isControlSignal[chan] = T/F
+        self.isEnabled = {}  # isEnabled[chan] = T/F
 
         self.widgets.import_btn.clicked.connect(self.importEMGBtnClicked)
         self.widgets.lineEdit.textChanged.connect(self.updateFilterText)
@@ -120,7 +120,7 @@ class EMGAddWindow(QMainWindow):
             self.widgets.tableWidget.setItem(i, 0, q)
             # control signal checkbox
             self.widgets.tableWidget.setCellWidget(
-                i, 1, self.controlSignalCheckbox(chan)
+                i, 1, self.selectSignalCheckbox(chan)
             )
             # drop down selection
             self.widgets.tableWidget.setCellWidget(i, 2, self.jointComboBox(chan))
@@ -163,14 +163,14 @@ class EMGAddWindow(QMainWindow):
         comboBox.currentIndexChanged.connect(self.MVCFilesChanged)
         return comboBox
 
-    def controlSignalCheckbox(self, chan):
+    def selectSignalCheckbox(self, chan):
         checkbox = QCheckBox()
         checkbox.setObjectName(chan)
-        checkbox.stateChanged.connect(self.controlSignalChanged)
-        if chan in self.isControlSignal:
-            checkbox.setChecked(self.isControlSignal[chan])
+        checkbox.stateChanged.connect(self.selectedSignalChanged)
+        if chan in self.isEnabled:
+            checkbox.setChecked(self.isEnabled[chan])
         else:
-            self.isControlSignal[chan] = False
+            self.isEnabled[chan] = False
             checkbox.setChecked(False)
 
         QWid = QWidget()
@@ -203,15 +203,15 @@ class EMGAddWindow(QMainWindow):
             )
             return
 
-    def controlSignalChanged(self, state):
+    def selectedSignalChanged(self, state):
         checkbox = self.sender()
         chan = checkbox.objectName()
-        self.isControlSignal[chan] = not self.isControlSignal[chan]
+        self.isEnabled[chan] = not self.isEnabled[chan]
 
-        if self.isControlSignal[chan]:
-            self.emg.setControlSignal(chan)
+        if self.isEnabled[chan]:
+            self.emg.enableChannel(chan)
         else:
-            self.emg.removeControlSignal(chan)
+            self.emg.disableChannel(chan)
 
     def updateFilterText(self):
         filter_str = self.widgets.lineEdit.text()
@@ -252,7 +252,7 @@ class EMGAddWindow(QMainWindow):
             return
 
         # get channels and update list
-        self.channels = self.emg.getChannels()
+        self.channels = self.emg.getAllChannels()
 
         self.widgets.label_3.setText(file)
         # auto apply joint matching on joint mapping
@@ -368,9 +368,18 @@ class EMGAddWindow(QMainWindow):
                 QMessageBox.Ok,
             )
             return False
+        # at least one chan is selected
+        if len(self.emg.getChannels()) == 0:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("At least one Channel is selected!"),
+                QMessageBox.Ok,
+            )
+            return False
         # check all joint names are selected
         for c in self.channels:
-            if c not in self.jointMap and self.isControlSignal[c] == False:
+            if c not in self.jointMap and self.isEnabled[c]:
                 QMessageBox.critical(
                     None,
                     self.tr("error"),
@@ -381,18 +390,20 @@ class EMGAddWindow(QMainWindow):
         # check joint name is unique
         used_joint = {}
         for chan, joint in self.jointMap.items():
-            if joint in used_joint:
-                line1 = self.channels.index(used_joint[joint]) + 1
-                line2 = self.channels.index(chan) + 1
-                QMessageBox.critical(
-                    None,
-                    self.tr("error"),
-                    self.tr(
-                        "Duplicated joint name founded, please check line {} and {}"
-                    ).format(line1, line2),
-                    QMessageBox.Ok,
-                )
-                return False
+            if self.isEnabled[chan] and joint in used_joint:
+                chan2 = used_joint[joint]
+                if self.isEnabled[chan2]:
+                    line1 = self.channels.index(chan2) + 1
+                    line2 = self.channels.index(chan) + 1
+                    QMessageBox.critical(
+                        None,
+                        self.tr("error"),
+                        self.tr(
+                            "Duplicated joint name founded, please check line {} and {}"
+                        ).format(line1, line2),
+                        QMessageBox.Ok,
+                    )
+                    return False
             used_joint[joint] = chan
         return True
 
@@ -412,16 +423,19 @@ class EMGAddWindow(QMainWindow):
                 self.emg.removeChannel(c)
 
         for old, new in self.jointMap.items():
-            self.emg.renameChannel(old, new)
+            if self.isEnabled[old]:
+                self.emg.renameChannel(old, new)
 
         # update MVC file name matching fuzz string
         for chan, index in self.mvcfilesMap.items():
-            self.workspace.addChanToMVCFileMap(
-                chan, os.path.basename(self.mvcfiles[index])
-            )
+            if self.isEnabled[chan]:
+                self.workspace.addChanToMVCFileMap(
+                    chan, os.path.basename(self.mvcfiles[index])
+                )
 
         for chan, joint in self.jointMap.items():
-            self.workspace.addChanToJointMap(chan, joint)
+            if self.isEnabled[chan]:
+                self.workspace.addChanToJointMap(chan, joint)
 
         # 发出信号，通知窗口关闭并传递结果
         self.finished.emit((self.person, self.emg, self.kinematic))
@@ -1221,7 +1235,6 @@ class MainWindow(QMainWindow):
         state = not not state
         if state:
             cfg[step].enable = False
-            return
         else:
             cfg[step].enable = True
 
@@ -1607,11 +1620,6 @@ class MainWindow(QMainWindow):
         # calcuate FFT
         tst = self.workspace[p].emg.getTST()
         freq, v = tst.fft_db(channel, l, r)
-
-        # delete negliable value
-        to_del = np.argwhere(v <= 1e-3)
-        freq = np.delete(freq, to_del)
-        v = np.delete(v, to_del)
 
         # mean frequency with filtered value
         medFreq = np.dot(freq, v) / np.sum(v)

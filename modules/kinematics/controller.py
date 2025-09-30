@@ -113,4 +113,5 @@ class Controller:
         if name in self.model.emg.Channels:
             x = self.model.emg.getLinspace()
             y = self.model.emg[name]
+            print(x, y, name)
             self.top.add_line(x, y, name)

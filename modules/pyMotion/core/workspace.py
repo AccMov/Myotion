@@ -361,7 +361,7 @@ class workspace:
                 profile.loading = False
                 self.emgloaderstop = True
                 # 将异常信息传递给回调函数
-                errorCallback(f"can not load {name} with {profile.emg.emgFile}")
+                errorCallback(f"can not load {name} with {profile.emg.emgFile}, error {e}")
 
             if self.emgloaderstop:
                 logger.info("emg async loader: stopping")

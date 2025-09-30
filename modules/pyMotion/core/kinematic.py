@@ -78,8 +78,11 @@ class kinematic:
         try:
             c3d = c3dFile(f)
             self.data = c3d.points
-            self.length = c3d.frame_number
+            self.frame_number = c3d.frame_number
             self.labels = c3d.point_labels
+            self.first_frame = c3d.reader.first_frame
+            self.last_frame = c3d.reader.last_frame
+            self.length = c3d.reader.frame_count
 
             self.reallabels = list(
                 filter(lambda x: self.ismarker(x) and self.isrealmarker(x), self.labels)

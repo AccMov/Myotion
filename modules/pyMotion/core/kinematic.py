@@ -78,14 +78,18 @@ class kinematic:
         try:
             c3d = c3dFile(f)
             self.data = c3d.points
+            self.point_fs = c3d.point_fs
+            self.analog_fs = c3d.analog_fs
             self.frame_number = c3d.frame_number
             self.labels = c3d.point_labels
             self.first_frame = c3d.reader.first_frame
             self.last_frame = c3d.reader.last_frame
             self.length = c3d.reader.frame_count
+            self.manufacturer = c3d.manufacturer.string_value
+            self.software = c3d.software.string_value
 
             self.reallabels = list(
-                filter(lambda x: self.ismarker(x) and self.isrealmarker(x), self.labels)
+                filter(lambda x: (self.manufacturer == 'VICON' and self.ismarker(x) and self.isrealmarker(x)) or self.manufacturer != 'VICON', self.labels)
             )
             for joint in self.reallabels:
                 self.realpoints[joint] = self.data[joint]

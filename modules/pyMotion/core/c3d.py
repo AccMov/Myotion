@@ -170,6 +170,8 @@ class c3dFile:
             "point_scale": getattr(self.reader, "point_scale"),
             "point_used": getattr(self.reader, "point_used"),
         }
+        self.manufacturer = self.reader.get('MANUFACTURER:COMPANY')
+        self.software = self.reader.get('MANUFACTURER:SOFTWARE')
 
         self.analog_fs = self.attr["analog_rate"]
         self.point_fs = self.attr["point_rate"]

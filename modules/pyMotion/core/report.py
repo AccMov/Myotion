@@ -22,7 +22,7 @@ class report:
         filteredTST = emg.emgTST.copy()
         filteredTST.setname("EMG")
         for c in filteredTST.channels:
-            if c in emg.controlSignals:
+            if c not in emg.enabledChannels:
                 filteredTST.removeChannel(c)
 
         # emg Time Series Data

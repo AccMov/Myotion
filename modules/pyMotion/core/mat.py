@@ -59,7 +59,7 @@ class matFile:
         try:
             self.reader = scipy.io.loadmat(file, squeeze_me=True)
         except:
-            logger.error("failed to open file")
+            logger.error(f"Failed to open file: {file}. Error: {str(e)}")
             raise Exception(logger.errstr())
         self.keylist = sorted(self.reader.keys())
 

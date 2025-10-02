@@ -107,7 +107,7 @@ class QPlotView(QWebEngineView):
         # set label to be on the bottom of the fig
         self.fig.update_layout(
             legend=dict(
-                yanchor="bottom", xanchor="center", y=-0.5, x=0.5, orientation="h"
+                yanchor="bottom", xanchor="center", y=-0.5, x=0.95, orientation="h"
             )
         )
         self.fig.update_layout(yaxis_title=y_label)

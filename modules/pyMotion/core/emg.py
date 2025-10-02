@@ -1,3 +1,4 @@
+import asyncio
 from .timeSeriesTable import *
 from .c3d import *
 from .mat import *
@@ -9,11 +10,11 @@ from enum import IntEnum
 
 
 class emgConfigEnum(IntEnum):
-    FILTER = 0
-    FULL_W_RECT = 1
-    DC_OFFSET = 2
-    ACTIVATION = 3
-    NORMALIZATION = 4
+    DC_OFFSET = 0
+    FILTER = 1
+    FULL_W_RECT = 2
+    NORMALIZATION = 3
+    ACTIVATION = 4
     SUMMARY = 5
     MAX = 6
 
@@ -29,8 +30,8 @@ class emgConfigInfo:
     ]
     nameMap = {
         emgConfigEnum.DC_OFFSET: "remove_dc_offset",
-        emgConfigEnum.FULL_W_RECT: "full_wave_rectification",
         emgConfigEnum.FILTER: "filter",
+        emgConfigEnum.FULL_W_RECT: "full_wave_rectification",
         emgConfigEnum.NORMALIZATION: "normalization",
         emgConfigEnum.ACTIVATION: "activation",
         emgConfigEnum.SUMMARY: "summary",
@@ -41,7 +42,7 @@ class emgDCOffset:
     id = emgConfigEnum.DC_OFFSET
 
     def __init__(self):
-        self.enable = False
+        self.enable = True
 
     def toXML(self):
         e = xmlElement("emgDCOffset")
@@ -67,7 +68,7 @@ class emgRectification:
     id = emgConfigEnum.FULL_W_RECT
 
     def __init__(self):
-        self.enable = False
+        self.enable = True
 
     def toXML(self):
         e = xmlElement("emgRectification")
@@ -93,7 +94,7 @@ class emgNormalization:
     id = emgConfigEnum.NORMALIZATION
 
     def __init__(self):
-        self.enable = False
+        self.enable = True
 
     def toXML(self):
         e = xmlElement("emgNormalization")
@@ -133,8 +134,8 @@ class emgSummary:
 
 
 class emgFilterEnum(IntEnum):
-    LOW_PASS = 0
-    BAND_PASS = 1
+    BAND_PASS = 0
+    LOW_PASS = 1
     MAX = 2
 
 
@@ -142,8 +143,8 @@ class emgFilter:
     id = emgConfigEnum.FILTER
 
     def __init__(self):
-        self.enable = False
-        self.type = emgFilterEnum.LOW_PASS
+        self.enable = True
+        self.type = emgFilterEnum.BAND_PASS
         self.cutoff_l = 0
         self.cutoff_h = 0
         self.order = int(2)
@@ -189,7 +190,7 @@ class emgFilter:
         if e and e.text:
             obj.type = xmlStringParse(e.text, int)
         else:
-            obj.type = emgFilterEnum.LOW_PASS
+            obj.type = emgFilterEnum.BAND_PASS
         e = root.find("order")
         if e and e.text:
             obj.order = xmlStringParse(e.text, int)
@@ -261,8 +262,15 @@ class emgConfigure:
     def __init__(self):
         # default config for each step
         self.stepConfig = []
-        for s in emgConfigInfo.classical_steps:
-            self.stepConfig.append(self.initConfig(s))
+        for i, s in enumerate(emgConfigInfo.classical_steps):
+            config = self.initConfig(s)
+            
+            # 特殊处理第二个 FILTER (索引为 3，要与classical_steps同步修改)
+            if s == emgConfigEnum.FILTER and i == 3:  # 第二个 filter
+                config.type = emgFilterEnum.LOW_PASS
+                
+            self.stepConfig.append(config)
+
 
     # use step id as key to access config file
     def __getitem__(self, id):
@@ -369,7 +377,7 @@ class emg:
         self.emgMVCTST = None  # emg MVC data
         self.processCFG = None  # emg data process configure
         self.Channels = []  # channels of emg
-        self.controlSignals = set()  # sync up channel
+        self.enabledChannels = set() # enabled channels
         self.mvcFilesMap = {}  # channels:mvc_file_path
         self.chanMap = {}  # old chan name: new chan name
         self.isprocessdone = False
@@ -380,21 +388,36 @@ class emg:
         if file != None and len(file):
             self.setEMGFile(file)
 
-    # async load of emg file, use for loading file in worker thread
-    # required emgfile, mvcfile and mvcfilemap to be pre-configured
-    def async_load(self):
-        if self.emgFile == None:
+    async def async_load(self):
+        """异步加载 EMG 和 MVC 文件"""
+        if self.emgFile is None:
             return -1
-        else:
-            self.setEMGFile(self.emgFile)
 
-        for chan, mvcfile in self.mvcFilesMap.items():
-            self.setMVCFile(chan, mvcfile)
+        # 异步加载 EMG 文件
+        await self.async_set_emg_file(self.emgFile)
 
-        # rename channel using map
+        # 异步加载 MVC 文件
+        tasks = [
+            self.async_set_mvc_file(chan, mvcfile)
+            for chan, mvcfile in self.mvcFilesMap.items()
+        ]
+        await asyncio.gather(*tasks)
+
+        # 重命名通道
         for old, new in self.chanMap.items():
             self.renameChannel(old, new)
+
         return 0
+
+    async def async_set_emg_file(self, file):
+        """异步加载 EMG 文件"""
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, self.setEMGFile, file)
+
+    async def async_set_mvc_file(self, channel, file):
+        """异步加载 MVC 文件"""
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, self.setMVCFile, channel, file)
 
     # applying tst to emg, used when
     # loading emg from a report
@@ -402,6 +425,7 @@ class emg:
         self.emgTST = tst.copy()
         self.isprocessdone = True
         self.Channels = tst.labels.copy()
+        self.enabledChannels = tst.labels.copy()
 
     # use channel as key to access TST
     def __getitem__(self, chan):
@@ -419,7 +443,7 @@ class emg:
     # check if MVC TST has all channels in place
     def isMVCComplete(self):
         for c in self.Channels:
-            if c not in self.controlSignals and not self.emgMVCTST.hasChannel(c):
+            if c in self.enabledChannels and not self.emgMVCTST.hasChannel(c):
                 return False
         return True
 
@@ -428,10 +452,15 @@ class emg:
         self.emgTST = None
         self.emgMVCTST = None
         self.Channels.clear()
+        self.enabledChannels.clear()
+
+    # return all channels
+    def getAllChannels(self):
+        return self.Channels
 
     # return channels
     def getChannels(self):
-        return self.Channels
+        return [c for c in self.Channels if c in self.enabledChannels]
 
     def getfs(self):
         return self.emgTST.fs
@@ -455,6 +484,7 @@ class emg:
             del self.emgTST[channel]
             del self.emgMVCTST[channel]
             self.Channels.remove(channel)
+            self.enabledChannels.remove(channel)
 
     # remove a list of channels
     def removeChannels(self, channels):
@@ -470,25 +500,26 @@ class emg:
             self.Channels[self.Channels.index(old)] = new
             self.chanMap[old] = new
 
-    # set the name of the sync up channel of emg
-    def setControlSignal(self, chan):
+        if old in self.enabledChannels:
+            self.enabledChannels.remove(old)
+            self.enabledChannels.add(new)
+
+    # enable channel
+    def enableChannel(self, chan):
         if chan not in self.Channels:
             return -1
 
-        self.controlSignals.add(chan)
+        self.enabledChannels.add(chan)
 
-    def removeControlSignal(self, chan):
+    def disableChannel(self, chan):
         if chan not in self.Channels:
             return -1
 
-        self.controlSignals.remove(chan)
+        self.enabledChannels.remove(chan)
 
     # set EMG file path
     def setEMGFile(self, f):
         self.emgFile = f
-
-        # remove old data
-        self.clear()
 
         # load file
         try:
@@ -560,7 +591,7 @@ class emg:
         for chan, f in self.mvcFilesMap.items():
             t.addNode("chan", [xmlString(chan), xmlString(f)])
         root.addSubTree(t)
-        root.addNode("controlSignals", self.controlSignals)
+        root.addNode("enabledChannels", self.enabledChannels)
         # channel name migh have spaces or invalid chars,
         # so addDict is not applicable here
         t = xmlElement("chanMap")
@@ -584,9 +615,9 @@ class emg:
             for el in e:
                 l = xmlStringParseList(el.text)
                 emg_obj.mvcFilesMap[l[0]] = l[1]
-        e = root.find("controlSignals")
+        e = root.find("enabledChannels")
         if e != None and e.text != None:
-            emg_obj.controlSignals = xmlStringParseList(e.text)
+            emg_obj.enabledChannels = set(xmlStringParseList(e.text))
         e = root.find("chanMap")
         if e != None:
             for el in e:
@@ -658,10 +689,14 @@ class emg:
                 cfg.rms = tst.rms(chan)
                 cfg.ptp = tst.ptp(chan)
                 cfg.zeros = tst.countZeros(chan)
-        except:
+        except Exception as e:
             output = [0] * tst.size()
+            import traceback
+            error_msg = traceback.format_exc()
             logger.error(
-                "cannot apply configuration on chan: {}, step: {}".format(chan, tname)
+                "cannot apply config to channel: {}, step: {}, Error Message: {}\n{}".format(
+                    chan, tname, str(e), error_msg
+                )
             )
         return output
 
@@ -677,7 +712,7 @@ class emg:
     # process EMG and MVC using configure file
     def processWithConfigure(self):
         for chan in self.Channels:
-            if chan in self.controlSignals:
+            if chan not in self.enabledChannels:
                 continue
 
             for step in range(0, self.processCFG.size()):

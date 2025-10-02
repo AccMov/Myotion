@@ -4478,7 +4478,7 @@ font-size:12px;</string>
                                                       <number>16</number>
                                                      </property>
                                                      <property name="placeholderText">
-                                                      <string>cut-off frequency high</string>
+                                                      <string>high</string>
                                                      </property>
                                                     </widget>
                                                    </item>
@@ -4501,7 +4501,7 @@ font-size:12px;</string>
                                                       <number>16</number>
                                                      </property>
                                                      <property name="placeholderText">
-                                                      <string>cut-off frequency low</string>
+                                                      <string>low</string>
                                                      </property>
                                                     </widget>
                                                    </item>
@@ -4587,7 +4587,7 @@ font-size:12px;</string>
                                                       <number>16</number>
                                                      </property>
                                                      <property name="placeholderText">
-                                                      <string>cut-off frequency low</string>
+                                                      <string>low</string>
                                                      </property>
                                                     </widget>
                                                    </item>

@@ -2259,8 +2259,8 @@ if __name__ == "__main__":
     AppDataPath, LogPath = initializeAppDataFolder()
 
     # setup logfile
-    sys_log = open(getSyslogFilename(LogPath), 'w')
-    r_log = open(getRserverlogFilename(LogPath), 'w')
+    sys_log = open(getSyslogFilename(LogPath), 'w', encoding="utf-8")
+    r_log = open(getRserverlogFilename(LogPath), 'w', encoding="utf-8")
     logger.pipe = sys_log
 
     # argument parse

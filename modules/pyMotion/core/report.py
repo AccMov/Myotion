@@ -18,10 +18,12 @@ class report:
 
         self.root = xmlElement("report")
         self.root.addSubTree(person.toXML())
-        # get a copy of emgTST, filter out control signal
+        # get a copy of emgTST, filter out disabled signal
         filteredTST = emg.emgTST.copy()
         filteredTST.setname("EMG")
-        for c in filteredTST.channels:
+
+        all_chan = filteredTST.channels.copy()
+        for c in all_chan:
             if c not in emg.enabledChannels:
                 filteredTST.removeChannel(c)
 

@@ -286,7 +286,7 @@ class EMGAddWindow(QMainWindow):
         # 如果文件数量过多，限制显示数量并添加省略号
         if len(file_names) > 5:
             displayed_files = file_names[:5]
-            file_names_str = ",\n".join(displayed_files) + f",\n...\n共 {len(file_names)} 个文件"
+            file_names_str = ",\n".join(displayed_files) + f",\n...{len(file_names)} files"
         else:
             file_names_str = ",\n".join(file_names)
             

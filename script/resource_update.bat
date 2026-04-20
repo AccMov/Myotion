@@ -1,0 +1,1 @@
+ pyside6-rcc.exe -o modules/resources_rc.py resources.qrc

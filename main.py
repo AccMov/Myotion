@@ -1,0 +1,2252 @@
+# ///////////////////////////////////////////////////////////////
+#
+# BY: WANDERSON M.PIMENTA
+# PROJECT MADE WITH: Qt Designer and PySide6
+# V: 1.0.0
+#
+# This project can be used freely for all uses, as long as they maintain the
+# respective credits only in the Python scripts, any information in the visual
+# interface (GUI) can be modified without any implication.
+#
+# There are limitations on Qt licenses if you want to use your products
+# commercially, I recommend reading them on the official website:
+# https://doc.qt.io/qtforpython/licenses.html
+#
+# ///////////////////////////////////////////////////////////////
+
+import sys
+import os
+import re
+from pathlib import Path
+import webbrowser
+import argparse
+
+from PySide6.QtCore import Qt, Signal, Slot, QTranslator, QSignalBlocker
+from PySide6.QtGui import QIcon, QPalette
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QSizePolicy,
+    QMessageBox,
+    QDialog,
+    QWidget,
+    QFileDialog,
+    QTableWidgetItem,
+    QComboBox,
+    QCheckBox,
+    QFileSystemModel,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QHBoxLayout,
+)
+from PySide6.QtWebEngineCore import QWebEngineUrlScheme
+
+from rserver import RServer
+from miscWidgets import *
+from path import *
+from qplotview import QPlotView
+
+# IMPORT / GUI AND MODULES AND WIDGETS
+# ///////////////////////////////////////////////////////////////
+from modules import *
+from widgets import *
+
+os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100%
+# SET AS GLOBAL WIDGETS
+# ///////////////////////////////////////////////////////////////
+widgets = None
+
+
+# Global Constant
+# ///////////////////////////////////////////////////////////////
+class EMGAddWindow(QMainWindow):
+    finished = Signal(tuple) # 定义一个信号，用于通知窗口关闭时返回结果
+
+    def __init__(self, workspace, home, width, height, parent=None):
+        QMainWindow.__init__(self)
+
+        self.ui = Ui_EMGImport()
+        # 创建一个中央部件并将 UI 设置到该部件上
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        self.ui.setupUi(central_widget)  # 将 UI 的布局设置到中央部件上
+
+        self.resize(width, height)
+        self.setWindowTitle(self.tr("Add EMG File"))
+        self.setWindowFlags(Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint | Qt.WindowCloseButtonHint)
+
+        self.widgets = self.ui
+        self.workspace = workspace
+        self.root = home
+        self.emg = None
+        self.kinematic = None
+        self.person = None
+        self.channels = []
+        self.mvcfiles = []
+        self.mvcfilesMap = {}  # mapping mvc_file -> chan
+        self.jointMap = {}  # mapping chan -> joints (short name)
+        self.isEnabled = {}  # isEnabled[chan] = T/F
+
+        self.widgets.import_btn.clicked.connect(self.importEMGBtnClicked)
+        self.widgets.lineEdit.textChanged.connect(self.updateFilterText)
+        self.widgets.import_btn_2.clicked.connect(self.confirmBtnClicked)
+        self.widgets.import_btn_3.clicked.connect(self.cancelBtnClicked)
+        self.widgets.importMVC_btn.clicked.connect(self.importMVCBtnClicked)
+
+    def run(self):
+        self.show()
+        return self.person, self.emg, self.kinematic
+
+    # update emg and mvc qtablewidget
+    def updateChannelBox(self):
+        self.widgets.tableWidget.clearContents()
+        # column width
+        w = self.frameGeometry().width()
+        # fixed ratio
+        self.widgets.tableWidget.setColumnWidth(0, w * 0.3)
+        self.widgets.tableWidget.setColumnWidth(1, w * 0.1)
+        self.widgets.tableWidget.setColumnWidth(2, w * 0.2)
+        self.widgets.tableWidget.setColumnWidth(3, w * 0.4)
+
+        n = len(self.channels)
+        self.widgets.tableWidget.setRowCount(n)
+        for i in range(0, n):
+            chan = self.channels[i]
+            q = QTableWidgetItem(chan)
+            q.setTextAlignment(Qt.AlignLeading | Qt.AlignVCenter)
+            q.setFlags(q.flags() ^ Qt.ItemIsEditable)
+            self.widgets.tableWidget.setItem(i, 0, q)
+            # control signal checkbox
+            self.widgets.tableWidget.setCellWidget(
+                i, 1, self.selectSignalCheckbox(chan)
+            )
+            # drop down selection
+            self.widgets.tableWidget.setCellWidget(i, 2, self.jointComboBox(chan))
+            # mvc file path
+            self.widgets.tableWidget.setCellWidget(i, 3, self.mvcFileDisplay(chan))
+
+        self.widgets.tableWidget.resizeColumnToContents(0)
+
+    def jointComboBox(self, chan):
+        comboBox = QComboBox()
+        comboBox.setObjectName(chan)
+        comboBox.setEditable(True)
+        for j in jointName.short:
+            comboBox.addItem(jointName.getConcatName(j))
+
+        # 设置 QCompleter 并启用模糊匹配
+        completer = QCompleter([jointName.getConcatName(j) for j in jointName.short], comboBox)
+        completer.setFilterMode(Qt.MatchContains)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)  # 设置大小写不敏感
+        comboBox.setCompleter(completer)
+        
+        if chan in self.jointMap:
+            comboBox.setCurrentText(jointName.getConcatName(self.jointMap[chan]))
+        else:
+            comboBox.setCurrentIndex(-1)
+        comboBox.currentIndexChanged.connect(self.jointBoxChanged)
+        return comboBox
+
+    def mvcFileDisplay(self, chan):
+        comboBox = QComboBox()
+        comboBox.setObjectName(chan)
+
+        # only display file name instead of full path
+        for f in self.mvcfiles:
+            comboBox.addItem(os.path.basename(f))
+        if chan in self.mvcfilesMap:
+            comboBox.setCurrentIndex(self.mvcfilesMap[chan])
+        else:
+            comboBox.setCurrentIndex(-1)
+        comboBox.currentIndexChanged.connect(self.MVCFilesChanged)
+        return comboBox
+
+    def selectSignalCheckbox(self, chan):
+        checkbox = QCheckBox()
+        checkbox.setObjectName(chan)
+        checkbox.stateChanged.connect(self.selectedSignalChanged)
+        if chan in self.isEnabled:
+            checkbox.setChecked(self.isEnabled[chan])
+        else:
+            self.isEnabled[chan] = False
+            checkbox.setChecked(False)
+
+        QWid = QWidget()
+        QHBox = QHBoxLayout(QWid)
+        QHBox.addWidget(checkbox)
+        QHBox.setAlignment(Qt.AlignCenter)
+        QHBox.setContentsMargins(0, 0, 0, 0)
+        return QWid
+
+    # SIGNALS AND SLOT
+    ################################################
+    def jointBoxChanged(self, index):
+        jointbox = self.sender()
+        chan = jointbox.objectName()
+        self.jointMap[chan] = jointName.short[index]
+
+    def MVCFilesChanged(self, index):
+        mvcBox = self.sender()
+        chan = mvcBox.objectName()
+        self.mvcfilesMap[chan] = index
+        # apply MVC
+        try:
+            self.emg.setMVCFile(chan, self.mvcfiles[index])
+        except Exception:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Selected mvc file is invalid!"),
+                QMessageBox.Ok,
+            )
+            return
+
+    def selectedSignalChanged(self, state):
+        checkbox = self.sender()
+        chan = checkbox.objectName()
+        self.isEnabled[chan] = not self.isEnabled[chan]
+
+        if self.isEnabled[chan]:
+            self.emg.enableChannel(chan)
+        else:
+            self.emg.disableChannel(chan)
+
+    def updateFilterText(self):
+        filter_str = self.widgets.lineEdit.text()
+        if filter_str == "":
+            filter_str = ".*"
+
+        # check valid regex string
+        try:
+            re.compile(filter_str)
+        except re.error:
+            logger.error("regex not valid")
+            return
+
+        self.channels = self.emg.searchChannels(filter_str)
+        self.updateChannelBox()
+
+    def importEMGBtnClicked(self):
+        # load EMG file
+        file, extension = QFileDialog.getOpenFileName(
+            None,
+            caption="open EMG file",
+            dir=self.root,
+            filter="EMG Files (*.c3d *.mat)",
+        )
+        if file == "":
+            return
+        self.file = file
+        # open up emg MVC file
+        try:
+            self.emg = emg(file)
+        except Exception:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Selected emg file is invalid!"),
+                QMessageBox.Ok,
+            )
+            return
+
+        # get channels and update list
+        self.channels = self.emg.getAllChannels()
+
+        self.widgets.label_3.setText(file)
+        # auto apply joint matching on joint mapping
+        self.applyFuzzMatchOnJoint()
+        self.updateChannelBox()
+
+    def importMVCBtnClicked(self):
+        if len(self.channels) == 0:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Please select emg file before MVC file!"),
+                QMessageBox.Ok,
+            )
+            return
+
+        btn = self.sender()
+        chan = btn.objectName()
+
+        files, extension = QFileDialog.getOpenFileNames(
+            None,
+            caption="open MVC file",
+            dir=self.root,
+            filter="EMG Files (*.c3d *.mat)",
+        )
+
+        # Get all file names and join them with ","
+        file_names = [os.path.basename(file) for file in files]
+        # 设置 label_3 的自动换行属性
+        self.widgets.label_3.setWordWrap(True)
+        # 如果文件数量过多，限制显示数量并添加省略号
+        if len(file_names) > 5:
+            displayed_files = file_names[:5]
+            file_names_str = ",\n".join(displayed_files) + f",\n...{len(file_names)} files"
+        else:
+            file_names_str = ",\n".join(file_names)
+            
+        self.widgets.label_3.setText(file_names_str)
+        # clear old, set new val
+        self.mvcfilesMap.clear()
+        self.mvcfiles = files
+
+        # auto apply fuzz matching on MVC mapping
+        self.applyFuzzMatchOnMVC()
+        self.updateChannelBox()
+
+    def applyFuzzMatchOnMVC(self):
+        filenames = [os.path.basename(f) for f in self.mvcfiles]
+        for c in self.channels:
+            candidate_list = self.workspace.matchChanToMVCFile(
+                c, filenames, lower_bound=50
+            )
+            if len(candidate_list) == 0:
+                logger.info("EMG ADD MVC: no candidate found")
+                continue
+            else:
+                file, possibility = candidate_list[0]
+                logger.info(
+                    "EMG ADD MVC: selecting file {} for chan {}, possibility {}".format(
+                        file, c, possibility
+                    )
+                )
+                self.mvcfilesMap[c] = filenames.index(file)
+
+    def applyFuzzMatchOnJoint(self):
+        for c in self.channels:
+            # set only when possiblity bigger than 50%
+            candidate_list = self.workspace.matchChanToJoint(
+                c, jointName.short, lower_bound=50
+            )
+            if len(candidate_list) == 0:
+                continue
+            else:
+                joint, possibility = candidate_list[0]
+                logger.info(
+                    "EMG Select Joint: selecting Joint {} for chan {}, possibility {}".format(
+                        joint, c, possibility
+                    )
+                )
+                self.jointMap[c] = joint
+
+    def sanity(self):
+        # check emg file is selected
+        if self.emg is None:
+            QMessageBox.critical(
+                None, self.tr("error"), self.tr("No EMG file selected!"), QMessageBox.Ok
+            )
+            return False
+        # check mvc file is complete
+        if not self.emg.isMVCComplete():
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("MVC file not complete!"),
+                QMessageBox.Ok,
+            )
+            return False
+        # check pariticipant name is complete and no duplicates
+        name = self.widgets.lineEdit_3.text()
+        if name == "":
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Name of pariticipant not set!"),
+                QMessageBox.Ok,
+            )
+            return False
+        if self.workspace.findParticipant(name) != None:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Name of pariticipant already exists!"),
+                QMessageBox.Ok,
+            )
+            return False
+        # at least one chan is selected
+        if len(self.emg.getChannels()) == 0:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("At least one Channel is selected!"),
+                QMessageBox.Ok,
+            )
+            return False
+        # check all joint names are selected
+        for c in self.channels:
+            if c not in self.jointMap and self.isEnabled[c]:
+                QMessageBox.critical(
+                    None,
+                    self.tr("error"),
+                    self.tr("Joint of channel {} not set!").format(c),
+                    QMessageBox.Ok,
+                )
+                return False
+        # check joint name is unique
+        used_joint = {}
+        for chan, joint in self.jointMap.items():
+            if self.isEnabled[chan] and joint in used_joint:
+                chan2 = used_joint[joint]
+                if self.isEnabled[chan2]:
+                    line1 = self.channels.index(chan2) + 1
+                    line2 = self.channels.index(chan) + 1
+                    QMessageBox.critical(
+                        None,
+                        self.tr("error"),
+                        self.tr(
+                            "Duplicated joint name founded, please check line {} and {}"
+                        ).format(line1, line2),
+                        QMessageBox.Ok,
+                    )
+                    return False
+            used_joint[joint] = chan
+        return True
+
+    def confirmBtnClicked(self):
+        if not self.sanity():
+            return
+
+        # creat person
+        name = self.widgets.lineEdit_3.text()
+        self.person = person(name, "N/A", "N/A")
+        self.kinematic = kinematic(self.file)
+
+        # filter and rename channels
+        old = self.emg.getChannels()
+        for c in old:
+            if c not in self.channels:
+                self.emg.removeChannel(c)
+
+        for old, new in self.jointMap.items():
+            if self.isEnabled[old]:
+                self.emg.renameChannel(old, new)
+
+        # update MVC file name matching fuzz string
+        for chan, index in self.mvcfilesMap.items():
+            if self.isEnabled[chan]:
+                self.workspace.addChanToMVCFileMap(
+                    chan, os.path.basename(self.mvcfiles[index])
+                )
+
+        for chan, joint in self.jointMap.items():
+            if self.isEnabled[chan]:
+                self.workspace.addChanToJointMap(chan, joint)
+
+        # 发出信号，通知窗口关闭并传递结果
+        self.finished.emit((self.person, self.emg, self.kinematic))
+        self.close()
+
+    def cancelBtnClicked(self):
+        self.person = None
+        self.emg = None
+        self.finished.emit((self.person, self.emg, self.kinematic)) # 发出信号，通知窗口关闭并传递结果
+        self.close()
+
+
+class ConfigWindow(QDialog):
+    def __init__(self, width, height, parent=None):
+        QDialog.__init__(self, parent)
+        self.ui = Ui_Configuration()
+        self.ui.setupUi(self)
+
+        self.resize(width, height)
+        self.setWindowTitle("Configuration")
+
+        self.widgets = self.ui
+
+    def run(self):
+        self.exec()
+        return self.person, self.emg, self.kinematic
+
+    def confirmBtnClicked(self):
+        return
+
+    def cancelBtnClicked(self):
+        self.close()
+
+
+class EMGConfigWindow(QDialog):
+    def __init__(self, cfg, is_edit_state=True, parent=None):
+        QDialog.__init__(self, parent)
+        self.ui = Ui_EMGConfigWindow()
+        self.ui.setupUi(self)
+
+        self.widgets = self.ui
+
+        self.widgets.start.clicked.connect(self.confirmBtnClicked)
+        self.widgets.cancel.clicked.connect(self.cancelBtnClicked)
+
+        if is_edit_state:
+            self.setWindowTitle("EMG Config")
+            self.widgets.start.setText("Save")
+        else:
+            self.setWindowTitle("Batch Process")
+            self.widgets.start.setText("Start")
+
+        self._cfg = cfg
+        self._state = False
+        self._init()
+
+    def run(self):
+        self.exec()
+        return self._state, self._cfg
+
+    def confirmBtnClicked(self):
+        self._state = True
+
+        self._cfg[0].enable = self.ui.dc_offset.checkState() == Qt.CheckState.Checked
+        self._cfg[2].enable = self.ui.full_wave_rectification.checkState() == Qt.CheckState.Checked
+        self._cfg[4].enable = self.ui.normalization.checkState() == Qt.CheckState.Checked
+
+        self._cfg[1].enable = self.ui.low_pass_switch.checkState() == Qt.CheckState.Checked
+        self._cfg[1].order = self.ui.low_pass_order.currentIndex()
+        self._cfg[1].cutoff_l = self.ui.low_pass_value.value()
+
+        self._cfg[3].enable = self.ui.band_pass_switch.checkState() == Qt.CheckState.Checked
+        self._cfg[3].order = self.ui.band_pass_order.currentIndex()
+        self._cfg[3].cutoff_l = self.ui.band_pass_low.value()
+        self._cfg[3].cutoff_h = self.ui.band_pass_high.value()
+
+        self.close()
+
+    def cancelBtnClicked(self):
+        self.close()
+
+    def _init(self):
+        self.ui.dc_offset.setCheckState(Qt.CheckState.Checked if self._cfg[0].enable else Qt.CheckState.Unchecked)
+        
+        self.ui.full_wave_rectification.setCheckState(Qt.CheckState.Checked if self._cfg[2].enable else Qt.CheckState.Unchecked)
+        
+        self.ui.normalization.setCheckState(Qt.CheckState.Checked if self._cfg[4].enable else Qt.CheckState.Unchecked)
+
+        lp = self._cfg[1]
+        self.ui.low_pass_switch.setCheckState(Qt.CheckState.Checked if lp.enable else Qt.CheckState.Unchecked)
+        self.ui.low_pass_order.setCurrentIndex(lp.order)
+        self.ui.low_pass_value.setValue(lp.cutoff_l)
+
+        bp = self._cfg[3]
+        self.ui.band_pass_switch.setCheckState(Qt.CheckState.Checked if bp.enable else Qt.CheckState.Unchecked)
+        self.ui.band_pass_order.setCurrentIndex(bp.order)
+        self.ui.band_pass_low.setValue(bp.cutoff_l)
+        self.ui.band_pass_high.setValue(bp.cutoff_h)
+
+
+class MainWindow(QMainWindow):
+    # SIGNALS
+    sigUpdateParticipants = Signal()
+    sigAsyncLoadError = Signal(str)
+
+    def __init__(self, language, sys_log, r_log):
+        QMainWindow.__init__(self)
+
+        self.language = language
+        # Launch R server
+        self.rserver = RServer(language, r_log)
+        self.rserver.start()
+
+        # SET AS GLOBAL WIDGETS
+        # ///////////////////////////////////////////////////////////////
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        global widgets
+        widgets = self.ui
+
+        # USE CUSTOM TITLE BAR | USE AS "False" FOR MAC OR LINUX
+        # ///////////////////////////////////////////////////////////////
+        Settings.ENABLE_CUSTOM_TITLE_BAR = True
+
+        # APP NAME
+        # ///////////////////////////////////////////////////////////////
+        title = "MYOTION"
+        description = "MYOTION"
+        # APPLY TEXTS
+        self.setWindowTitle(title)
+        widgets.titleRightInfo.setText(description)
+
+        # TOGGLE MENU
+        # ///////////////////////////////////////////////////////////////
+        widgets.toggleButton.clicked.connect(lambda: UIFunctions.toggleMenu(self, True))
+
+        # SET UI DEFINITIONS
+        # ///////////////////////////////////////////////////////////////
+        UIFunctions.uiDefinitions(self)
+
+        # QTableWidget PARAMETERS
+        # ///////////////////////////////////////////////////////////////
+        widgets.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        # BUTTONS CLICK
+        # ///////////////////////////////////////////////////////////////
+
+        # LEFT MENUS
+        widgets.btn_start.clicked.connect(self.buttonClick)
+        widgets.btn_emg.clicked.connect(self.buttonClick)
+        widgets.btn_kinematic.clicked.connect(self.buttonClick)
+        widgets.btn_frequency.clicked.connect(self.buttonClick)
+        widgets.btn_advanced.clicked.connect(self.buttonClick)
+        widgets.btn_stats.clicked.connect(self.buttonClick)
+
+        # EXTRA LEFT BOX
+        def openCloseLeftBox():
+            UIFunctions.toggleLeftBox(self, True)
+
+        widgets.toggleLeftBox.clicked.connect(openCloseLeftBox)
+        widgets.extraCloseColumnBtn.clicked.connect(openCloseLeftBox)
+        widgets.pushButton_17.clicked.connect(self.workspaceRemoveSelectedParticipant)
+        widgets.pushButton_18.clicked.connect(self.addEMGButtonClick)
+        widgets.pushButton_16.clicked.connect(self.emgPageRemoveSelectedParticipant)
+        widgets.pushButton_161.clicked.connect(self.addEMGButtonClick)
+        widgets.checkBox_3.stateChanged.connect(self.workspaceToggleSelectAllParticipant)
+        widgets.listWidget_3.itemChanged.connect(self.checkWorkspaceParticipantSelectState)
+
+        # EXTRA RIGHT BOX
+        def openCloseRightBox():
+            UIFunctions.toggleRightBox(self, True)
+
+        widgets.settingsTopBtn.clicked.connect(openCloseRightBox)
+
+        # Project
+        widgets.btn_new.clicked.connect(self.newProjectButtonClick)
+        widgets.btn_share.clicked.connect(lambda: self.saveProjectButtonClick(True))
+        widgets.btn_adjustments.clicked.connect(self.loadProjectButtonClick)
+        self.sigUpdateParticipants.connect(self.updateEMGParticipantBox)
+        self.sigAsyncLoadError.connect(self.handleAsyncLoadError)
+        widgets.treeView.doubleClicked.connect(self.handleTreeViewDoubleClick)
+
+        # General
+        widgets.settingsMenu.clicked.connect(self.configButtonClick)
+
+        # EMG Page
+        widgets.pushButton_10.clicked.connect(self.addEMGButtonClick)
+        widgets.pushButton_11.clicked.connect(self.singleEMGButtonClick)
+        widgets.listWidget.itemDoubleClicked.connect(
+            self.EMGConfigurationListDoubleClicked
+        )
+        widgets.checkBox_4.stateChanged.connect(self.EMGConfigureToggleConfiguration)
+        widgets.checkBox_11.stateChanged.connect(self.EMGConfigureToggleConfiguration)
+        widgets.checkBox_12.stateChanged.connect(self.EMGConfigureToggleConfiguration)
+        widgets.checkBox_13.stateChanged.connect(self.EMGConfigureToggleConfiguration)
+        widgets.comboBox_2.currentIndexChanged.connect(
+            self.EMGChannelSelectorIndexChanged
+        )
+        widgets.toolBox.currentChanged.connect(self.EMGChannelToolBoxIndexChanged)
+        widgets.pushButton_19.clicked.connect(self.EMGStepNextButtonClicked)
+        widgets.pushButton_20.clicked.connect(self.EMGStepNextButtonClicked)
+        widgets.pushButton_21.clicked.connect(self.EMGConfigureFilterConfiguration)
+        widgets.pushButton_22.clicked.connect(self.EMGStepNextButtonClicked)
+        widgets.pushButton_23.clicked.connect(self.EMGStepNextButtonClicked)
+        widgets.pushButton_25.clicked.connect(self.EMGStepNextButtonClicked)
+        widgets.pushButton_26.clicked.connect(self.EMGGenerateReportButtonClicked)
+        widgets.pushButton_27.clicked.connect(self.EMGSaveConfigurationButtonClicked)
+        widgets.pushButton_12.clicked.connect(self.EMGBatchProcessButtonClicked)
+        widgets.pushButton_12.setEnabled(False)
+        widgets.lineEdit_3.textChanged.connect(self.updateFilterText)
+        widgets.checkBox_2.stateChanged.connect(self.EMGParticipantSelectAllClicked)
+
+        # Freqency Page
+        widgets.pushButton_29.clicked.connect(self.addNewFFTtoFreqAnalysisFFTPanel)
+        widgets.pushButton_28.clicked.connect(self.FFTPlotPrevPageClicked)
+        widgets.pushButton_30.clicked.connect(self.FFTPlotNextPageClicked)
+        widgets.pushButton_32.clicked.connect(self.FFTPlotClearAllClicked)
+        widgets.comboBox_19.currentIndexChanged.connect(self.FFTPlotPerPageSelected)
+        widgets.comboBox_20.currentIndexChanged.connect(self.FFTPlotPageIndexSelected)
+
+        # start page
+        widgets.settingsTopBtn.hide()
+        widgets.signInButton.clicked.connect(self.login_click)
+        widgets.signUpButton.clicked.connect(
+            lambda x: webbrowser.open("http://www.accmov.com")
+        )
+        widgets.btn_logout.clicked.connect(self.logout_click)
+
+        # SHOW APP
+        # ///////////////////////////////////////////////////////////////
+
+        # self.show()
+        self.showMaximized()
+
+        # SET CUSTOM THEME
+        # ///////////////////////////////////////////////////////////////
+        useCustomTheme = False
+        themeFile = "D:/Myotion/themes/py_dracula_dark.qss"
+
+        # SET THEME AND HACKS
+        if useCustomTheme:
+            # LOAD AND APPLY STYLE
+            UIFunctions.theme(self, themeFile, True)
+
+            # SET HACKS
+            AppFunctions.setThemeHack(self)
+
+        # SET HOME PAGE AND SELECT MENU
+        # ///////////////////////////////////////////////////////////////
+        widgets.stackedWidget.setCurrentWidget(widgets.start_page)
+        widgets.btn_start.setStyleSheet(
+            UIFunctions.selectMenu(widgets.btn_start.styleSheet())
+        )
+
+        # APPLICATION LOGICS
+        self.workspace = None
+        self.home = None
+        self.account = None
+
+        self.participant_filter = ""
+        self.filesystemTree = (
+            QFileSystemModel()
+        )  # file system tree for workspace directory
+        self.selectedParticipants = set()  # key of selected participants
+        self.singleEMG = (
+            None,
+            None,
+            None,
+        )  # sm for single EMG Process, (Participant, Steps, channel)
+        self.inputBuffer = None  # buffer for single EMG process
+        self.outputBuffer = None  # buffer for single EMG process
+
+        # FrequencyAnalysis State Machine
+        self.freqAnalysis = (None, None)  # (Participant, channel)
+        self.freqAnalysisPlots = []  # plot diagram for frequency analysis
+        self.plotsPerPage_list = [0, 1, 3, 5, 10]  # correspond to ui combox_19 setting
+
+
+        # 设置 EMG 过滤器输入框的验证器
+        self.setupEMGFilterValidators()
+
+        # self.test()
+
+        # 添加自动保存定时器
+        self.autosave_timer = QTimer(self)
+        self.autosave_timer.timeout.connect(self.autoSaveHandler)
+        self.autosave_interval = 60000  # 1分钟 (单位：毫秒)
+
+    def handleAsyncLoadError(self, error_msg):
+        """处理异步加载过程中的错误"""
+        logger.error(f"async load error: {error_msg}")
+        QMessageBox.critical(
+            None,
+            self.tr("error"),
+            self.tr(f"Wrong to load workspace: {error_msg}"),
+            QMessageBox.Ok,
+        )
+        # 重置工作区状态
+        self.reset()
+        widgets.tableWidget_2.clearContents()
+
+    def enableAutoSave(self, enable):
+        """ 控制自动保存开关 """
+        if enable:
+            self.autosave_timer.start(self.autosave_interval)
+            logger.info(f"AutoSave enabled, interval: {self.autosave_interval/1000}s")
+        else:
+            self.autosave_timer.stop()
+
+    def autoSaveHandler(self):
+        """ 自动保存处理器 """
+        if self.workspace is None:
+            return
+        
+        logger.info("Auto-saving workspace...")
+        self.saveProjectButtonClick(show=False)
+        logger.info("Auto-save completed")
+
+    def test(self):
+        self.newWorkSpace(os.getcwd(), "test")
+        f = os.getcwd() + "/ERRPT.c3d"
+        # "\\test\\Data\\lifting+bending\\LDH\\duchunguang\\2021-12-06-17-57_lift.mat"
+        memg = emg(f)
+        kin = kinematic(f)
+
+        # add people
+        p1 = person("Guo Chen", "1995/08/05", "male")
+
+        # add data
+        self.workspace.addParticipant(p1, memg, kin)
+
+        self.updateEMGParticipantBox()
+        self.updateWorkSpaceParticipantBox()
+
+    # BUTTONS CLICK
+    # Post here your functions for clicked buttons
+    # ///////////////////////////////////////////////////////////////
+    
+    def workspaceRemoveSelectedParticipant (self):
+        """移除选中的项"""
+        selected_items = widgets.listWidget_3.selectedItems()
+        for item in selected_items:
+            p_name = item.text()
+            p = self.workspace.findParticipant(p_name)
+            if p is not None:
+                # 从 workspace 中移除参与者
+                self.workspace.participants.remove(p)
+                del self.workspace.profileList[p.name]
+            # 从 UI 中移除项
+            widgets.listWidget_3.takeItem(widgets.listWidget_3.row(item))
+        self.updateEMGParticipantBox()
+
+    def emgPageRemoveSelectedParticipant(self):
+        """从 EMG 页面移除选中的参与者"""
+        # 获取 EMG 页面上选中的参与者
+        selected_participants = list(self.selectedParticipants)
+        
+        if not selected_participants:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("No participant selected!"),
+                QMessageBox.Ok,
+            )
+            return
+            
+        # 确认是否删除
+        reply = QMessageBox.question(
+            None,
+            self.tr("confirm"),
+            self.tr("Are you sure to remove selected participant(s)?"),
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        
+        if reply == QMessageBox.No:
+            return
+            
+        # 执行删除操作
+        for p_name in selected_participants:
+            p = self.workspace.findParticipant(p_name)
+            if p is not None:
+                # 从 workspace 中移除参与者
+                self.workspace.participants.remove(p)
+                del self.workspace.profileList[p.name]
+                
+        # 清空选择集合
+        self.selectedParticipants.clear()
+        
+        # 更新 UI
+        self.updateEMGParticipantBox()
+        self.updateWorkSpaceParticipantBox()
+
+    def workspaceToggleSelectAllParticipant(self, state):
+        """全选或取消全选"""
+        # 暂时断开 listWidget_3 的信号连接
+        widgets.listWidget_3.itemChanged.disconnect(self.checkWorkspaceParticipantSelectState)
+
+        state = not not state  # 将状态转换为布尔值
+        for i in range(widgets.listWidget_3.count()):
+            item = widgets.listWidget_3.item(i)
+            item.setCheckState(Qt.Checked if state else Qt.Unchecked)
+        
+        # 重新连接 listWidget_3 的信号
+        widgets.listWidget_3.itemChanged.connect(self.checkWorkspaceParticipantSelectState)
+
+    def checkWorkspaceParticipantSelectState(self):
+        # 暂时断开 checkBox_3 的信号连接
+        widgets.checkBox_3.stateChanged.disconnect(self.workspaceToggleSelectAllParticipant)
+
+        # 检查是否有任何一个 item 被取消选择
+        all_checked = True
+        for i in range(widgets.listWidget_3.count()):
+            if widgets.listWidget_3.item(i).checkState() != Qt.Checked:
+                all_checked = False
+                break
+        
+        # 如果有任何一个 item 被取消选择，取消 checkbox 的选择状态
+        if not all_checked:
+            widgets.checkBox_3.setCheckState(Qt.Unchecked)
+        else:
+            widgets.checkBox_3.setCheckState(Qt.Checked)
+        
+        # 重新连接 checkBox_3 的信号
+        widgets.checkBox_3.stateChanged.connect(self.workspaceToggleSelectAllParticipant)
+
+
+    def buttonClick(self):
+        # GET BUTTON CLICKED
+        btn = self.sender()
+        btnName = btn.objectName()
+
+        # SHOW START PAGE
+        if btnName == "btn_start":
+            widgets.stackedWidget.setCurrentWidget(widgets.start_page)
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
+
+        # SHOW EMG PAGE
+        if btnName == "btn_emg":
+            widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
+
+        # SHOW STATS PAGE
+        if btnName == "btn_stats":
+            widgets.stackedWidget.setCurrentWidget(widgets.stats_page)  # SET PAGE
+            UIFunctions.resetStyle(self, btnName)  # RESET ANOTHERS BUTTONS SELECTED
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
+
+        if btnName == "btn_kinematic":
+            widgets.stackedWidget.setCurrentWidget(widgets.kinematics_page)  # SET PAGE
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
+            self.preloadKinematicPage()
+            return
+
+        if btnName == "btn_frequency":
+            widgets.stackedWidget.setCurrentWidget(widgets.frequency_page)  # SET PAGE
+            UIFunctions.resetStyle(self, btnName)
+            btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))  # SELECT MENU
+            self.preloadFreqAnalysisPage()
+
+        if btnName == "btn_save":
+            logger.info("Save BTN clicked!")
+
+        # PRINT BTN NAME
+        logger.info(f'Button "{btnName}" pressed!')
+
+    def login_click(self):
+        return
+
+    def logout_click(self):
+        return
+
+    # RESIZE EVENTS
+    # ///////////////////////////////////////////////////////////////
+    def resizeEvent(self, event):
+        # Update Size Grips
+        UIFunctions.resize_grips(self)
+
+    # MOUSE CLICK EVENTS
+    # //////////////////////////////////////////////////////////////
+    def mousePressEvent(self, event):
+        # SET DRAG POS WINDOW
+        self.dragPos = event.globalPosition().toPoint()
+
+        # PRINT MOUSE EVENTS
+        if event.buttons() == Qt.LeftButton:
+            logger.info("Mouse click: LEFT CLICK")
+        if event.buttons() == Qt.RightButton:
+            logger.info("Mouse click: RIGHT CLICK")
+
+    def on_emg_add_window_closed(self, result):
+        # 获取窗口返回的数据
+        p, emgdata, kinematic = result
+        
+        if p is None:
+            return
+
+        logger.info("added participate {}".format(p.name))
+
+        # 添加到 workspace
+        self.workspace.addParticipant(p, emgdata, kinematic)
+
+        # 更新 UI
+        self.updateEMGParticipantBox()
+        self.updateWorkSpaceParticipantBox()
+
+        # 调用 handle_emg_load_done
+        # self.handle_emg_load_done(p.name)
+        self.selectedParticipants.clear()
+        self.selectedParticipants.add(p.name)
+        self.singleEMGButtonClick()
+        self.saveProjectButtonClick(show=False)
+
+    def addEMGButtonClick(self):
+        # create person
+        self.emg_add_window = EMGAddWindow(self.workspace, self.home, 1200, 800)
+        
+        # 连接窗口关闭信号到槽函数
+        self.emg_add_window.finished.connect(self.on_emg_add_window_closed)
+
+        # 显示窗口
+        self.emg_add_window.run()  # 这里不需要返回结果，因为结果会通过信号传递
+
+
+    def configButtonClick(self):
+        rc = ConfigWindow(1200, 800).run()
+
+    def ifOldProjectOpened(self):
+        if self.workspace is not None:
+            relpy = QMessageBox.question(
+                None,
+                "warning",
+                "Current workspace not closed, do you want to save and continue?",
+                QMessageBox.Yes | QMessageBox.No,
+            )
+
+            if relpy == QMessageBox.Yes:
+                self.saveWorkSpace()
+                self.reset()
+                return 0
+            else:
+                return -1
+        return 0
+
+    def newProjectButtonClick(self):
+        if self.ifOldProjectOpened():
+            return -1
+
+        filename = QFileDialog.getSaveFileName(
+            None,
+            "New Project",
+            self.home,
+            "Project files (*.myo)",
+            None,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks,
+        )
+        if filename[0] == "":
+            return
+
+        proj_full_name = os.path.basename(filename[0])
+        dir = filename[0][: -len(proj_full_name)]
+
+        proj_name = proj_full_name[: -len(PROJ_EXT)]
+        if not checkValidPath(dir):
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Selected path does not exist!"),
+                QMessageBox.Ok,
+            )
+
+        p = Path(dir)
+        if self.newWorkSpace(p, proj_name):
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Failed to create new Workspace!"),
+                QMessageBox.Ok,
+            )
+
+        logger.info("workspace path: {}".format(self.home))
+        logger.info("workspace name: {}".format(self.workspace.name))
+
+        # Jump to EMG page
+        widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
+
+    def saveProjectButtonClick(self, show=True):
+        if self.workspace is None:
+            logger.info("workspace is empty, nothing to save")
+            return
+
+        if self.saveWorkSpace():
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Failed to save Workspace!"),
+                QMessageBox.Ok,
+            )
+            return
+        
+        if show:
+            QMessageBox.information(None, "save", "Workspace saved!", QMessageBox.Ok)
+        logger.info("workspace is saved")
+
+    def loadProjectButtonClick(self):
+        if self.ifOldProjectOpened():
+            return -1
+
+        filepath, extension = QFileDialog.getOpenFileNames(
+            None,
+            caption=self.tr("open Project file"),
+            dir=MyotionPath,
+            filter=self.tr("Project Files (*.myo)"),
+        )
+
+        if len(filepath) == 0:
+            return
+
+        file = os.path.basename(filepath[0])
+        path = filepath[0][: -len(file)]
+
+        try:
+            if self.loadWorkSpace(path, file):
+                QMessageBox.critical(
+                    None,
+                    self.tr("error"),
+                    self.tr("Failed to load Workspace!"),
+                    QMessageBox.Ok,
+                )
+                return
+        except Exception as e:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr(f"Failed to load Workspace: {str(e)}"),
+                QMessageBox.Ok,
+            )
+            return
+
+        # Jump to EMG page
+        widgets.stackedWidget.setCurrentWidget(widgets.emg_page)
+
+    def singleEMGButtonClick(self):
+        p, step, chan = self.singleEMG
+
+        if len(self.selectedParticipants) == 0:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("No participant selected!"),
+                QMessageBox.Ok,
+            )
+            return
+
+        if len(self.selectedParticipants) > 1:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Only one participant can be selected!"),
+                QMessageBox.Ok,
+            )
+            return
+
+        if p is not None:
+            reply = QMessageBox.question(
+                None,
+                self.tr("Attention"),
+                self.tr("Current EMG process is not finished! Do you want to start a new process?"),
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                QMessageBox.Cancel
+            )
+            if reply == QMessageBox.Yes:
+                self.singleEMG = (None, None, None)
+                self.inputBuffer = None
+                self.outputBuffer = None
+            else:
+                return
+        p_name = self.selectedParticipants.pop()
+        p = self.workspace.findParticipant(p_name)
+        self.startSingleEMGProcess(p)
+
+    def participantCheckBoxChanged(self, state):
+        sender = self.sender()
+        p = sender.objectName()
+
+        if Qt.CheckState(state) == Qt.Checked:
+            self.selectedParticipants.add(p)
+        else:
+            if p in self.selectedParticipants:
+                self.selectedParticipants.remove(p)
+
+        # 同步更新 listWidget_3 的状态
+        self.syncListWidgetWithSelectedParticipants()
+        self.updateBatchProcessButtonState()
+        
+    def syncListWidgetWithSelectedParticipants(self):
+        """同步 selectedParticipants 到 listWidget_3"""
+        # 暂时阻断信号以避免循环触发
+        widgets.listWidget_3.blockSignals(True)
+        
+        # 更新 listWidget_3 中的选择状态
+        for i in range(widgets.listWidget_3.count()):
+            item = widgets.listWidget_3.item(i)
+            p_name = item.text()
+            if p_name in self.selectedParticipants:
+                item.setCheckState(Qt.Checked)
+            else:
+                item.setCheckState(Qt.Unchecked)
+                
+        widgets.listWidget_3.blockSignals(False)
+
+    def listWidgetItemChanged(self, item):
+        """处理 listWidget_3 项目状态变化"""
+        p_name = item.text()
+        
+        if item.checkState() == Qt.Checked:
+            self.selectedParticipants.add(p_name)
+        else:
+            if p_name in self.selectedParticipants:
+                self.selectedParticipants.remove(p_name)
+                
+        # 同步更新 tableWidget_2 的状态
+        self.syncTableWidgetWithSelectedParticipants()
+        
+    def syncTableWidgetWithSelectedParticipants(self):
+        """同步 selectedParticipants 到 tableWidget_2"""
+        # 遍历表格中的所有复选框
+        for i in range(widgets.tableWidget_2.rowCount()):
+            cell_widget = widgets.tableWidget_2.cellWidget(i, 0)
+            if cell_widget:
+                checkbox = cell_widget.findChild(QCheckBox)
+                if checkbox:
+                    p_name = checkbox.objectName()
+                    # 暂时阻断信号以避免循环触发
+                    checkbox.blockSignals(True)
+                    checkbox.setChecked(p_name in self.selectedParticipants)
+                    checkbox.blockSignals(False)
+
+    def EMGConfigurationListDoubleClicked(self, item):
+        curr = widgets.listWidget.currentRow()
+        if curr == self.singleEMG[1]:
+            return
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+
+        idx = widgets.listWidget.currentRow()
+        type, str = cfg.getTypeInfo(idx)
+        self.selectSingleEMGStep(widgets.listWidget.currentRow())
+
+    def EMGConfigureToggleConfiguration(self, state):
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+
+        state = not not state
+        if state:
+            cfg[step].enable = False
+        else:
+            cfg[step].enable = True
+
+        logger.info(
+            "EMG process step {}, configuration {} set to {}".format(
+                step, cfg.getStepStringList()[step], state
+            )
+        )
+        self.__updateEMGRenderBuffer(prev=False)
+        self.updateEMGSignalProcessPanel(prev=False)
+
+    def setupEMGFilterValidators(self):
+        """设置 EMG 过滤器输入框的验证器，限制输入范围"""
+        # 初始时使用一个默认的最大值，后续会根据实际采样率动态调整
+        default_max = 1000  # 默认最大值
+        
+        # 创建整数验证器，限制输入范围为 0 到 default_max
+        validator_band_high = QIntValidator(0, default_max, self)
+        validator_band_low = QIntValidator(0, default_max, self)
+        validator_low_pass = QIntValidator(0, default_max, self)
+        
+        # 应用验证器到输入框
+        widgets.lineEdit_10.setValidator(validator_band_high)
+        widgets.lineEdit_11.setValidator(validator_band_low)
+        widgets.lineEdit_12.setValidator(validator_low_pass)
+        
+        # 存储验证器引用，以便后续更新
+        self.validator_band_high = validator_band_high
+        self.validator_band_low = validator_band_low
+        self.validator_low_pass = validator_low_pass
+
+    def updateEMGFilterValidators(self, p):
+        """根据采样率更新过滤器输入框的验证器范围"""
+        if p is None:
+            return
+            
+        try:
+            fs = self.workspace[p].emg.getfs()
+            max_freq = fs / 2
+            
+            # 更新验证器的范围
+            self.validator_band_high.setTop(max_freq)
+            self.validator_band_low.setTop(max_freq)
+            self.validator_low_pass.setTop(max_freq)
+            
+            # 更新输入框的提示文本
+            widgets.lineEdit_10.setPlaceholderText(f"high: 0-{max_freq}")
+            widgets.lineEdit_11.setPlaceholderText(f"low: 0-{max_freq}")
+            widgets.lineEdit_12.setPlaceholderText(f"low: 0-{max_freq}")
+            
+            logger.info(f"EMG filter validators updated with max frequency: {max_freq}")
+        except Exception as e:
+            logger.error(f"Failed to update EMG filter validators: {e}")
+
+    def EMGConfigureFilterConfiguration(self):
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        # according to UI layout
+        filtertypename = {
+            0: emgFilterEnum.BAND_PASS,
+            1: emgFilterEnum.LOW_PASS,
+        }
+        filter_type = filtertypename[widgets.comboBox_7.currentIndex()]
+        cutoff_b_h_text = widgets.lineEdit_10.text()
+        cutoff_b_l_text = widgets.lineEdit_11.text()
+        cutoff_l_l_text = widgets.lineEdit_12.text()
+        # order set from 2,3,4
+        order = widgets.comboBox_8.currentIndex() + 2
+        cutoff_b_l = None
+        cutoff_b_h = None
+        cutoff_l_l = None
+        if cutoff_b_l_text != "":
+            cutoff_b_l = int(cutoff_b_l_text)
+        if cutoff_b_h_text != "":
+            cutoff_b_h = int(cutoff_b_h_text)
+        if cutoff_l_l_text != "":
+            cutoff_l_l = int(cutoff_l_l_text)
+
+        fs = self.workspace[p].emg.getfs()
+        # sanity
+        if filter_type == emgFilterEnum.BAND_PASS:
+            if cutoff_b_h is None or cutoff_b_l is None:
+                QMessageBox.critical(
+                    None,
+                    self.tr("error"),
+                    self.tr("cut off frequency is not complete!"),
+                    QMessageBox.Ok,
+                )
+                return
+            if (
+                cutoff_b_h >= fs / 2
+                or cutoff_b_h < 0
+                or cutoff_b_l >= fs / 2
+                or cutoff_b_l < 0
+            ):
+                QMessageBox.critical(
+                    None,
+                    self.tr("error"),
+                    self.tr("cut off frequency has to be between 0 and {}!").format(
+                        fs / 2
+                    ),
+                    QMessageBox.Ok,
+                )
+                return
+            if cutoff_b_l >= cutoff_b_h:
+                QMessageBox.critical(
+                    None,
+                    self.tr("error"),
+                    self.tr("cut off low has to be smaller than cut off high!"),
+                    QMessageBox.Ok,
+                )
+                return
+        elif filter_type == emgFilterEnum.LOW_PASS:
+            if cutoff_l_l is None:
+                QMessageBox.critical(
+                    None,
+                    self.tr("error"),
+                    self.tr("cut off frequency is not complete!"),
+                    QMessageBox.Ok,
+                )
+                return
+            if cutoff_l_l >= fs / 2 or cutoff_l_l < 0:
+                QMessageBox.critical(
+                    None,
+                    self.tr("error"),
+                    self.tr("cut off frequency has to be between 0 and {}!").format(
+                        fs / 2
+                    ),
+                    QMessageBox.Ok,
+                )
+                return
+
+        cfg[step].type = filter_type
+        if filter_type == emgFilterEnum.BAND_PASS:
+            cfg[step].cutoff_l = cutoff_b_l
+            cfg[step].cutoff_h = cutoff_b_h
+        elif filter_type == emgFilterEnum.LOW_PASS:
+            cfg[step].cutoff_l = cutoff_l_l
+        cfg[step].order = order
+
+        logger.info(
+            "EMG process step {}, configuration filter,"
+            " type {}, high {}, low {}, order {}".format(
+                step, filter_type, cutoff_b_h, cutoff_b_l, order
+            )
+        )
+
+        self.__updateEMGRenderBuffer(prev=False)
+        self.updateEMGSignalProcessPanel(prev=False)
+
+    def EMGChannelSelectorIndexChanged(self, idx):
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        newchan = widgets.comboBox_2.currentText()
+        if chan == newchan:
+            return
+        logger.info("EMG channel selector index changed to {}".format(newchan))
+        self.selectSingleEMGChannel(newchan)
+
+    def EMGChannelToolBoxIndexChanged(self, idx):
+        # do not allow user change
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        type, str = cfg.getTypeInfo(step)
+        # self.selectSingleEMGStep(idx)
+
+    def EMGStepNextButtonClicked(self):
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+
+        if step + 1 >= cfg.size():
+            QMessageBox.critical(
+                None, self.tr("error"), self.tr("end of emg process!"), QMessageBox.Ok
+            )
+            return
+
+        widgets.listWidget.setCurrentRow(step + 1)
+        # equivent to double click on EMG configuration list
+        self.EMGConfigurationListDoubleClicked(None)
+        self.saveProjectButtonClick(show=False)
+        self.EMGSaveConfigurationButtonClicked()
+
+    def EMGGenerateReportButtonClicked(self):
+        # sanity
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+
+        # apply configuration on all chans in EMG and MVC
+        # this might takes a while
+        self.workspace[p].emg.processWithConfigure()
+
+        # save report
+        self.workspace.genReport(p)
+        self.workspace.saveReport(p, self.home)
+
+        # exit single process stage
+        self.singleEMG = (None, None, None)
+        self.updateEMGSignalProcessPanel()
+        self.updateEMGConfigureList()
+
+        self.selectedParticipants.clear()
+        self.updateEMGParticipantBox()
+
+    def EMGSaveConfigurationButtonClicked(self):
+        p, step, chan = self.singleEMG
+        if p is None:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Single EMG not started!"),
+                QMessageBox.Ok,
+            )
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("EMG process file not available!"),
+                QMessageBox.Ok,
+            )
+            return
+
+        cfgname = p.name + "'s EMGConfig"
+        self.workspace.saveEMGConfigure(p, cfgname)
+        self.updateEMGSavedConfigureList()
+
+    def EMGBatchProcessButtonClicked(self):
+        # sanity for pariticpants
+        if len(self.selectedParticipants) == 0:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("Please select participants first!"),
+                QMessageBox.Ok,
+            )
+            return
+
+        listofpeople = []
+        for p_name in self.selectedParticipants:
+            p = self.workspace.findParticipant(p_name)
+            if p is not None:
+                listofpeople.append(p)
+
+        logger.info(
+            "batch process: selected participants {}".format(
+                [",".join(p.name) for p in listofpeople]
+            )
+        )
+
+        # if report has been generated, generate warning
+
+        # check configure file
+        configureList = self.workspace.getEMGConfigures()
+        if len(configureList) == 0:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr(
+                    "No saved configuration file found, please use single EMG to generate configure file!"
+                ),
+                QMessageBox.Ok,
+            )
+            return
+
+        # get current selected one
+        selectedConfigs = widgets.listWidget_2.selectedItems()
+        if len(selectedConfigs) >= 1:
+            config_name = selectedConfigs[0].text()
+            config = configureList[config_name]
+        else:
+            # pick any one
+            config_name = configureList.keys()[0]
+            config = configureList[config_name]
+
+        logger.info("batch process: select configure {}".format(config_name))
+
+        isStart, cfg = EMGConfigWindow(config, False).run()
+        if isStart:
+            self.startBatchEMGProcess(listofpeople, cfg)
+        else:
+            logger.info("batch process: cancelled")
+
+    def EMGParticipantSelectAllClicked(self, state):
+        """ 全选复选框点击处理 """
+        # 设置表格中的所有checkbox
+        state = Qt.CheckState(state)
+        widgets.checkBox_2.setCheckState(state)
+        
+        # 暂时断开单个checkbox的信号
+        for i in range(widgets.tableWidget_2.rowCount()):
+            checkbox = widgets.tableWidget_2.cellWidget(i, 0).findChild(QCheckBox)
+            checkbox.blockSignals(True)
+            checkbox.setCheckState(state)
+            checkbox.blockSignals(False)
+
+        participants = self.workspace.getFilteredParticipants(self.participant_filter)
+        if Qt.CheckState(state) == Qt.Checked:
+            for p in participants:
+                self.selectedParticipants.add(p.name)
+        else:
+            for p in participants:
+                if p.name in self.selectedParticipants:
+                    self.selectedParticipants.remove(p.name)
+        
+        self.updateBatchProcessButtonState()
+
+
+    def FFTPlotClearAllClicked(self):
+        widgets.scrollArea_3.deleteAllPages()
+        self.updateFreqAnalysisFFTPanel()
+
+    def FFTPlotNextPageClicked(self):
+        widgets.scrollArea_3.nextPage()
+        self.updateFreqAnalysisFFTPanel()
+
+    def FFTPlotPrevPageClicked(self):
+        widgets.scrollArea_3.prevPage()
+        self.updateFreqAnalysisFFTPanel()
+
+    def FFTPlotPerPageSelected(self, index):
+        self.updateFreqAnalysisFFTPanel()
+
+    def FFTPlotPageIndexSelected(self, index):
+        widgets.scrollArea_3.setCurrentPage(index)
+        widgets.scrollArea_3.show()
+
+    # WIDGET
+    # //////////////////////////////////////////////////////////////
+    def EMGCreateParticipantCheckBox(self, name):
+        checkbox = QCheckBox(widgets.tableWidget_2)
+        checkbox.setObjectName(name)
+
+        # select state according to selectedpartipant
+        if name in self.selectedParticipants:
+            checkbox.setChecked(True)
+        else:
+            checkbox.setChecked(False)
+        checkbox.stateChanged.connect(self.participantCheckBoxChanged)
+        checkbox.stateChanged.connect(self.handleParticipantCheckState)
+        return checkbox
+
+    def handleParticipantCheckState(self, state):
+        """ 当单个checkbox状态改变时的处理函数 """
+        # 暂时关闭信号防止循环触发
+        with QSignalBlocker(widgets.checkBox_2):
+            # 检查是否全部选中
+            all_checked = True
+            for i in range(widgets.tableWidget_2.rowCount()):
+                w = widgets.tableWidget_2.cellWidget(i, 0).findChild(QCheckBox)
+                if not w.isChecked():
+                    all_checked = False
+                    break
+                    
+            widgets.checkBox_2.setChecked(all_checked)
+
+    def EMGCreateHBox(self, w, parent=None):
+        container = QWidget()
+        layout = QHBoxLayout(container)
+        layout.addWidget(w)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setContentsMargins(0, 0, 0, 0)
+        # w.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        return container
+
+    # draw FFT
+    def FreqAnalysisCreateQPlotView(self, p, channel, l, r, title):
+        pv = QPlotView()
+        # calcuate FFT
+        tst = self.workspace[p].emg.getTST()
+        freq, v = tst.fft_db(channel, l, r)
+
+        # mean frequency with filtered value
+        medFreq = np.dot(freq, v) / np.sum(v)
+        title = title + ", Median Frequency {}".format(medFreq)
+
+        # pv.bar(freq, v, channel, title=title,xlabel='Frequency', ylabel='dB')
+        # pv.show()
+        pv.line(freq, v, channel, title=title, xlabel="Frequency", ylabel="dB")
+        return pv
+
+    # Signals
+    # //////////////////////////////////////////////////////////////
+    def emitPariticipantUpdate(self):
+        self.sigUpdateParticipants.emit()
+
+    def emitAsyncLoadError(self, str):
+        self.sigAsyncLoadError.emit(str)
+
+    # UPDATE UI EVENTS/Slots
+    # //////////////////////////////////////////////////////////////
+    @Slot()
+    def updateEMGParticipantBox(self):
+        participants = self.workspace.getFilteredParticipants(self.participant_filter)
+        n = len(participants)
+        widgets.tableWidget_2.clearContents()
+        widgets.tableWidget_2.setRowCount(n)
+        for i in range(0, n):
+            p = participants[i]
+            name = p.name
+            # checkbox
+            chb = self.EMGCreateParticipantCheckBox(p.name)
+            widgets.tableWidget_2.setCellWidget(i, 0, self.EMGCreateHBox(chb))
+            # name
+            q = QTableWidgetItem(name)
+            q.setTextAlignment(Qt.AlignCenter)
+            widgets.tableWidget_2.setItem(i, 1, q)
+            # status
+            h = widgets.tableWidget_2.rowHeight(i)
+            col2w = widgets.tableWidget_2.columnWidth(2)
+            col3w = widgets.tableWidget_2.columnWidth(3)
+            ready = statusLED(
+                col2w * 0.8,
+                h * 0.8,
+                STATUS.Loading if self.workspace[p].isLoading() else STATUS.Passed,
+            )
+            report = statusLED(
+                col3w * 0.8,
+                h * 0.8,
+                STATUS.Passed if self.workspace[p].isReportReady() else STATUS.Failed,
+            )
+            widgets.tableWidget_2.setCellWidget(i, 2, self.EMGCreateHBox(ready))
+            widgets.tableWidget_2.setCellWidget(i, 3, self.EMGCreateHBox(report))
+
+        # 同步 listWidget_3 的状态
+        self.syncListWidgetWithSelectedParticipants()
+
+    def updateWorkSpaceParticipantBox(self):
+        # listwidget_3
+        participants = self.workspace.getParticipants()
+        n = len(participants)
+        widgets.listWidget_3.clear()
+        for i in range(0, n):
+            p = participants[i]
+            name = p.name
+            # name
+            item = QListWidgetItem(name)
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
+            item.setCheckState(Qt.Unchecked)
+            widgets.listWidget_3.addItem(item)
+            widgets.listWidget_3.item(i).setForeground(Qt.black)
+
+        # 连接信号
+        widgets.listWidget_3.itemChanged.connect(self.listWidgetItemChanged)
+
+    # update waveform regarding to config step and user input metrics
+    def updateEMGSignalProcessPanel(self, prev=True, post=True):
+        p, step, chan = self.singleEMG
+
+        if p is None:
+            widgets.plot_input.hide()
+            widgets.plot_output.hide()
+            return
+
+        x = self.workspace[p].emg.getLinspace()
+        # push data to plot
+
+        if prev:
+            widgets.plot_input.line(x, self.inputBuffer, chan)
+            widgets.plot_input.show()
+        if post:
+            widgets.plot_output.line(x, self.outputBuffer, chan)
+            widgets.plot_output.show()
+
+    def updateEMGConfigureList(self):
+        widgets.listWidget.clear()
+
+        if self.workspace is None:
+            return
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        cfgstrings = cfg.getStepStringList()
+        # update configuration list
+        n = len(cfgstrings)
+        widgets.listWidget.clear()
+        widgets.listWidget.setSortingEnabled(False)
+        for i in range(0, n):
+            widgets.listWidget.addItem(cfgstrings[i])
+            widgets.listWidget.item(i).setForeground(Qt.black)
+
+    def updateEMGToolBox(self, type):
+        # update toolbox with current config
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        if type == emgConfigEnum.DC_OFFSET:
+            widgets.checkBox_4.setCheckState(
+                Qt.Unchecked if cfg[step].enable else Qt.Checked
+            )
+        elif type == emgConfigEnum.FULL_W_RECT:
+            widgets.checkBox_11.setCheckState(
+                Qt.Unchecked if cfg[step].enable else Qt.Checked
+            )
+        elif type == emgConfigEnum.FILTER:
+            widgets.checkBox_13.setCheckState(
+                Qt.Unchecked if cfg[step].enable else Qt.Checked
+            )
+            if cfg[step].type == emgFilterEnum.BAND_PASS:
+                widgets.comboBox_7.setCurrentIndex(0)
+                widgets.lineEdit_10.setText(str(cfg[step].cutoff_h))
+                widgets.lineEdit_11.setText(str(cfg[step].cutoff_l))
+                widgets.lineEdit_12.setText("")
+            else:
+                widgets.comboBox_7.setCurrentIndex(1)
+                widgets.lineEdit_12.setText(str(cfg[step].cutoff_l))
+                widgets.lineEdit_10.setText("")
+                widgets.lineEdit_11.setText("")
+        elif type == emgConfigEnum.NORMALIZATION:
+            widgets.checkBox_12.setCheckState(
+                Qt.Unchecked if cfg[step].enable else Qt.Checked
+            )
+        elif type == emgConfigEnum.SUMMARY:
+            setp = emgConfigEnum.SUMMARY
+            widgets.label_23.setText("{:.4f}".format(cfg[step].max))
+            widgets.label_25.setText("{:.4f}".format(cfg[step].min))
+            widgets.label_27.setText("{:.4f}".format(cfg[step].med))
+            widgets.label_29.setText("{:.4f}".format(cfg[step].rms))
+            widgets.label_31.setText("{:.4f}".format(cfg[step].ptp))
+            widgets.label_33.setText("{:.4f}".format(cfg[step].zeros))
+
+    def updateEMGChannelSelectorContent(self):
+        p, step, chan = self.singleEMG
+        widgets.comboBox_2.clear()
+        if p is None:
+            return
+        chan = self.workspace[p].emg.getChannels()
+        widgets.comboBox_2.addItems(chan)
+
+    def updateEMGChannelSelectorText(self, chan):
+        widgets.comboBox_2.setCurrentText(chan)
+
+    def updateWorkProjectTreeWidget(self):
+        widgets.treeView.setForegroundRole(QPalette.Base)
+        if self.home is not None:
+            # load workspace file exploer
+            self.filesystemTree.setRootPath(self.home)
+            widgets.treeView.setModel(self.filesystemTree)
+            widgets.treeView.setRootIndex(self.filesystemTree.index(self.home))
+        else:
+            widgets.treeView.setModel(None)
+
+    def handleTreeViewDoubleClick(self, index):
+        """ 处理文件树的双击事件 """
+        # 获取文件路径
+        file_path = self.filesystemTree.filePath(index)
+        
+        # 判断文件类型
+        if not os.path.isfile(file_path):
+            return
+        
+        # 处理需要根据文件类型执行的操作
+        print(f"Double clicked: {file_path}")
+        
+        # 如果是myo项目文件则打开
+        if file_path.endswith(".myo"):
+            # 先检查现有工作区保存状态
+            if self.ifOldProjectOpened():
+                return
+            
+            # 加载项目
+            self.loadWorkSpace(os.path.dirname(file_path), os.path.basename(file_path))
+            
+    def updateEMGSavedConfigureList(self):
+        if self.workspace is None:
+            return
+        # update configuration list
+        widgets.listWidget_2.clear()
+        widgets.listWidget_2.setSortingEnabled(False)
+        i = 0
+        for key, item in self.workspace.getEMGConfigures().items():
+            widgets.listWidget_2.addItem(key)
+            widgets.listWidget_2.item(i).setForeground(Qt.black)
+            i += 1
+        
+        widgets.listWidget_2.itemSelectionChanged.connect(self.updateBatchProcessButtonState)
+        widgets.listWidget_2.itemDoubleClicked.connect(self.onListWidget2ItemDoubleClicked)
+
+    def onListWidget2ItemDoubleClicked(self, item):
+        cfgname = item.text()
+        configureList = self.workspace.getEMGConfigures()
+        config = configureList[cfgname]
+        isSave, cfg = EMGConfigWindow(config).run()
+
+        if not isSave:
+            return 
+
+        p = self.workspace.getParticipantWithName(self.extract_participant_name_from_configname(cfgname))
+        if p is not None:
+            self.workspace[p].emg.setProcessConfig(cfg)
+            self.workspace.saveEMGConfigure(p, cfgname)
+            self.saveWorkSpace()
+        else:
+            logger.error("participant name not found")
+            return
+
+    def extract_participant_name_from_configname(self, cfgname):
+        """从配置文件名称中提取参与者名称
+        
+        Args:
+            cfgname: 格式为 "p.name's EMGConfig" 的配置文件名
+            
+        Returns:
+            提取出的参与者名称
+        """
+        # 检查是否包含后缀
+        if "'s EMGConfig" in cfgname:
+            # 通过分割字符串提取参与者名称
+            p_name = cfgname.split("'s EMGConfig")[0]
+            return p_name
+        else:
+            # 如果格式不匹配，返回原始字符串或None
+            return None
+
+    def updateFilterText(self):
+        filter_str = widgets.lineEdit_3.text()
+        # check valid regex string
+        try:
+            re.compile(filter_str)
+        except re.error:
+            logger.error("regex not valid")
+            return
+
+        if filter_str == self.participant_filter:
+            return
+
+        self.participant_filter = filter_str
+        self.selectedParticipants.clear()
+        self.updateEMGParticipantBox()
+
+    def updateFreqAnalysisParticipantTree(self, participants):
+        widgets.frequency_participants.clear()
+        widgets.frequency_participants.setColumnCount(1)
+        for p in participants:
+            treeItem = QTreeWidgetItem()
+            treeItem.setText(0, p.name)
+            widgets.frequency_participants.addTopLevelItem(treeItem)
+            emg = self.workspace[p].emg
+            for c in emg.getChannels():
+                treeItem2 = QTreeWidgetItem(treeItem)
+                treeItem2.setText(0, c)  # channel name
+                treeItem.addChild(treeItem2)
+        # connect slots
+        widgets.frequency_participants.itemDoubleClicked.connect(
+            self.updateFreqAnalysisWaveformPanel
+        )
+        widgets.frequency_participants.setHeaderItem(QTreeWidgetItem(["Participant"]))
+        widgets.frequency_participants.addTopLevelItem(treeItem)
+
+    def updateFreqAnalysisWaveformPanel(self, item, column):
+        # if item is top level, return
+        if item.parent() is None:
+            return
+
+        p_name = item.parent().text(column)
+        channel = item.text(column)
+        p = self.workspace.findParticipant(p_name)
+        x = self.workspace[p].emg.getLinspace()
+
+        # set state machine
+        logger.info(
+            "Frequency Analysis - selecting {} channel {}".format(p.name, channel)
+        )
+        self.freqAnalysis = (p, channel)
+        self.freqAnalysisPlots.clear()
+
+        widgets.freq_timedomain.line(x, self.workspace[p].emg[channel], channel)
+        widgets.freq_timedomain.show()
+        self.updateFreqAnalysisFFTPanel()
+
+    def updateFreqAnalysisFFTPanel(self):
+        # update control ui
+        # get pages per frame
+        plotsPerPage = self.plotsPerPage_list[widgets.comboBox_19.currentIndex()]
+        widgets.scrollArea_3.setPlotsPerPage(plotsPerPage)
+        # page index selector
+        currentpage = widgets.scrollArea_3.currentPage()
+        widgets.comboBox_20.clear()
+        widgets.comboBox_20.addItems(
+            [str(i + 1) for i in range(0, widgets.scrollArea_3.pages())]
+        )
+
+        widgets.scrollArea_3.setCurrentPage(currentpage)
+        widgets.comboBox_20.setCurrentIndex(widgets.scrollArea_3.currentPage())
+        widgets.scrollArea_3.show()
+        logger.info(
+            "Updating FFT Analysis figure, nums_per_page: {} total page: {}, total plots:{}, current page: {}".format(
+                widgets.scrollArea_3.plotsPerPage(),
+                widgets.scrollArea_3.pages(),
+                widgets.scrollArea_3.size(),
+                widgets.scrollArea_3.currentPage(),
+            )
+        )
+
+    # Application Logic
+    # ///////////////////////////////////////////////////////////////
+    def reset(self):
+        self.singleEMG = (None, None, None)
+        self.inputBuffer = None
+        self.outputBuffer = None
+        self.workspace = None
+        self.home = None
+        self.filesystemTree = QFileSystemModel()
+        self.selectedParticipants.clear()
+
+    def newWorkSpace(self, fpath, name):
+        # create new project
+        # self.workspace = workspace(name)
+        self.workspace = workspace(str(fpath), name)
+        self.home = str(fpath)
+
+        # clear GUI
+        self.updateEMGSignalProcessPanel()
+        self.updateEMGConfigureList()
+        self.updateEMGParticipantBox()
+        self.updateWorkSpaceParticipantBox()
+        self.updateWorkProjectTreeWidget()
+        self.updateEMGChannelSelectorContent()
+
+        # auto save
+        self.enableAutoSave(True)
+
+        # notify rserver
+        self.rserver.UpdateProjectPath(self.home)
+        return 0
+
+    def saveWorkSpace(self):
+        self.workspace.saveWorkSpace(self.home)
+        return 0
+
+    def loadWorkSpace(self, path, file):
+        self.workspace = workspace.loadWorkSpace(
+            path, file, self.emitPariticipantUpdate, self.emitAsyncLoadError
+        )
+        if self.workspace == None:
+            return -1
+        self.home = self.workspace.fpath
+
+        # load workspace file exploer
+        self.filesystemTree.setRootPath(self.home)
+
+        # clear and load GUI
+        self.updateEMGSignalProcessPanel()
+        self.updateEMGConfigureList()
+        self.updateEMGParticipantBox()
+        self.updateWorkSpaceParticipantBox()
+        self.updateWorkProjectTreeWidget()
+        self.updateEMGChannelSelectorContent()
+        self.updateEMGSavedConfigureList()
+
+        # auto save
+        self.enableAutoSave(True)
+
+        # notify rserver
+        self.rserver.UpdateProjectPath(self.home)
+        return 0
+
+    def populateKinematicTree(self, tree: QTreeWidget, participants):
+        tree.clear()
+        tree.setColumnCount(1)
+        tree.setDragEnabled(True)
+        tree.setDropIndicatorShown(True)
+        tree.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
+        for p in participants:
+            treeItem = QTreeWidgetItem()
+            treeItem.setText(0, p.name)
+            tree.addTopLevelItem(treeItem)
+            person = self.workspace[p]
+            emg = person.emg
+            k = person.kinematic
+            if not k.isValid():
+                continue
+            for point in k.reallabels:
+                tr = QTreeWidgetItem(treeItem)
+                tr.setFlags(tr.flags() | Qt.ItemIsDragEnabled | Qt.ItemIsSelectable)
+                tr.setText(0, point)
+                treeItem.addChild(tr)
+            for c in emg.getChannels():
+                treeItem2 = QTreeWidgetItem(treeItem)
+                treeItem2.setText(0, c)
+                treeItem.addChild(treeItem2)
+
+        tree.itemDoubleClicked.connect(self.loadKinemtic)
+        tree.setHeaderItem(QTreeWidgetItem(["Participant"]))
+        tree.addTopLevelItem(treeItem)
+
+    def preloadKinematicPage(self):
+        ps = self.workspace.getParticipants()
+        self.populateKinematicTree(widgets.kinematics_label_tree, ps)
+
+    def loadKinemtic(self, item, column):
+        # if item is not top level, return
+        if item.parent() != None:
+            return
+
+        p_name = item.text(column)
+        p = self.workspace.findParticipant(p_name)
+
+        if not self.workspace[p].kinematic.isValid():
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("No kinematic data available!"),
+                QMessageBox.Ok,
+            )
+            return
+
+        self.model = Model(self.workspace[p])
+        top = widgets.graph_top
+        top.setModel(self.model, widgets.kinematics_label_tree)
+        # bottom = widgets.graph_bottom
+        # bottom.setModel(self.model, widgets.kinematics_label_tree)
+        Controller(
+            self.model,
+            widgets.renderWidget,
+            widgets.playSlider,
+            widgets.kinematic_analysis,
+            None,
+            widgets.kinematics_label_tree,
+        )
+
+    def preloadFreqAnalysisPage(self):
+        if self.workspace == None:
+            return -1
+        self.updateFreqAnalysisParticipantTree(self.workspace.getParticipants())
+        self.freqAnalysisPlots.clear()
+
+    def addNewFFTtoFreqAnalysisFFTPanel(self):
+        p, chan = self.freqAnalysis
+        tst = self.workspace[p].emg.getTST()
+        try:
+            left = float(widgets.lineEdit_5.text())
+            right = float(widgets.lineEdit_4.text())
+            # check sanity
+            if left < 0 or left > tst.time:
+                left = 0.0
+            if right < 0 or right > tst.time:
+                right = float(tst.time)
+        except Exception:
+            left = 0.0
+            right = float(tst.time)
+
+        widgets.lineEdit_5.setText(str(left))
+        widgets.lineEdit_4.setText(str(right))
+
+        num_plots = 1
+        if widgets.lineEdit_6.text() != "":
+            num_plots = int(widgets.lineEdit_6.text())
+
+        curr_time = left
+        step = (right - left) / num_plots
+        for i in range(0, num_plots):
+            title = "Frequency Analysis: {} s to {} s".format(
+                curr_time, curr_time + step
+            )
+            newPlot = self.FreqAnalysisCreateQPlotView(
+                p, chan, curr_time, curr_time + step, title=title
+            )
+            self.freqAnalysisPlots.append(newPlot)
+            widgets.scrollArea_3.append(newPlot)
+            curr_time += step
+        self.updateFreqAnalysisFFTPanel()
+
+    def startSingleEMGProcess(self, p):
+        logger.info("started single EMG process for {}".format(p.name))
+        if not self.workspace.hasParticipant(p):
+            return -1
+
+        # 更新过滤器输入框的验证器范围
+        self.updateEMGFilterValidators(p)
+
+        # set fsm
+        chan = self.workspace[p].emg.getChannels()[0]
+        self.singleEMG = (p, 0, chan)
+        self.workspace[p].emg.startProcess()
+        self.updateEMGConfigureList()
+        self.updateEMGChannelSelectorContent()
+        self.updateEMGChannelSelectorText(chan)
+        self.selectSingleEMGStep(0)
+
+    def __updateEMGRenderBuffer(self, prev=True, post=True):
+        p, step, chan = self.singleEMG
+        if prev:
+            if step == 0:
+                self.inputBuffer = self.workspace[p].emg[chan]
+            else:
+                self.inputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step - 1)
+        if post:
+            self.outputBuffer = self.workspace[p].emg.tryConfigStepTo(chan, step)
+
+    def selectSingleEMGChannel(self, chan):
+        p, step, oldchan = self.singleEMG
+        self.singleEMG = (p, step, chan)
+        self.__updateEMGRenderBuffer()
+        self.updateEMGSignalProcessPanel()
+
+        # update summary toolbox
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        idx = widgets.listWidget.currentRow()
+        type, str = cfg.getTypeInfo(idx)
+        widgets.toolBox.setCurrentIndex(int(type))
+        self.updateEMGToolBox(type)
+        
+    def selectSingleEMGStep(self, idx):
+        p, step, chan = self.singleEMG
+        if p is None:
+            return
+        cfg = self.workspace[p].emg.getProcessConfig()
+        if cfg is None:
+            return
+        cfgstrings = cfg.getStepStringList()
+
+        if idx > len(cfgstrings) or idx < 0:
+            logger.info("single EMG process idx {} out of range".format(idx))
+
+        logger.info("selecting EMG process step {}, {}".format(idx, cfgstrings[idx]))
+        self.singleEMG = (p, idx, chan)
+        logger.info("Current channel {}".format(chan))
+
+        self.__updateEMGRenderBuffer()
+        # select index for EMG config widget
+        widgets.listWidget.setCurrentRow(idx)
+        # update UI
+        self.updateEMGSignalProcessPanel()
+        type, str = cfg.getTypeInfo(idx)
+        widgets.toolBox.setCurrentIndex(int(type))
+        self.updateEMGToolBox(type)
+
+    def startBatchEMGProcess(self, people, configure):
+        for p in people:
+            logger.info("Batch Process: processing data for {}".format(p.name))
+            # process data
+            self.workspace[p].emg.setProcessConfig(configure)
+            self.workspace[p].emg.processWithConfigure()
+            # save report
+            self.workspace.genReport(p)
+            self.workspace.saveReport(p, self.home)
+
+        # clear selectedparitipant
+        self.selectedParticipants.clear()
+        self.updateEMGParticipantBox()
+
+
+    def closeEvent(self, event):  # 添加窗口关闭事件处理
+        # 显式销毁所有QPlotView实例
+        self.deletePlots()
+        # clean up app when closed
+        # logout
+        self.logout_click()
+        event.accept()
+
+    def deletePlots(self):
+        # 删除同时存在于UI和Python层面的对象引用
+        if hasattr(self, 'plot_input'):
+            widgets.plot_input.deleteLater()
+            del widgets.plot_input
+        if hasattr(self, 'plot_output'):
+            widgets.plot_output.deleteLater()
+            del widgets.plot_output
+
+    # 更新批处理按钮状态
+    def updateBatchProcessButtonState(self):
+        """更新批处理按钮的可点击状态"""
+        # 检查 listWidget_2 是否有且仅有一个选中项
+        list_selected_count = len(widgets.listWidget_2.selectedItems())
+        
+        # 检查 tableWidget_2 中选中的参与者数量
+        table_selected_count = len(self.selectedParticipants)
+        
+        # 设置按钮状态
+        widgets.pushButton_12.setEnabled(list_selected_count == 1 and table_selected_count > 1)
+
+
+# setting up Url Scheme string before app starts
+# this is for qplotview setup
+def QPlotViewSetup():
+    scheme = QWebEngineUrlScheme(bytes("local", "ascii"))
+    scheme.setFlags(
+        QWebEngineUrlScheme.Flag.SecureScheme
+        | QWebEngineUrlScheme.Flag.LocalScheme
+        | QWebEngineUrlScheme.Flag.LocalAccessAllowed
+    )
+    QWebEngineUrlScheme.registerScheme(scheme)
+
+def parse_args(argv):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--lang', type=str, help='lanuage setting')
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
+
+    # DO NOT REMOVE enforce pyside to use opengl for underlying graphics render.
+    QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.OpenGL)
+
+    # Setup Url scheme handler for WebEngineView
+    QPlotViewSetup()
+
+    # Setup appData path
+    AppDataPath, LogPath = initializeAppDataFolder()
+
+    # setup logfile
+    sys_log = open(getSyslogFilename(LogPath), 'w', encoding="utf-8")
+    r_log = open(getRserverlogFilename(LogPath), 'w', encoding="utf-8")
+    logger.pipe = sys_log
+
+    # argument parse
+    args = parse_args(sys.argv[1:])
+
+    qApp = QApplication(sys.argv)
+    qApp.setWindowIcon(QIcon(":/images/Myotion_logo.png"))
+
+    # get language, default en
+    language = args.lang
+    if language == None:
+        language = "en"
+
+    # translator
+    if language == "cn":
+        translator = QTranslator(qApp)
+        if translator.load(":/qm/CN.qm"):
+            qApp.installTranslator(translator)
+
+    window = MainWindow(language, sys_log, r_log)
+    qApp.exec()
+    window.rserver.shutdown()
+    window.rserver.join()
+    sys.exit(0)

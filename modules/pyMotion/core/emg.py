@@ -535,6 +535,8 @@ class emg:
                 self.Channels = mat.labels
                 # load TST
                 self.emgTST = mat.convertToTST()
+                print("emg check1:", self.Channels)
+                print("emgTST:",self.emgTST)
             else:
                 logger.error("unsupported file format")
         except:

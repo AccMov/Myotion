@@ -55,6 +55,7 @@ class matdata:
 
 class matFile:
     def __init__(self, file):
+        print(file)
         self.file = file
         try:
             self.reader = scipy.io.loadmat(file, squeeze_me=True)
@@ -62,6 +63,7 @@ class matFile:
             logger.error(f"Failed to open file: {file}. Error: {str(e)}")
             raise Exception(logger.errstr())
         self.keylist = sorted(self.reader.keys())
+        print(self.keylist)
 
         assert len(self.keylist) > 3, "mat keylist less then 4"
 
@@ -82,9 +84,11 @@ class matFile:
             "channel_number": 0,
             "labels": [],
         }
+        print(self.metadata)
 
         # ['type', 'name', 'time_begin', 'time_end', sources]
         movements = self.raw["movements"].tolist()
+        print("Movements",movements)
 
         assert "sources" in movements.dtype.names, "sources is not found in movements"
         # [ 'sources', 'signals' ]
@@ -92,6 +96,7 @@ class matFile:
 
         assert "signals" in sources.dtype.names, "signal is not found in sources"
         signals = sources["signals"].tolist()
+        print("Signals:",signals)
 
         # matdata type
         movement_datas = []
@@ -102,6 +107,7 @@ class matFile:
                 movement_data[sub_key] = np.squeeze(signal_x[sub_key]).tolist()
             movement_datas.append(matdata(movement_data))
         assert len(movement_datas) != 0, "movement data not extracted from mat"
+        print("movement_data",movement_datas)
 
         self.movements = {
             "type": movements["type"].tolist(),
@@ -116,6 +122,7 @@ class matFile:
         self.metadata["channel_number"] = len(self.movements["channels"])
 
         logger.info("extracted mat labels {}".format(self.metadata["labels"]))
+        print("i am here #############################")
 
     def __getattr__(self, key):
         if key == "metadata":

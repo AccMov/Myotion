@@ -95,6 +95,42 @@ class EMGAddWindow(QMainWindow):
         self.widgets.import_btn_3.clicked.connect(self.cancelBtnClicked)
         self.widgets.importMVC_btn.clicked.connect(self.importMVCBtnClicked)
 
+    def validateEMGDataFile(self, file_path):
+        if file_path is None or len(file_path.strip()) == 0:
+            return False, self.tr("File path is empty")
+        if not os.path.isfile(file_path):
+            return False, self.tr("File does not exist: {}".format(file_path))
+
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext not in [".c3d", ".mat"]:
+            return False, self.tr("Unsupported file format: {}".format(ext))
+
+        try:
+            if ext == ".c3d":
+                parsed = c3dFile(file_path)
+                labels = parsed.analog.labels
+            else:
+                parsed = matFile(file_path)
+                labels = parsed.labels
+        except Exception as e:
+            return False, self.tr("Failed to read {}: {}".format(os.path.basename(file_path), str(e)))
+
+        if labels is None or len(labels) == 0:
+            return False, self.tr("No channels found in file: {}".format(os.path.basename(file_path)))
+
+        return True, ""
+
+    def validateBatchEMGDataFiles(self, files):
+        valid_files = []
+        invalid_msgs = []
+        for file_path in files:
+            ok, msg = self.validateEMGDataFile(file_path)
+            if ok:
+                valid_files.append(file_path)
+            else:
+                invalid_msgs.append(msg)
+        return valid_files, invalid_msgs
+
     def run(self):
         self.show()
         return self.person, self.emg, self.kinematic
@@ -194,11 +230,11 @@ class EMGAddWindow(QMainWindow):
         # apply MVC
         try:
             self.emg.setMVCFile(chan, self.mvcfiles[index])
-        except Exception:
+        except Exception as e:
             QMessageBox.critical(
                 None,
                 self.tr("error"),
-                self.tr("Selected mvc file is invalid!"),
+                self.tr("Selected mvc file is invalid: {}".format(str(e))),
                 QMessageBox.Ok,
             )
             return
@@ -238,15 +274,26 @@ class EMGAddWindow(QMainWindow):
         )
         if file == "":
             return
+
+        valid, err = self.validateEMGDataFile(file)
+        if not valid:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                err,
+                QMessageBox.Ok,
+            )
+            return
+
         self.file = file
         # open up emg MVC file
         try:
             self.emg = emg(file)
-        except Exception:
+        except Exception as e:
             QMessageBox.critical(
                 None,
                 self.tr("error"),
-                self.tr("Selected emg file is invalid!"),
+                self.tr("Selected emg file is invalid: {}".format(str(e))),
                 QMessageBox.Ok,
             )
             return
@@ -279,8 +326,29 @@ class EMGAddWindow(QMainWindow):
             filter="EMG Files (*.c3d *.mat)",
         )
 
+        if len(files) == 0:
+            return
+
+        valid_files, invalid_msgs = self.validateBatchEMGDataFiles(files)
+        if len(invalid_msgs) > 0:
+            QMessageBox.warning(
+                None,
+                self.tr("warning"),
+                self.tr("Some files were ignored:\n{}".format("\n".join(invalid_msgs))),
+                QMessageBox.Ok,
+            )
+
+        if len(valid_files) == 0:
+            QMessageBox.critical(
+                None,
+                self.tr("error"),
+                self.tr("No valid MVC files selected"),
+                QMessageBox.Ok,
+            )
+            return
+
         # Get all file names and join them with ","
-        file_names = [os.path.basename(file) for file in files]
+        file_names = [os.path.basename(file) for file in valid_files]
         # 设置 label_3 的自动换行属性
         self.widgets.label_3.setWordWrap(True)
         # 如果文件数量过多，限制显示数量并添加省略号
@@ -293,7 +361,7 @@ class EMGAddWindow(QMainWindow):
         self.widgets.label_3.setText(file_names_str)
         # clear old, set new val
         self.mvcfilesMap.clear()
-        self.mvcfiles = files
+        self.mvcfiles = valid_files
 
         # auto apply fuzz matching on MVC mapping
         self.applyFuzzMatchOnMVC()
@@ -1232,11 +1300,8 @@ class MainWindow(QMainWindow):
         if cfg is None:
             return
 
-        state = not not state
-        if state:
-            cfg[step].enable = False
-        else:
-            cfg[step].enable = True
+        state = Qt.CheckState(state) == Qt.CheckState.Checked
+        cfg[step].enable = state
 
         logger.info(
             "EMG process step {}, configuration {} set to {}".format(
@@ -1742,17 +1807,11 @@ class MainWindow(QMainWindow):
         if cfg is None:
             return
         if type == emgConfigEnum.DC_OFFSET:
-            widgets.checkBox_4.setCheckState(
-                Qt.Unchecked if cfg[step].enable else Qt.Checked
-            )
+            widgets.checkBox_4.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
         elif type == emgConfigEnum.FULL_W_RECT:
-            widgets.checkBox_11.setCheckState(
-                Qt.Unchecked if cfg[step].enable else Qt.Checked
-            )
+            widgets.checkBox_11.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
         elif type == emgConfigEnum.FILTER:
-            widgets.checkBox_13.setCheckState(
-                Qt.Unchecked if cfg[step].enable else Qt.Checked
-            )
+            widgets.checkBox_13.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
             if cfg[step].type == emgFilterEnum.BAND_PASS:
                 widgets.comboBox_7.setCurrentIndex(0)
                 widgets.lineEdit_10.setText(str(cfg[step].cutoff_h))
@@ -1764,9 +1823,7 @@ class MainWindow(QMainWindow):
                 widgets.lineEdit_10.setText("")
                 widgets.lineEdit_11.setText("")
         elif type == emgConfigEnum.NORMALIZATION:
-            widgets.checkBox_12.setCheckState(
-                Qt.Unchecked if cfg[step].enable else Qt.Checked
-            )
+            widgets.checkBox_12.setCheckState(Qt.Checked if cfg[step].enable else Qt.Unchecked)
         elif type == emgConfigEnum.SUMMARY:
             setp = emgConfigEnum.SUMMARY
             widgets.label_23.setText("{:.4f}".format(cfg[step].max))

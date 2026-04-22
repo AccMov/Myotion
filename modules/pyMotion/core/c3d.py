@@ -155,10 +155,11 @@ class c3dFile:
     def __init__(self, file):
         self.file = file
         try:
-            self.reader = c3d.Reader(open(file, "rb"))
-        except:
-            logger.error("failed to open file")
-            raise
+            self._fh = open(file, "rb")
+            self.reader = c3d.Reader(self._fh)
+        except Exception as e:
+            logger.error("failed to open c3d file {}: {}".format(file, str(e)))
+            raise ValueError("Failed to open C3D file {}: {}".format(file, str(e)))
 
         # get metadata
         self.attr = {
@@ -224,6 +225,11 @@ class c3dFile:
             "points": all_points,  # collection of points
             "analog": self.analogdata,  # collection of analogdata
         }
+
+    def __del__(self):
+        fh = getattr(self, "_fh", None)
+        if fh is not None and not fh.closed:
+            fh.close()
 
     def __getattr__(self, key):
         if key in self.data.keys():

@@ -55,17 +55,16 @@ class matdata:
 
 class matFile:
     def __init__(self, file):
-        print(file)
         self.file = file
         try:
             self.reader = scipy.io.loadmat(file, squeeze_me=True)
-        except:
-            logger.error(f"Failed to open file: {file}. Error: {str(e)}")
-            raise Exception(logger.errstr())
+        except Exception as e:
+            logger.error(f"Failed to open MAT file: {file}. Error: {str(e)}")
+            raise ValueError(f"Failed to open MAT file: {file}. {str(e)}")
         self.keylist = sorted(self.reader.keys())
-        print(self.keylist)
-
-        assert len(self.keylist) > 3, "mat keylist less then 4"
+        if len(self.keylist) <= 3:
+            logger.error("MAT file keylist less than 4")
+            raise ValueError("Invalid MAT file format: no movement data table found")
 
         # ['__globals__', '__header__', '__version__', 'TABLE']
         self.raw = self.reader[self.keylist[3]]
@@ -84,19 +83,19 @@ class matFile:
             "channel_number": 0,
             "labels": [],
         }
-        print(self.metadata)
 
         # ['type', 'name', 'time_begin', 'time_end', sources]
         movements = self.raw["movements"].tolist()
-        print("Movements",movements)
-
-        assert "sources" in movements.dtype.names, "sources is not found in movements"
+        if "sources" not in movements.dtype.names:
+            logger.error("sources is not found in movements")
+            raise ValueError("Invalid MAT file format: sources field not found")
         # [ 'sources', 'signals' ]
         sources = movements["sources"].tolist()
 
-        assert "signals" in sources.dtype.names, "signal is not found in sources"
+        if "signals" not in sources.dtype.names:
+            logger.error("signals is not found in sources")
+            raise ValueError("Invalid MAT file format: signals field not found")
         signals = sources["signals"].tolist()
-        print("Signals:",signals)
 
         # matdata type
         movement_datas = []
@@ -106,8 +105,9 @@ class matFile:
             for sub_key in signal_x.dtype.fields:
                 movement_data[sub_key] = np.squeeze(signal_x[sub_key]).tolist()
             movement_datas.append(matdata(movement_data))
-        assert len(movement_datas) != 0, "movement data not extracted from mat"
-        print("movement_data",movement_datas)
+        if len(movement_datas) == 0:
+            logger.error("movement data not extracted from mat")
+            raise ValueError("Invalid MAT file format: movement channels are empty")
 
         self.movements = {
             "type": movements["type"].tolist(),
@@ -122,7 +122,6 @@ class matFile:
         self.metadata["channel_number"] = len(self.movements["channels"])
 
         logger.info("extracted mat labels {}".format(self.metadata["labels"]))
-        print("i am here #############################")
 
     def __getattr__(self, key):
         if key == "metadata":

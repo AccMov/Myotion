@@ -1,6 +1,7 @@
 from .api import bill_management as bm
 import threading
 import time
+from PySide6.QtWidgets import QMessageBox
 
 def serverHeartbeat(username, password, status):
     ret = bm.heartBeat(username, password)
@@ -63,31 +64,33 @@ class permission:
 
     def serverHeartbeat(self, username, password):
         ret = bm.heartBeat(username, password)
+        if ret.status_code == 200:
+            return 0
         if ret.status_code == 401 or ret.status_code == 500:
-            assert("invalid password/username or internal error")
+            return -1
         elif ret.status_code == 408:
             ret = bm.heartBeat(username, password)
             if ret.status_code == 408:
                 return -1
+        elif ret.status_code in (495, 503):
+            return -1
         return 0
 
     def serverHeartRun(self):
         while self.th_run:
-            th = threading.Thread(target = self.serverHeartbeat, args = (self.account.username, self.account.password))
-            th.start()
-            rc = th.join()
+            rc = self.serverHeartbeat(self.account.username, self.account.password)
             if rc == -1:
                 self.setPermLevel(permission.LOGOUT)
                 mb = QMessageBox()
                 mb.setIcon(QMessageBox.Icon.Warning)
-                mb.setWindowTitle(self.tr("Error"))
+                mb.setWindowTitle("Error")
                 mb.setStyleSheet("QMessagebox{background-color: black;}"
                                 "QPushButton{background-color: #333; color: white;}")
-                mb.setText(self.tr("Lost connection to server, logged out!"))
+                mb.setText("Lost connection to server, logged out!")
                 mb.exec()
                 break
             else:
-                time.sleep(1)     
+                time.sleep(1)
 
     def startServerHeartbeat(self, _account):
         self.account = _account

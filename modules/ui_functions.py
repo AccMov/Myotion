@@ -235,6 +235,11 @@ class UIFunctions(MainWindow):
             self.setWindowFlags(Qt.FramelessWindowHint)
             self.setAttribute(Qt.WA_TranslucentBackground)
 
+            def setDragPos(event):
+                if event.button() == Qt.LeftButton:
+                    self.dragPos = event.globalPosition().toPoint()
+                    event.accept()
+
             # MOVE WINDOW / MAXIMIZE / RESTORE
             def moveWindow(event):
                 # IF MAXIMIZED CHANGE TO NORMAL
@@ -242,11 +247,23 @@ class UIFunctions(MainWindow):
                     UIFunctions.maximize_restore(self)
                 # MOVE WINDOW
                 if event.buttons() == Qt.LeftButton:
-                    self.move(self.pos() + event.globalPos() - self.dragPos)
-                    self.dragPos = event.globalPos()
+                    if not hasattr(self, "dragPos"):
+                        self.dragPos = event.globalPosition().toPoint()
+                    current_pos = event.globalPosition().toPoint()
+                    self.move(self.pos() + current_pos - self.dragPos)
+                    self.dragPos = current_pos
                     event.accept()
 
-            self.ui.titleRightInfo.mouseMoveEvent = moveWindow
+            # Allow dragging from the whole custom top bar area.
+            drag_widgets = [
+                self.ui.titleRightInfo,
+                self.ui.contentTopBg,
+                self.ui.leftBox,
+                self.ui.menuBox,
+            ]
+            for drag_widget in drag_widgets:
+                drag_widget.mousePressEvent = setDragPos
+                drag_widget.mouseMoveEvent = moveWindow
 
             # CUSTOM GRIPS
             self.left_grip = CustomGrip(self, Qt.LeftEdge, True)

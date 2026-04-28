@@ -22,7 +22,7 @@ import webbrowser
 import argparse
 
 from PySide6.QtCore import Qt, Signal, Slot, QTranslator, QSignalBlocker
-from PySide6.QtGui import QIcon, QPalette
+from PySide6.QtGui import QIcon, QPalette, QFont
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -55,21 +55,27 @@ os.environ["QT_FONT_DPI"] = "96"  # FIX Problem for High DPI and Scale above 100
 # SET AS GLOBAL WIDGETS
 # ///////////////////////////////////////////////////////////////
 widgets = None
+<<<<<<< HEAD
+=======
+perm = None
+# Development switch: launch directly without requiring sign-in.
+BYPASS_LOGIN_FOR_DEV = True
+>>>>>>> 3fac42d (fixed window sizing and login bypass)
 
 
 # Global Constant
 # ///////////////////////////////////////////////////////////////
 class EMGAddWindow(QMainWindow):
-    finished = Signal(tuple) # 定义一个信号，用于通知窗口关闭时返回结果
+    finished = Signal(tuple)  # Signal emitted when the window closes, returning results.
 
     def __init__(self, workspace, home, width, height, parent=None):
         QMainWindow.__init__(self)
 
         self.ui = Ui_EMGImport()
-        # 创建一个中央部件并将 UI 设置到该部件上
+        # Create a central widget and mount the UI layout on it.
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        self.ui.setupUi(central_widget)  # 将 UI 的布局设置到中央部件上
+        self.ui.setupUi(central_widget)  # Attach the UI layout to the central widget.
 
         self.resize(width, height)
         self.setWindowTitle(self.tr("Add EMG File"))
@@ -170,10 +176,10 @@ class EMGAddWindow(QMainWindow):
         for j in jointName.short:
             comboBox.addItem(jointName.getConcatName(j))
 
-        # 设置 QCompleter 并启用模糊匹配
+        # Configure QCompleter and enable fuzzy matching.
         completer = QCompleter([jointName.getConcatName(j) for j in jointName.short], comboBox)
         completer.setFilterMode(Qt.MatchContains)
-        completer.setCaseSensitivity(Qt.CaseInsensitive)  # 设置大小写不敏感
+        completer.setCaseSensitivity(Qt.CaseInsensitive)  # Case-insensitive matching.
         comboBox.setCompleter(completer)
         
         if chan in self.jointMap:
@@ -347,9 +353,9 @@ class EMGAddWindow(QMainWindow):
 
         # Get all file names and join them with ","
         file_names = [os.path.basename(file) for file in valid_files]
-        # 设置 label_3 的自动换行属性
+        # Enable word-wrap on label_3.
         self.widgets.label_3.setWordWrap(True)
-        # 如果文件数量过多，限制显示数量并添加省略号
+        # If there are too many files, limit the display and append an ellipsis.
         if len(file_names) > 5:
             displayed_files = file_names[:5]
             file_names_str = ",\n".join(displayed_files) + f",\n...{len(file_names)} files"
@@ -503,14 +509,14 @@ class EMGAddWindow(QMainWindow):
             if self.isEnabled[chan]:
                 self.workspace.addChanToJointMap(chan, joint)
 
-        # 发出信号，通知窗口关闭并传递结果
+        # Emit a signal to notify close and pass results.
         self.finished.emit((self.person, self.emg, self.kinematic))
         self.close()
 
     def cancelBtnClicked(self):
         self.person = None
         self.emg = None
-        self.finished.emit((self.person, self.emg, self.kinematic)) # 发出信号，通知窗口关闭并传递结果
+        self.finished.emit((self.person, self.emg, self.kinematic))  # Emit close signal and pass results.
         self.close()
 
 
@@ -641,6 +647,7 @@ class MainWindow(QMainWindow):
         # SET UI DEFINITIONS
         # ///////////////////////////////////////////////////////////////
         UIFunctions.uiDefinitions(self)
+        self.applyModernWidgetStyle()
 
         # QTableWidget PARAMETERS
         # ///////////////////////////////////////////////////////////////
@@ -724,7 +731,8 @@ class MainWindow(QMainWindow):
 
         # start page
         widgets.settingsTopBtn.hide()
-        widgets.signInButton.clicked.connect(self.login_click)
+        if not BYPASS_LOGIN_FOR_DEV:
+            widgets.signInButton.clicked.connect(self.login_click)
         widgets.signUpButton.clicked.connect(
             lambda x: webbrowser.open("http://www.accmov.com")
         )
@@ -780,18 +788,85 @@ class MainWindow(QMainWindow):
         self.plotsPerPage_list = [0, 1, 3, 5, 10]  # correspond to ui combox_19 setting
 
 
-        # 设置 EMG 过滤器输入框的验证器
+        # Configure validators for EMG filter input boxes.
         self.setupEMGFilterValidators()
 
         # self.test()
 
+<<<<<<< HEAD
         # 添加自动保存定时器
+=======
+        # Permission widget setup
+        perm.register(widgets.topMenu, permission.BASIC)  # menu page
+        perm.register(widgets.extraTopMenu, permission.BASIC)  # workspace page
+        if BYPASS_LOGIN_FOR_DEV:
+            self.account = Account("", "")
+            widgets.subtitle_label.setText("Welcome to MSK workplace (dev mode)")
+            widgets.settingsTopBtn.setText("Developer")
+            widgets.settingsTopBtn.show()
+            widgets.frame_64.hide()
+            perm.setPermLevel(permission.BASIC)
+        else:
+            perm.setPermLevel(permission.LOGOUT)
+
+        # Add auto-save timer.
+>>>>>>> 3fac42d (fixed window sizing and login bypass)
         self.autosave_timer = QTimer(self)
         self.autosave_timer.timeout.connect(self.autoSaveHandler)
-        self.autosave_interval = 60000  # 1分钟 (单位：毫秒)
+        self.autosave_interval = 60000  # 1 minute (milliseconds)
+
+    def applyModernWidgetStyle(self):
+        self.setFont(QFont("Segoe UI", 10))
+
+        # Keep style updates scoped to content pages so navigation/title-bar styles stay intact.
+        base_style = self.ui.styleSheet.styleSheet()
+        modern_style = """
+#contentBottom QLabel {
+    font-family: "Segoe UI";
+    font-size: 10pt;
+    color: rgb(222, 226, 234);
+}
+
+#contentBottom QLabel#title_label {
+    font-family: "Segoe UI Semibold";
+    font-size: 20pt;
+    color: rgb(245, 247, 250);
+}
+
+#contentBottom QLabel#subtitle_label {
+    font-family: "Segoe UI";
+    font-size: 11pt;
+    color: rgb(182, 188, 199);
+}
+
+#contentBottom QPushButton {
+    font-family: "Segoe UI Semibold";
+    font-size: 10pt;
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid rgb(62, 68, 82);
+    background-color: rgb(46, 52, 63);
+    color: rgb(236, 239, 244);
+}
+
+#contentBottom QPushButton:hover {
+    background-color: rgb(58, 65, 79);
+}
+
+#contentBottom QPushButton:pressed {
+    background-color: rgb(38, 43, 54);
+}
+
+#contentBottom QPushButton:disabled {
+    color: rgb(145, 150, 162);
+    background-color: rgb(40, 44, 53);
+    border: 1px solid rgb(55, 60, 72);
+}
+"""
+        self.ui.styleSheet.setStyleSheet(base_style + "\n" + modern_style)
 
     def handleAsyncLoadError(self, error_msg):
-        """处理异步加载过程中的错误"""
+        """Handle errors raised during asynchronous loading."""
         logger.error(f"async load error: {error_msg}")
         QMessageBox.critical(
             None,
@@ -799,12 +874,12 @@ class MainWindow(QMainWindow):
             self.tr(f"Wrong to load workspace: {error_msg}"),
             QMessageBox.Ok,
         )
-        # 重置工作区状态
+        # Reset workspace state.
         self.reset()
         widgets.tableWidget_2.clearContents()
 
     def enableAutoSave(self, enable):
-        """ 控制自动保存开关 """
+        """Enable or disable auto-save."""
         if enable:
             self.autosave_timer.start(self.autosave_interval)
             logger.info(f"AutoSave enabled, interval: {self.autosave_interval/1000}s")
@@ -812,7 +887,7 @@ class MainWindow(QMainWindow):
             self.autosave_timer.stop()
 
     def autoSaveHandler(self):
-        """ 自动保存处理器 """
+        """Auto-save handler."""
         if self.workspace is None:
             return
         
@@ -841,22 +916,22 @@ class MainWindow(QMainWindow):
     # ///////////////////////////////////////////////////////////////
     
     def workspaceRemoveSelectedParticipant (self):
-        """移除选中的项"""
+        """Remove selected participants."""
         selected_items = widgets.listWidget_3.selectedItems()
         for item in selected_items:
             p_name = item.text()
             p = self.workspace.findParticipant(p_name)
             if p is not None:
-                # 从 workspace 中移除参与者
+                # Remove participant from workspace.
                 self.workspace.participants.remove(p)
                 del self.workspace.profileList[p.name]
-            # 从 UI 中移除项
+            # Remove item from UI.
             widgets.listWidget_3.takeItem(widgets.listWidget_3.row(item))
         self.updateEMGParticipantBox()
 
     def emgPageRemoveSelectedParticipant(self):
-        """从 EMG 页面移除选中的参与者"""
-        # 获取 EMG 页面上选中的参与者
+        """Remove selected participants from the EMG page."""
+        # Get selected participants from the EMG page.
         selected_participants = list(self.selectedParticipants)
         
         if not selected_participants:
@@ -868,7 +943,7 @@ class MainWindow(QMainWindow):
             )
             return
             
-        # 确认是否删除
+        # Confirm deletion.
         reply = QMessageBox.question(
             None,
             self.tr("confirm"),
@@ -879,52 +954,52 @@ class MainWindow(QMainWindow):
         if reply == QMessageBox.No:
             return
             
-        # 执行删除操作
+        # Perform deletion.
         for p_name in selected_participants:
             p = self.workspace.findParticipant(p_name)
             if p is not None:
-                # 从 workspace 中移除参与者
+            # Remove participant from workspace.
                 self.workspace.participants.remove(p)
                 del self.workspace.profileList[p.name]
                 
-        # 清空选择集合
+        # Clear selection set.
         self.selectedParticipants.clear()
         
-        # 更新 UI
+        # Refresh UI.
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
 
     def workspaceToggleSelectAllParticipant(self, state):
-        """全选或取消全选"""
-        # 暂时断开 listWidget_3 的信号连接
+        """Select all or clear all participants."""
+        # Temporarily disconnect listWidget_3 signal.
         widgets.listWidget_3.itemChanged.disconnect(self.checkWorkspaceParticipantSelectState)
 
-        state = not not state  # 将状态转换为布尔值
+        state = not not state  # Convert state to boolean.
         for i in range(widgets.listWidget_3.count()):
             item = widgets.listWidget_3.item(i)
             item.setCheckState(Qt.Checked if state else Qt.Unchecked)
         
-        # 重新连接 listWidget_3 的信号
+        # Reconnect listWidget_3 signal.
         widgets.listWidget_3.itemChanged.connect(self.checkWorkspaceParticipantSelectState)
 
     def checkWorkspaceParticipantSelectState(self):
-        # 暂时断开 checkBox_3 的信号连接
+        # Temporarily disconnect checkBox_3 signal.
         widgets.checkBox_3.stateChanged.disconnect(self.workspaceToggleSelectAllParticipant)
 
-        # 检查是否有任何一个 item 被取消选择
+        # Check whether any item is unchecked.
         all_checked = True
         for i in range(widgets.listWidget_3.count()):
             if widgets.listWidget_3.item(i).checkState() != Qt.Checked:
                 all_checked = False
                 break
         
-        # 如果有任何一个 item 被取消选择，取消 checkbox 的选择状态
+        # If any item is unchecked, clear the select-all checkbox.
         if not all_checked:
             widgets.checkBox_3.setCheckState(Qt.Unchecked)
         else:
             widgets.checkBox_3.setCheckState(Qt.Checked)
         
-        # 重新连接 checkBox_3 的信号
+        # Reconnect checkBox_3 signal.
         widgets.checkBox_3.stateChanged.connect(self.workspaceToggleSelectAllParticipant)
 
 
@@ -971,10 +1046,51 @@ class MainWindow(QMainWindow):
         logger.info(f'Button "{btnName}" pressed!')
 
     def login_click(self):
+<<<<<<< HEAD
         return
 
     def logout_click(self):
         return
+=======
+        if BYPASS_LOGIN_FOR_DEV:
+            return
+
+        dlg = LoginDialog()
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            self.account = Account(dlg.ui.lineEdit.text(), dlg.ui.lineEdit_2.text())
+            self.account.key_from_json(dlg.user)
+            widgets.subtitle_label.setText(
+                "Welcome to MSK workplace, " + dlg.ui.lineEdit.text()
+            )
+            widgets.settingsTopBtn.setText(dlg.ui.lineEdit.text())
+            widgets.settingsTopBtn.show()
+            widgets.frame_64.hide()
+            perm.setPermLevel(permission.BASIC)
+            perm.startServerHeartbeat(self.account)
+
+    def logout_click(self):
+        if BYPASS_LOGIN_FOR_DEV:
+            return
+
+        # check old project saved
+        if self.ifOldProjectOpened():
+            return -1
+
+        # switch to home page
+        widgets.stackedWidget.setCurrentWidget(widgets.start_page)
+
+        widgets.title_label.setText("Let's get started!")
+        widgets.subtitle_label.setText(
+            "Welcome to MSK workplace, sign in to start using"
+        )
+        widgets.settingsTopBtn.hide()
+        widgets.frame_64.show()
+
+        if self.account is not None and len(self.account.username):
+            bm.logout(self.account.username, self.account.password)
+        perm.setPermLevel(permission.LOGOUT)
+        perm.stopServerHeartbeat()
+>>>>>>> 3fac42d (fixed window sizing and login bypass)
 
     # RESIZE EVENTS
     # ///////////////////////////////////////////////////////////////
@@ -995,7 +1111,7 @@ class MainWindow(QMainWindow):
             logger.info("Mouse click: RIGHT CLICK")
 
     def on_emg_add_window_closed(self, result):
-        # 获取窗口返回的数据
+        # Read returned data from child window.
         p, emgdata, kinematic = result
         
         if p is None:
@@ -1003,14 +1119,14 @@ class MainWindow(QMainWindow):
 
         logger.info("added participate {}".format(p.name))
 
-        # 添加到 workspace
+        # Add to workspace.
         self.workspace.addParticipant(p, emgdata, kinematic)
 
-        # 更新 UI
+        # Refresh UI.
         self.updateEMGParticipantBox()
         self.updateWorkSpaceParticipantBox()
 
-        # 调用 handle_emg_load_done
+        # Trigger follow-up loading flow.
         # self.handle_emg_load_done(p.name)
         self.selectedParticipants.clear()
         self.selectedParticipants.add(p.name)
@@ -1021,11 +1137,11 @@ class MainWindow(QMainWindow):
         # create person
         self.emg_add_window = EMGAddWindow(self.workspace, self.home, 1200, 800)
         
-        # 连接窗口关闭信号到槽函数
+        # Connect window close signal to slot.
         self.emg_add_window.finished.connect(self.on_emg_add_window_closed)
 
-        # 显示窗口
-        self.emg_add_window.run()  # 这里不需要返回结果，因为结果会通过信号传递
+        # Show window.
+        self.emg_add_window.run()  # No direct return needed; results are delivered via signal.
 
 
     def configButtonClick(self):
@@ -1195,16 +1311,16 @@ class MainWindow(QMainWindow):
             if p in self.selectedParticipants:
                 self.selectedParticipants.remove(p)
 
-        # 同步更新 listWidget_3 的状态
+        # Sync listWidget_3 state.
         self.syncListWidgetWithSelectedParticipants()
         self.updateBatchProcessButtonState()
         
     def syncListWidgetWithSelectedParticipants(self):
-        """同步 selectedParticipants 到 listWidget_3"""
-        # 暂时阻断信号以避免循环触发
+        """Sync selectedParticipants to listWidget_3."""
+        # Temporarily block signals to avoid recursive triggers.
         widgets.listWidget_3.blockSignals(True)
         
-        # 更新 listWidget_3 中的选择状态
+        # Update selection state in listWidget_3.
         for i in range(widgets.listWidget_3.count()):
             item = widgets.listWidget_3.item(i)
             p_name = item.text()
@@ -1216,7 +1332,7 @@ class MainWindow(QMainWindow):
         widgets.listWidget_3.blockSignals(False)
 
     def listWidgetItemChanged(self, item):
-        """处理 listWidget_3 项目状态变化"""
+        """Handle state changes of listWidget_3 items."""
         p_name = item.text()
         
         if item.checkState() == Qt.Checked:
@@ -1225,19 +1341,19 @@ class MainWindow(QMainWindow):
             if p_name in self.selectedParticipants:
                 self.selectedParticipants.remove(p_name)
                 
-        # 同步更新 tableWidget_2 的状态
+        # Sync tableWidget_2 state.
         self.syncTableWidgetWithSelectedParticipants()
         
     def syncTableWidgetWithSelectedParticipants(self):
-        """同步 selectedParticipants 到 tableWidget_2"""
-        # 遍历表格中的所有复选框
+        """Sync selectedParticipants to tableWidget_2."""
+        # Traverse all checkboxes in the table.
         for i in range(widgets.tableWidget_2.rowCount()):
             cell_widget = widgets.tableWidget_2.cellWidget(i, 0)
             if cell_widget:
                 checkbox = cell_widget.findChild(QCheckBox)
                 if checkbox:
                     p_name = checkbox.objectName()
-                    # 暂时阻断信号以避免循环触发
+                    # Temporarily block signals to avoid recursive triggers.
                     checkbox.blockSignals(True)
                     checkbox.setChecked(p_name in self.selectedParticipants)
                     checkbox.blockSignals(False)
@@ -1277,27 +1393,27 @@ class MainWindow(QMainWindow):
         self.updateEMGSignalProcessPanel(prev=False)
 
     def setupEMGFilterValidators(self):
-        """设置 EMG 过滤器输入框的验证器，限制输入范围"""
-        # 初始时使用一个默认的最大值，后续会根据实际采样率动态调整
-        default_max = 1000  # 默认最大值
+        """Configure validators for EMG filter inputs with bounded ranges."""
+        # Start with a default max; update dynamically based on sampling rate.
+        default_max = 1000  # default max value
         
-        # 创建整数验证器，限制输入范围为 0 到 default_max
+        # Create integer validators with range 0..default_max.
         validator_band_high = QIntValidator(0, default_max, self)
         validator_band_low = QIntValidator(0, default_max, self)
         validator_low_pass = QIntValidator(0, default_max, self)
         
-        # 应用验证器到输入框
+        # Apply validators to input fields.
         widgets.lineEdit_10.setValidator(validator_band_high)
         widgets.lineEdit_11.setValidator(validator_band_low)
         widgets.lineEdit_12.setValidator(validator_low_pass)
         
-        # 存储验证器引用，以便后续更新
+        # Keep validator references for later updates.
         self.validator_band_high = validator_band_high
         self.validator_band_low = validator_band_low
         self.validator_low_pass = validator_low_pass
 
     def updateEMGFilterValidators(self, p):
-        """根据采样率更新过滤器输入框的验证器范围"""
+        """Update filter-input validator ranges based on sampling rate."""
         if p is None:
             return
             
@@ -1305,12 +1421,12 @@ class MainWindow(QMainWindow):
             fs = self.workspace[p].emg.getfs()
             max_freq = fs / 2
             
-            # 更新验证器的范围
+            # Update validator ranges.
             self.validator_band_high.setTop(max_freq)
             self.validator_band_low.setTop(max_freq)
             self.validator_low_pass.setTop(max_freq)
             
-            # 更新输入框的提示文本
+            # Update placeholder text.
             widgets.lineEdit_10.setPlaceholderText(f"high: 0-{max_freq}")
             widgets.lineEdit_11.setPlaceholderText(f"low: 0-{max_freq}")
             widgets.lineEdit_12.setPlaceholderText(f"low: 0-{max_freq}")
@@ -1556,6 +1672,30 @@ class MainWindow(QMainWindow):
 
         logger.info("batch process: select configure {}".format(config_name))
 
+        fs_map = {}
+        for p in listofpeople:
+            try:
+                fs = self.workspace[p].emg.getfs()
+                fs_map.setdefault(fs, []).append(p.name)
+            except Exception as e:
+                logger.error("batch process: failed to read fs for {}: {}".format(p.name, str(e)))
+
+        if len(fs_map) > 1:
+            lines = []
+            for fs, plist in fs_map.items():
+                lines.append("{} Hz: {}".format(fs, ", ".join(plist)))
+            reply = QMessageBox.warning(
+                None,
+                self.tr("warning"),
+                self.tr(
+                    "Selected participants have mixed sampling rates:\n{}\n\nContinue batch processing?"
+                ).format("\n".join(lines)),
+                QMessageBox.Yes | QMessageBox.No,
+            )
+            if reply != QMessageBox.Yes:
+                logger.info("batch process: cancelled due to mixed sampling rates")
+                return
+
         isStart, cfg = EMGConfigWindow(config, False).run()
         if isStart:
             self.startBatchEMGProcess(listofpeople, cfg)
@@ -1563,12 +1703,12 @@ class MainWindow(QMainWindow):
             logger.info("batch process: cancelled")
 
     def EMGParticipantSelectAllClicked(self, state):
-        """ 全选复选框点击处理 """
-        # 设置表格中的所有checkbox
+        """Handle select-all checkbox interactions."""
+        # Update all table checkboxes.
         state = Qt.CheckState(state)
         widgets.checkBox_2.setCheckState(state)
         
-        # 暂时断开单个checkbox的信号
+        # Temporarily block individual checkbox signals.
         for i in range(widgets.tableWidget_2.rowCount()):
             checkbox = widgets.tableWidget_2.cellWidget(i, 0).findChild(QCheckBox)
             checkbox.blockSignals(True)
@@ -1622,10 +1762,10 @@ class MainWindow(QMainWindow):
         return checkbox
 
     def handleParticipantCheckState(self, state):
-        """ 当单个checkbox状态改变时的处理函数 """
-        # 暂时关闭信号防止循环触发
+        """Handle state changes of individual participant checkboxes."""
+        # Temporarily block signals to avoid recursive updates.
         with QSignalBlocker(widgets.checkBox_2):
-            # 检查是否全部选中
+            # Check whether all are selected.
             all_checked = True
             for i in range(widgets.tableWidget_2.rowCount()):
                 w = widgets.tableWidget_2.cellWidget(i, 0).findChild(QCheckBox)
@@ -1703,7 +1843,7 @@ class MainWindow(QMainWindow):
             widgets.tableWidget_2.setCellWidget(i, 2, self.EMGCreateHBox(ready))
             widgets.tableWidget_2.setCellWidget(i, 3, self.EMGCreateHBox(report))
 
-        # 同步 listWidget_3 的状态
+        # Sync listWidget_3 state.
         self.syncListWidgetWithSelectedParticipants()
 
     def updateWorkSpaceParticipantBox(self):
@@ -1721,7 +1861,7 @@ class MainWindow(QMainWindow):
             widgets.listWidget_3.addItem(item)
             widgets.listWidget_3.item(i).setForeground(Qt.black)
 
-        # 连接信号
+        # Connect signals.
         widgets.listWidget_3.itemChanged.connect(self.listWidgetItemChanged)
 
     # update waveform regarding to config step and user input metrics
@@ -1820,24 +1960,24 @@ class MainWindow(QMainWindow):
             widgets.treeView.setModel(None)
 
     def handleTreeViewDoubleClick(self, index):
-        """ 处理文件树的双击事件 """
-        # 获取文件路径
+        """Handle double-click events in the file tree."""
+        # Get file path.
         file_path = self.filesystemTree.filePath(index)
         
-        # 判断文件类型
+        # Check file type.
         if not os.path.isfile(file_path):
             return
         
-        # 处理需要根据文件类型执行的操作
+        # Handle file-type-specific actions.
         print(f"Double clicked: {file_path}")
         
-        # 如果是myo项目文件则打开
+        # Open .myo project files.
         if file_path.endswith(".myo"):
-            # 先检查现有工作区保存状态
+            # First check whether current workspace should be saved.
             if self.ifOldProjectOpened():
                 return
             
-            # 加载项目
+            # Load project.
             self.loadWorkSpace(os.path.dirname(file_path), os.path.basename(file_path))
             
     def updateEMGSavedConfigureList(self):
@@ -1874,21 +2014,20 @@ class MainWindow(QMainWindow):
             return
 
     def extract_participant_name_from_configname(self, cfgname):
-        """从配置文件名称中提取参与者名称
+        """Extract participant name from a configuration filename.
         
         Args:
-            cfgname: 格式为 "p.name's EMGConfig" 的配置文件名
+            cfgname: Configuration filename in the format "p.name's EMGConfig".
             
         Returns:
-            提取出的参与者名称
+            Extracted participant name.
         """
-        # 检查是否包含后缀
-        if "'s EMGConfig" in cfgname:
-            # 通过分割字符串提取参与者名称
-            p_name = cfgname.split("'s EMGConfig")[0]
+        suffix = "'s EMGConfig"
+        if cfgname.endswith(suffix):
+            p_name = cfgname[: -len(suffix)]
             return p_name
         else:
-            # 如果格式不匹配，返回原始字符串或None
+            # If format does not match, return None.
             return None
 
     def updateFilterText(self):
@@ -2145,7 +2284,7 @@ class MainWindow(QMainWindow):
         if not self.workspace.hasParticipant(p):
             return -1
 
-        # 更新过滤器输入框的验证器范围
+        # Update validator ranges for filter input boxes.
         self.updateEMGFilterValidators(p)
 
         # set fsm
@@ -2222,8 +2361,8 @@ class MainWindow(QMainWindow):
         self.updateEMGParticipantBox()
 
 
-    def closeEvent(self, event):  # 添加窗口关闭事件处理
-        # 显式销毁所有QPlotView实例
+    def closeEvent(self, event):  # Window close event handler.
+        # Explicitly destroy all QPlotView instances.
         self.deletePlots()
         # clean up app when closed
         # logout
@@ -2231,7 +2370,7 @@ class MainWindow(QMainWindow):
         event.accept()
 
     def deletePlots(self):
-        # 删除同时存在于UI和Python层面的对象引用
+        # Remove references that exist in both UI and Python layers.
         if hasattr(self, 'plot_input'):
             widgets.plot_input.deleteLater()
             del widgets.plot_input
@@ -2239,16 +2378,16 @@ class MainWindow(QMainWindow):
             widgets.plot_output.deleteLater()
             del widgets.plot_output
 
-    # 更新批处理按钮状态
+    # Update batch-process button state.
     def updateBatchProcessButtonState(self):
-        """更新批处理按钮的可点击状态"""
-        # 检查 listWidget_2 是否有且仅有一个选中项
+        """Update whether the batch-process button is enabled."""
+        # Check whether listWidget_2 has exactly one selected item.
         list_selected_count = len(widgets.listWidget_2.selectedItems())
         
-        # 检查 tableWidget_2 中选中的参与者数量
+        # Check number of selected participants in tableWidget_2.
         table_selected_count = len(self.selectedParticipants)
         
-        # 设置按钮状态
+        # Set button enabled state.
         widgets.pushButton_12.setEnabled(list_selected_count == 1 and table_selected_count > 1)
 
 
@@ -2303,7 +2442,9 @@ if __name__ == "__main__":
             qApp.installTranslator(translator)
 
     window = MainWindow(language, sys_log, r_log)
-    qApp.exec()
+    exit_code = qApp.exec()
     window.rserver.shutdown()
     window.rserver.join()
-    sys.exit(0)
+    sys_log.close()
+    r_log.close()
+    sys.exit(exit_code)

@@ -179,7 +179,7 @@ class SliderWidget(QSlider):
         self.setMinimum(min)
         self.setMaximum(max)
         interval = (max - min) // 10
-        # 确保至少有一个间隔
+        # Ensure there is at least one interval.
         if interval == 0:
             interval = 1
             

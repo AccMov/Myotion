@@ -355,13 +355,14 @@ class workspace:
                 profile.loading = False
                 doneCallback()
             except Exception as e:
-                # 捕获异常并记录日志
-                logger.error(f"emg async loader: wrong to load {name} with {profile.emg.emgFile}")
-                # 标记加载完成，避免界面卡死
+                logger.error(
+                    f"emg async loader: failed to load {name} with {profile.emg.emgFile}, error: {str(e)}"
+                )
                 profile.loading = False
-                self.emgloaderstop = True
-                # 将异常信息传递给回调函数
-                errorCallback(f"can not load {name} with {profile.emg.emgFile}, error {e}")
+                errorCallback(
+                    f"Cannot load participant {name} from {profile.emg.emgFile}: {str(e)}"
+                )
+                continue
 
             if self.emgloaderstop:
                 logger.info("emg async loader: stopping")

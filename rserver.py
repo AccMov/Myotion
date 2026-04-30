@@ -37,18 +37,25 @@ class RServer(threading.Thread):
     def run(self):
         app = Path(os.getcwd() + "/shiny/app.R")
         rscript = Path(os.getcwd() + "/R/bin/Rscript")
-        envscript = 'set "R_LIBS={}"'.format(Path(os.getcwd() + "/R/library"))
         args = "--language={}".format(self.language)
-        cmd = '{} && "{}" "{}" {}'.format(envscript, rscript, app, args)
-        print(cmd)
-        self.p = subprocess.Popen(cmd, shell=True, stdout=self.log_file, stderr=self.log_file)
+        env = os.environ.copy()
+        env["R_LIBS"] = str(Path(os.getcwd() + "/R/library"))
+        cmd = [str(rscript), str(app), args]
+        print("Launching R server:", " ".join(cmd))
+        self.p = subprocess.Popen(
+            cmd,
+            shell=False,
+            env=env,
+            stdout=self.log_file,
+            stderr=self.log_file,
+        )
 
         self.stdout, self.stderr = self.p.communicate()
     
     def shutdown(self):
         if self.p:
             print('Shutdown R-Server')
-            self.p.terminate()  # 使用terminate更友好
+            self.p.terminate()  # terminate() is a safer shutdown approach.
             self.p = None
 
     def UpdateProjectPath(self, path):

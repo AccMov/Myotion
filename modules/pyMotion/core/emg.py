@@ -1,4 +1,5 @@
 import asyncio
+import os
 from .timeSeriesTable import *
 from .c3d import *
 from .mat import *
@@ -7,6 +8,7 @@ from enum import Enum
 from .logger import *
 import re
 from enum import IntEnum
+from copy import deepcopy
 
 
 class emgConfigEnum(IntEnum):
@@ -55,7 +57,7 @@ class emgDCOffset:
         if root == None:
             return None
 
-        obj = emgDCOffset
+        obj = emgDCOffset()
         e = root.find("enable")
         if e and e.text:
             obj.enable = xmlStringParse(e.text, bool)
@@ -81,7 +83,7 @@ class emgRectification:
         if root == None:
             return None
 
-        obj = emgRectification
+        obj = emgRectification()
         e = root.find("enable")
         if e and e.text:
             obj.enable = xmlStringParse(e.text, bool)
@@ -107,7 +109,7 @@ class emgNormalization:
         if root == None:
             return None
 
-        obj = emgNormalization
+        obj = emgNormalization()
         e = root.find("enable")
         if e and e.text:
             obj.enable = xmlStringParse(e.text, bool)
@@ -131,6 +133,13 @@ class emgSummary:
         e = xmlElement("emgSummary")
         # we don't save temp calculation to config file
         return e
+
+    @staticmethod
+    def fromXML(xml):
+        root = xml.find("emgSummary")
+        if root == None:
+            return None
+        return emgSummary()
 
 
 class emgFilterEnum(IntEnum):
@@ -185,7 +194,7 @@ class emgFilter:
         if root == None:
             return None
 
-        obj = emgFilter
+        obj = emgFilter()
         e = root.find("type")
         if e and e.text:
             obj.type = xmlStringParse(e.text, int)
@@ -239,12 +248,12 @@ class emgActivation:
         if root == None:
             return None
 
-        obj = emgActivation
+        obj = emgActivation()
         e = root.find("threhold")
         if e and e.text:
             obj.threhold = xmlStringParse(e.text, float)
         else:
-            obj.type = 0
+            obj.threhold = 0
         e = root.find("n_above")
         if e and e.text:
             obj.n_above = xmlStringParse(e.text, int)
@@ -265,8 +274,8 @@ class emgConfigure:
         for i, s in enumerate(emgConfigInfo.classical_steps):
             config = self.initConfig(s)
             
-            # 特殊处理第二个 FILTER (索引为 3，要与classical_steps同步修改)
-            if s == emgConfigEnum.FILTER and i == 3:  # 第二个 filter
+            # Special handling for the second FILTER (index 3; keep in sync with classical_steps).
+            if s == emgConfigEnum.FILTER and i == 3:  # second filter
                 config.type = emgFilterEnum.LOW_PASS
                 
             self.stepConfig.append(config)
@@ -278,7 +287,7 @@ class emgConfigure:
 
     def copy(self):
         t = emgConfigure()
-        t.stepConfig = self.stepConfig.copy()
+        t.stepConfig = deepcopy(self.stepConfig)
         return t
 
     """
@@ -346,6 +355,7 @@ class emgConfigure:
             return None
 
         obj = emgConfigure()
+        obj.stepConfig = []
         for el in root:
             cfg = emgFilter.fromXML(el)
             if cfg:
@@ -367,6 +377,13 @@ class emgConfigure:
             if cfg:
                 obj.stepConfig.append(cfg)
                 continue
+            cfg = emgSummary.fromXML(el)
+            if cfg:
+                obj.stepConfig.append(cfg)
+                continue
+
+        if len(obj.stepConfig) == 0:
+            return emgConfigure()
         return obj
 
 
@@ -389,33 +406,33 @@ class emg:
             self.setEMGFile(file)
 
     async def async_load(self):
-        """异步加载 EMG 和 MVC 文件"""
+        """Asynchronously load EMG and MVC files."""
         if self.emgFile is None:
             return -1
 
-        # 异步加载 EMG 文件
+        # Asynchronously load EMG file.
         await self.async_set_emg_file(self.emgFile)
 
-        # 异步加载 MVC 文件
+        # Asynchronously load MVC files.
         tasks = [
             self.async_set_mvc_file(chan, mvcfile)
             for chan, mvcfile in self.mvcFilesMap.items()
         ]
         await asyncio.gather(*tasks)
 
-        # 重命名通道
+        # Rename channels.
         for old, new in self.chanMap.items():
             self.renameChannel(old, new)
 
         return 0
 
     async def async_set_emg_file(self, file):
-        """异步加载 EMG 文件"""
+        """Asynchronously load EMG file."""
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, self.setEMGFile, file)
 
     async def async_set_mvc_file(self, channel, file):
-        """异步加载 MVC 文件"""
+        """Asynchronously load MVC file."""
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, self.setMVCFile, channel, file)
 
@@ -435,10 +452,10 @@ class emg:
         return self.emgTST.getLinspace()
 
     def isC3D(self, f):
-        return f.endswith(".c3d")
+        return isinstance(f, str) and os.path.splitext(f)[1].lower() == ".c3d"
 
     def isMAT(self, f):
-        return f.endswith(".mat")
+        return isinstance(f, str) and os.path.splitext(f)[1].lower() == ".mat"
 
     # check if MVC TST has all channels in place
     def isMVCComplete(self):
@@ -519,30 +536,37 @@ class emg:
 
     # set EMG file path
     def setEMGFile(self, f):
+        if f is None or len(str(f).strip()) == 0:
+            raise ValueError("EMG file path is empty")
+        if not os.path.isfile(f):
+            raise ValueError("EMG file not found: {}".format(f))
+
         self.emgFile = f
 
         # load file
         try:
             if self.isC3D(f):
-                c3d = c3dFile(f)
-                self.Channels = c3d.analog.labels
+                c3d_obj = c3dFile(f)
+                self.Channels = c3d_obj.analog.labels
 
                 # load TST
-                self.emgTST = c3d.analog.convertToTST()
+                self.emgTST = c3d_obj.analog.convertToTST()
 
             elif self.isMAT(f):
-                mat = matFile(f)
-                self.Channels = mat.labels
+                mat_obj = matFile(f)
+                self.Channels = mat_obj.labels
                 # load TST
-                self.emgTST = mat.convertToTST()
+                self.emgTST = mat_obj.convertToTST()
             else:
-                logger.error("unsupported file format")
-        except:
-            raise Exception(logger.errstr)
+                raise ValueError("Unsupported EMG file format: {}".format(f))
+        except Exception as e:
+            raise ValueError("Failed to load EMG file {}: {}".format(f, str(e)))
 
         # sanities
-        assert self.Channels != None, "channels not extracted"
-        assert self.emgTST != None, "emg cannot be convert to TimeSeriesTable"
+        if self.Channels is None or len(self.Channels) == 0:
+            raise ValueError("No channels extracted from EMG file: {}".format(f))
+        if self.emgTST is None:
+            raise ValueError("Failed to convert EMG file to TimeSeriesTable: {}".format(f))
 
         # update MVC TST
         self.emgMVCTST = timeSeriesTable(self.emgTST.fs, self.emgTST.labels)
@@ -550,36 +574,38 @@ class emg:
     # set MVC file path
     def setMVCFile(self, channel, f):
         if len(self.Channels) == 0:
-            logger.error("channels is empty!")
-            raise Exception(logger.errstr)
+            raise ValueError("EMG channels are empty, please load EMG file first")
 
         if channel not in self.Channels:
-            logger.error("channel {} does not exists!".format(channel))
-            raise Exception(logger.errstr)
+            raise ValueError("Channel {} does not exist in EMG channels".format(channel))
+
+        if f is None or len(str(f).strip()) == 0:
+            raise ValueError("MVC file path is empty")
+        if not os.path.isfile(f):
+            raise ValueError("MVC file not found: {}".format(f))
 
         MVCTST = None
         # open file and load TST
         try:
             if self.isC3D(f):
-                c3d = c3dFile(f)
-                MVCChannels = c3d.analog.labels
-                MVCTST = c3d.analog.convertToTST()
+                c3d_obj = c3dFile(f)
+                MVCChannels = c3d_obj.analog.labels
+                MVCTST = c3d_obj.analog.convertToTST()
 
             elif self.isMAT(f):
-                mat = matFile(f)
-                MVCChannels = mat.labels
-                MVCTST = mat.convertToTST()
+                mat_obj = matFile(f)
+                MVCChannels = mat_obj.labels
+                MVCTST = mat_obj.convertToTST()
             else:
-                logger.error("unsupported file format")
-                raise Exception(logger.errstr)
-        except:
-            logger.error("cannot open mvc file")
-            raise Exception(logger.errstr)
+                raise ValueError("Unsupported MVC file format: {}".format(f))
+        except Exception as e:
+            raise ValueError("Cannot open MVC file {}: {}".format(f, str(e)))
 
         # check if targetted channel exists in f
         if channel not in MVCChannels:
-            logger.error("Targetted channel not found in file")
-            raise Exception(logger.errstr)
+            raise ValueError(
+                "Channel {} not found in MVC file {}".format(channel, f)
+            )
 
         self.emgMVCTST[channel] = MVCTST[channel]
         self.mvcFilesMap[channel] = f
